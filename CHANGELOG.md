@@ -4,6 +4,24 @@ All notable changes to RobotScope are documented in this file.
 
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and versioning follows [SemVer](https://semver.org/).
 
+## [0.6.0-beta.0] - 2026-06-12
+
+First v0.6 beta — scope consolidation after alpha.0.
+
+### Summary
+
+Beta consolidates OSM lanelet relations overlay. Documentation and known-limitations boundaries updated for daily map workflows with relation-aware OSM exports.
+
+### Added
+
+- [docs/release/v0.6.0-beta.0.md](RobotScope/docs/release/v0.6.0-beta.0.md)
+- [docs/migration/v0.6-alpha-to-beta.md](RobotScope/docs/migration/v0.6-alpha-to-beta.md)
+
+### Changed
+
+- README + [known-limitations.md](RobotScope/docs/known-limitations.md) updated for v0.6 beta boundaries
+- [docs/lanelet2-osm.md](RobotScope/docs/lanelet2-osm.md) — beta scope header
+
 ## [0.6.0-alpha.0] - 2026-06-12
 
 OSM lanelet relations (left/right/centerline).

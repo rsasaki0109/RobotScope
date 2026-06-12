@@ -43,7 +43,19 @@ export function useAutowareSnapshot(slice: AutowareViewerSlice): AutowareDataSta
                     format: slice.laneletOsmOverlay.format,
                     node_count: slice.laneletOsmOverlay.node_count,
                     way_count: slice.laneletOsmOverlay.way_count,
+                    lanelet_count: slice.laneletOsmOverlay.lanelet_count,
                     ways: slice.laneletOsmOverlay.ways.map((way) => ({ points: way.points })),
+                    lanelets: slice.laneletOsmOverlay.lanelets.map((lanelet) => ({
+                      left_bound: lanelet.left_bound
+                        ? { points: lanelet.left_bound.points }
+                        : undefined,
+                      right_bound: lanelet.right_bound
+                        ? { points: lanelet.right_bound.points }
+                        : undefined,
+                      centerline: lanelet.centerline
+                        ? { points: lanelet.centerline.points }
+                        : undefined,
+                    })),
                   },
                 },
               }

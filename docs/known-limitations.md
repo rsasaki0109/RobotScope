@@ -1,6 +1,6 @@
-# Known limitations (v0.5)
+# Known limitations (v0.6 alpha)
 
-Concrete scope boundaries for **v0.5.0**. Product choices or not-yet-built — not necessarily bugs.
+Concrete scope boundaries for **v0.6.0-alpha.0**. Product choices or not-yet-built — not necessarily bugs.
 
 Plugin manifest **`api: "0.1"`** remains stable (from v0.1 GA) — see [api-v0.1.md](RobotScope/docs/api-v0.1.md).
 
@@ -17,7 +17,7 @@ Plugin manifest **`api: "0.1"`** remains stable (from v0.1 GA) — see [api-v0.1
 
 | Limitation | Notes |
 |------------|-------|
-| **Lanelet2** — stats + **2D panel preview** + centerline polylines + **RL2D demo bin** boundaries in 3D + **OSM sidecar** (`.osm` ways) | Full Autoware `lanelet2_io` **boost binary** not parsed — use [lanelet2-osm.md](RobotScope/docs/lanelet2-osm.md) sidecar |
+| **Lanelet2** — stats + **2D panel preview** + centerline polylines + **RL2D demo bin** boundaries in 3D + **OSM sidecar** (ways + **lanelet relations**) | Full Autoware `lanelet2_io` **boost binary** not parsed — use [lanelet2-osm.md](RobotScope/docs/lanelet2-osm.md) sidecar; regulatory elements not parsed |
 | **Occupancy grid** — 2D preview + 3D mesh | No full costmap plugin parity with RViz |
 | **Point clouds** — basic decode + scene | No advanced filtering / accumulation UI |
 | **WebGPU** experimental | WebGL2 is the default render path |

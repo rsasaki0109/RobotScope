@@ -4,6 +4,22 @@ All notable changes to RobotScope are documented in this file.
 
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and versioning follows [SemVer](https://semver.org/).
 
+## [0.6.0-alpha.0] - 2026-06-12
+
+OSM lanelet relations (left/right/centerline).
+
+### Added
+
+- **`parseLaneletOsm()`** — `<relation type=lanelet>` member resolution
+- Map panel lanelet count + RL2D-style OSM lanelet 2D preview
+- 3D closed bounds for lanelet left/right + centerline trajectories
+- [docs/release/v0.6.0-alpha.0.md](RobotScope/docs/release/v0.6.0-alpha.0.md)
+
+### Changed
+
+- [docs/lanelet2-osm.md](RobotScope/docs/lanelet2-osm.md) updated for v0.6 alpha relations
+- [known-limitations.md](RobotScope/docs/known-limitations.md) updated for v0.6 alpha
+
 ## [0.5.0] - 2026-06-13
 
 Fifth GA release — Lanelet2 OSM sidecar overlay.

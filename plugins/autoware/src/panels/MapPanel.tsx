@@ -1,6 +1,11 @@
 import { useEffect, useRef } from "react";
 
-import type { AutowareLanelet2View, AutowareMapView, AutowareOccupancyMapView } from "../types.js";
+import type {
+  AutowareLanelet2View,
+  AutowareMapView,
+  AutowareOccupancyMapView,
+  LaneletOsmLaneletView,
+} from "../types.js";
 import styles from "./AutowarePanel.module.css";
 
 interface EgoPose {
@@ -241,6 +246,123 @@ function drawLaneletPreview(
   }
 }
 
+function OsmLaneletSidecarPreview({
+  lanelets,
+  ego,
+}: {
+  lanelets: LaneletOsmLaneletView[];
+  ego?: EgoPose;
+}) {
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas || lanelets.length === 0) {
+      return;
+    }
+
+    let minX = Number.POSITIVE_INFINITY;
+    let maxX = Number.NEGATIVE_INFINITY;
+    let minY = Number.POSITIVE_INFINITY;
+    let maxY = Number.NEGATIVE_INFINITY;
+
+    const includePoints = (points: Array<[number, number]>) => {
+      for (const [x, y] of points) {
+        minX = Math.min(minX, x);
+        maxX = Math.max(maxX, x);
+        minY = Math.min(minY, y);
+        maxY = Math.max(maxY, y);
+      }
+    };
+
+    for (const lanelet of lanelets) {
+      if (lanelet.left_bound) {
+        includePoints(lanelet.left_bound.points);
+      }
+      if (lanelet.right_bound) {
+        includePoints(lanelet.right_bound.points);
+      }
+      if (lanelet.centerline) {
+        includePoints(lanelet.centerline.points);
+      }
+    }
+
+    if (ego) {
+      minX = Math.min(minX, ego.position[0]);
+      maxX = Math.max(maxX, ego.position[0]);
+      minY = Math.min(minY, ego.position[1]);
+      maxY = Math.max(maxY, ego.position[1]);
+    }
+
+    if (!Number.isFinite(minX)) {
+      return;
+    }
+
+    canvas.width = LANELET_CANVAS_W;
+    canvas.height = LANELET_CANVAS_H;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) {
+      return;
+    }
+
+    ctx.fillStyle = "#12151c";
+    ctx.fillRect(0, 0, LANELET_CANVAS_W, LANELET_CANVAS_H);
+
+    const bounds = { minX, maxX, minY, maxY };
+    const drawPolyline = (
+      points: Array<[number, number]>,
+      color: string,
+      closed: boolean,
+    ) => {
+      if (points.length < 2) {
+        return;
+      }
+      ctx.strokeStyle = color;
+      ctx.lineWidth = closed ? 1.6 : 1.4;
+      ctx.beginPath();
+      const [startX, startY] = worldToCanvas(points[0]![0], points[0]![1], bounds);
+      ctx.moveTo(startX, startY);
+      for (let index = 1; index < points.length; index += 1) {
+        const [x, y] = points[index]!;
+        const [cx, cy] = worldToCanvas(x, y, bounds);
+        ctx.lineTo(cx, cy);
+      }
+      if (closed) {
+        ctx.closePath();
+      }
+      ctx.stroke();
+    };
+
+    for (const lanelet of lanelets) {
+      if (lanelet.left_bound) {
+        drawPolyline(lanelet.left_bound.points, "#c8820a", true);
+      }
+      if (lanelet.right_bound) {
+        drawPolyline(lanelet.right_bound.points, "#c8820a", true);
+      }
+      if (lanelet.centerline) {
+        drawPolyline(lanelet.centerline.points, "#f5a623", false);
+      }
+    }
+
+    if (ego) {
+      const [cx, cy] = worldToCanvas(ego.position[0], ego.position[1], bounds);
+      ctx.fillStyle = "#3dd68c";
+      ctx.beginPath();
+      ctx.arc(cx, cy, 3.2, 0, Math.PI * 2);
+      ctx.fill();
+    }
+  }, [lanelets, ego]);
+
+  return (
+    <canvas
+      ref={canvasRef}
+      className={styles.mapCanvas}
+      aria-label="Lanelet2 OSM lanelet preview"
+    />
+  );
+}
+
 function OsmSidecarPreview({
   ways,
   ego,
@@ -366,6 +488,9 @@ export function MapPanel({
             <dl className={styles.grid}>
               <dt>OSM sidecar</dt>
               <dd>
+                {osmSidecar.lanelet_count > 0
+                  ? `${osmSidecar.lanelet_count} lanelets · `
+                  : ""}
                 {osmSidecar.way_count} ways · {osmSidecar.node_count} nodes
               </dd>
             </dl>
@@ -407,7 +532,9 @@ export function MapPanel({
             <Lanelet2Preview lanelet={lanelet} ego={ego} />
           ) : null}
 
-          {osmSidecar?.ways.length ? (
+          {osmSidecar?.lanelets?.length ? (
+            <OsmLaneletSidecarPreview lanelets={osmSidecar.lanelets} ego={ego} />
+          ) : osmSidecar?.ways.length ? (
             <OsmSidecarPreview ways={osmSidecar.ways} ego={ego} />
           ) : null}
 

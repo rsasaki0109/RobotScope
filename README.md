@@ -88,26 +88,26 @@ RobotScope/
 └── sample_data/             Sample MCAP fetch scripts
 ```
 
-## v0.3 beta (0.3.0-beta.0)
+## v0.3.0 (GA)
 
-Rosbag2 sidecar cache on v0.2 foundations. See [release notes](RobotScope/docs/release/v0.3.0-beta.0.md) and [CHANGELOG.md](RobotScope/CHANGELOG.md).
+Rosbag2 sidecar cache on v0.2 foundations. See [release notes](RobotScope/docs/release/v0.3.0.md) and [CHANGELOG.md](RobotScope/CHANGELOG.md).
 
-**New in v0.3**
+**Shipped**
 
 | Layer | Features |
 |-------|----------|
 | Rosbag2 | **Sidecar cache** — re-open `.db3` skips topic re-scan (IndexedDB) |
+| v0.2 carry-over | Cross-layout banner · lazy `.db3` ingest · MCAP · live · plugins · Lanelet2 RL2D |
 
 **Docs**
 
 - [Rosbag2 guide](RobotScope/docs/rosbag2.md)
-- [Migration v0.3 alpha → beta](RobotScope/docs/migration/v0.3-alpha-to-beta.md)
+- [Migration v0.3 beta → GA](RobotScope/docs/migration/v0.3-beta-to-ga.md)
+- [Known limitations](RobotScope/docs/known-limitations.md)
 
-**Still out of scope (v0.3)**
+**Out of scope (v0.3)**
 
 - Native Lanelet2 `lanelet2_io` · rosbag2 folder bags · command gateway · cloud/fleet
-
-See [known limitations](RobotScope/docs/known-limitations.md).
 
 ## v0.2.0 (GA)
 

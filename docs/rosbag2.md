@@ -1,4 +1,4 @@
-# Rosbag2 ingest (v0.3 beta)
+# Rosbag2 ingest (v0.3)
 
 Browser-native **rosbag2 SQLite** playback (`*.db3`) with **IndexedDB sidecar** on re-open.
 
@@ -10,7 +10,7 @@ Browser-native **rosbag2 SQLite** playback (`*.db3`) with **IndexedDB sidecar** 
 
 Supported storage layout: standard `topics` + `messages` tables (ROS 2 Humble/Jazzy sqlite3 plugin).
 
-## Limitations (beta)
+## Limitations (v0.3)
 
 | Topic | Status |
 |-------|--------|

@@ -4,6 +4,24 @@ All notable changes to RobotScope are documented in this file.
 
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and versioning follows [SemVer](https://semver.org/).
 
+## [0.3.0] - 2026-06-12
+
+Third GA release — rosbag2 sidecar cache.
+
+### Summary
+
+v0.3 GA marks stable delivery of alpha/beta features on top of v0.2. No intentional breaking changes from `0.3.0-beta.0`. Plugin API `0.1` unchanged.
+
+### Added
+
+- [docs/release/v0.3.0.md](RobotScope/docs/release/v0.3.0.md)
+- [docs/migration/v0.3-beta-to-ga.md](RobotScope/docs/migration/v0.3-beta-to-ga.md)
+
+### Changed
+
+- README status section updated for **v0.3.0 GA**
+- Version series advances from `0.3.0-beta.0` to **`0.3.0`**
+
 ## [0.3.0-beta.0] - 2026-06-12
 
 First v0.3 beta — scope consolidation after alpha.0.

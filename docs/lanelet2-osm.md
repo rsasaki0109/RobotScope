@@ -1,4 +1,4 @@
-# Lanelet2 OSM sidecar (v0.5 alpha)
+# Lanelet2 OSM sidecar (v0.5 beta)
 
 Load an **Autoware / Lanelet2 OSM map** alongside MCAP or rosbag2 playback when native `LaneletMapBin` is not parsed.
 
@@ -14,7 +14,7 @@ Autoware `LaneletMapBin.data` uses lanelet2 **Boost binary serialization** — n
 
 Use **Clear OSM** to remove the overlay.
 
-## Supported OSM subset
+## Supported OSM subset (v0.5 beta)
 
 | Feature | Status |
 |---------|--------|

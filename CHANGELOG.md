@@ -4,6 +4,25 @@ All notable changes to RobotScope are documented in this file.
 
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and versioning follows [SemVer](https://semver.org/).
 
+## [0.5.0-beta.0] - 2026-06-13
+
+First v0.5 beta — scope consolidation after alpha.0.
+
+### Summary
+
+Beta consolidates Lanelet2 OSM sidecar overlay. Documentation and known-limitations boundaries updated for daily map overlay workflows.
+
+### Added
+
+- [docs/release/v0.5.0-beta.0.md](RobotScope/docs/release/v0.5.0-beta.0.md)
+- [docs/migration/v0.5-alpha-to-beta.md](RobotScope/docs/migration/v0.5-alpha-to-beta.md)
+- README hero GIF (`docs/assets/readme-hero.gif`) + `npm run capture:readme-hero`
+
+### Changed
+
+- README + [known-limitations.md](RobotScope/docs/known-limitations.md) updated for v0.5 beta boundaries
+- [docs/lanelet2-osm.md](RobotScope/docs/lanelet2-osm.md) — beta scope header
+
 ## [0.5.0-alpha.0] - 2026-06-12
 
 Lanelet2 OSM sidecar overlay (first native map ingest step).

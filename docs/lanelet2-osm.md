@@ -1,4 +1,4 @@
-# Lanelet2 OSM sidecar (v0.6 beta)
+# Lanelet2 OSM sidecar (v0.6)
 
 Load an **Autoware / Lanelet2 OSM map** alongside MCAP or rosbag2 playback when native `LaneletMapBin` is not parsed.
 
@@ -20,7 +20,7 @@ Use **Clear OSM** to remove the overlay.
 |---------|--------|
 | Nodes with `local_x` / `local_y` tags | **Supported** |
 | `<way>` polylines via `<nd ref>` | **Supported** |
-| `<relation type=lanelet>` with `left` / `right` / `centerline` members | **Supported** (v0.6 beta) |
+| `<relation type=lanelet>` with `left` / `right` / `centerline` members | **Supported** (v0.6) |
 | Regulatory elements / traffic rules | Not parsed |
 | Native `LaneletMapBin` boost bin | Still **unknown** — use OSM sidecar or RL2D demo MCAP |
 

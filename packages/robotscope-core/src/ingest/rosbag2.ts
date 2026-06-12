@@ -17,11 +17,6 @@ async function loadSqlJs(): Promise<SqlJsStatic> {
   return sqlModulePromise;
 }
 
-export function isRosbag2Filename(name: string): boolean {
-  const lower = name.toLowerCase();
-  return lower.endsWith(".db3") || lower.endsWith(".sqlite") || lower.endsWith(".sqlite3");
-}
-
 function collectTopics(db: Database): TopicInfo[] {
   const result = db.exec(
     "SELECT name, type, (SELECT COUNT(*) FROM messages WHERE topic_id = topics.id) FROM topics ORDER BY name",

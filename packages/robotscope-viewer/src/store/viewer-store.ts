@@ -277,10 +277,12 @@ export const useViewerStore = create<ViewerState>((set, get) => ({
     const sidecar =
       cached && validateSidecarFingerprint(cached, fingerprint) ? cached : undefined;
 
-    const { isRosbag2Filename, openMcap, openRosbag2 } = await import("@robotscope/core");
+    const { isRosbag2Filename, openMcap } = await import("@robotscope/core");
     const isRosbag2 = isRosbag2Filename(file.name);
     const handle = isRosbag2
-      ? await openRosbag2(buffer, {
+      ? await (
+          await import("@robotscope/core/ingest/rosbag2")
+        ).openRosbag2(buffer, {
           fingerprint,
           onProgress: (p: IngestProgress) =>
             set({

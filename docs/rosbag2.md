@@ -39,7 +39,8 @@ Then open `output.mcap` in RobotScope.
 
 ## Implementation
 
-- `openRosbag2()` — `RobotScope/packages/robotscope-core/src/ingest/rosbag2.ts`
+- `openRosbag2()` — `RobotScope/packages/robotscope-core/src/ingest/rosbag2.ts` (lazy-loaded by viewer when opening `.db3`)
+- `isRosbag2Filename()` — `RobotScope/packages/robotscope-core/src/ingest/recording-format.ts`
 - `Rosbag2QueryEngineImpl` — same query surface as MCAP (`McapQueryEngine` interface)
 - Session `source: "rosbag2"`
 

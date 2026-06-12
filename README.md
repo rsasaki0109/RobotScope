@@ -88,6 +88,29 @@ RobotScope/
 └── sample_data/             Sample MCAP fetch scripts
 ```
 
+## v0.2 beta (0.2.0-beta.0)
+
+Cross-layout failure recipes + rosbag2 SQLite ingest on top of v0.1 GA. See [release notes](RobotScope/docs/release/v0.2.0-beta.0.md) and [CHANGELOG.md](RobotScope/CHANGELOG.md).
+
+**New in v0.2**
+
+| Layer | Features |
+|-------|----------|
+| UX | **Cross-layout recipe banner** — all stacks at playhead; click → switch layout |
+| Ingest | **Rosbag2 `.db3`** in browser + `npm run convert:rosbag2` fallback |
+| Perf | sql.js **lazy-loaded** only when opening rosbag2 |
+
+**Docs**
+
+- [Rosbag2 guide](RobotScope/docs/rosbag2.md)
+- [Migration v0.2 alpha → beta](RobotScope/docs/migration/v0.2-alpha-to-beta.md)
+
+**Still out of scope (v0.2)**
+
+- Native Lanelet2 `lanelet2_io` · rosbag2 folder bags · command gateway · cloud/fleet
+
+See [known limitations](RobotScope/docs/known-limitations.md).
+
 ## v0.1.0 (GA)
 
 First stable **v0.1** release — MCAP + live agent + Autoware/Nav2/MoveIt plugins + failure recipe timeline. See [release notes](RobotScope/docs/release/v0.1.0.md), [API contract](RobotScope/docs/api-v0.1.md), and [CHANGELOG.md](RobotScope/CHANGELOG.md).
@@ -107,6 +130,7 @@ First stable **v0.1** release — MCAP + live agent + Autoware/Nav2/MoveIt plugi
 
 - [Live agent guide](RobotScope/docs/live-agent.md)
 - [Plugin SDK example](RobotScope/docs/plugin-sdk-example.md)
+- [Rosbag2 ingest](RobotScope/docs/rosbag2.md)
 - [API v0.1 (RC freeze)](RobotScope/docs/api-v0.1.md)
 - [Migration beta → RC](RobotScope/docs/migration/beta-to-rc.md)
 - [Migration RC → GA](RobotScope/docs/migration/rc-to-ga.md)
@@ -115,7 +139,7 @@ First stable **v0.1** release — MCAP + live agent + Autoware/Nav2/MoveIt plugi
 
 **Out of scope (v0.1)**
 
-- Cloud / fleet dashboard · command gateway · rosbag2-native · proprietary logs
+- Cloud / fleet dashboard · command gateway · proprietary logs
 - Full Lanelet2 mesh · RViz display parity · 3DGS / NeRF renderers
 
 See [known limitations](RobotScope/docs/known-limitations.md) for the full beta boundary list.

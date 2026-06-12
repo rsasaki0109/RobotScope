@@ -14,35 +14,51 @@ export default defineConfig(({ mode }) => ({
     open: true,
   },
   optimizeDeps: {
-    include: ["sql.js/dist/sql-asm.js"],
+    exclude: ["sql.js/dist/sql-asm.js"],
   },
   resolve: {
     preserveSymlinks: true,
-    alias: {
-      "@robotscope/core": path.resolve(rootDir, "../robotscope-core/src/index.ts"),
-      "@robotscope/plugin-autoware/manifest": path.resolve(
-        rootDir,
-        "../../plugins/autoware/src/manifest.ts",
-      ),
-      "@robotscope/plugin-nav2/manifest": path.resolve(
-        rootDir,
-        "../../plugins/nav2/src/manifest.ts",
-      ),
-      "@robotscope/plugin-moveit/manifest": path.resolve(
-        rootDir,
-        "../../plugins/moveit/src/manifest.ts",
-      ),
-      "@robotscope/plugin-example/manifest": path.resolve(
-        rootDir,
-        "../../plugins/example/src/manifest.ts",
-      ),
-      "@robotscope/plugin-autoware": path.resolve(
-        rootDir,
-        "../../plugins/autoware/src/index.ts",
-      ),
-      "@robotscope/plugin-nav2": path.resolve(rootDir, "../../plugins/nav2/src/index.ts"),
-      "@robotscope/plugin-moveit": path.resolve(rootDir, "../../plugins/moveit/src/index.ts"),
-      "@robotscope/plugin-example": path.resolve(rootDir, "../../plugins/example/src/index.ts"),
-    },
+    alias: [
+      {
+        find: "@robotscope/core/ingest/rosbag2",
+        replacement: path.resolve(rootDir, "../robotscope-core/src/ingest/rosbag2.ts"),
+      },
+      {
+        find: "@robotscope/core",
+        replacement: path.resolve(rootDir, "../robotscope-core/src/index.ts"),
+      },
+      {
+        find: "@robotscope/plugin-autoware/manifest",
+        replacement: path.resolve(rootDir, "../../plugins/autoware/src/manifest.ts"),
+      },
+      {
+        find: "@robotscope/plugin-nav2/manifest",
+        replacement: path.resolve(rootDir, "../../plugins/nav2/src/manifest.ts"),
+      },
+      {
+        find: "@robotscope/plugin-moveit/manifest",
+        replacement: path.resolve(rootDir, "../../plugins/moveit/src/manifest.ts"),
+      },
+      {
+        find: "@robotscope/plugin-example/manifest",
+        replacement: path.resolve(rootDir, "../../plugins/example/src/manifest.ts"),
+      },
+      {
+        find: "@robotscope/plugin-autoware",
+        replacement: path.resolve(rootDir, "../../plugins/autoware/src/index.ts"),
+      },
+      {
+        find: "@robotscope/plugin-nav2",
+        replacement: path.resolve(rootDir, "../../plugins/nav2/src/index.ts"),
+      },
+      {
+        find: "@robotscope/plugin-moveit",
+        replacement: path.resolve(rootDir, "../../plugins/moveit/src/index.ts"),
+      },
+      {
+        find: "@robotscope/plugin-example",
+        replacement: path.resolve(rootDir, "../../plugins/example/src/index.ts"),
+      },
+    ],
   },
 }));

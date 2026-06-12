@@ -4,6 +4,25 @@ All notable changes to RobotScope are documented in this file.
 
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and versioning follows [SemVer](https://semver.org/).
 
+## [0.2.0-beta.0] - 2026-06-13
+
+First v0.2 beta — scope consolidation after alpha.1.
+
+### Summary
+
+Beta consolidates cross-layout recipe banner + rosbag2 ingest. Demo MCAP bundle no longer includes sql.js (lazy load on `.db3` open).
+
+### Added
+
+- [docs/release/v0.2.0-beta.0.md](RobotScope/docs/release/v0.2.0-beta.0.md)
+- [docs/migration/v0.2-alpha-to-beta.md](RobotScope/docs/migration/v0.2-alpha-to-beta.md)
+
+### Changed
+
+- **Lazy rosbag2 import** — `openRosbag2` dynamic import; sql.js excluded from default viewer bundle
+- `isRosbag2Filename()` moved to `recording-format.ts` (no sql.js dependency)
+- README + [known-limitations.md](RobotScope/docs/known-limitations.md) updated for v0.2 beta boundaries
+
 ## [0.2.0-alpha.1] - 2026-06-13
 
 Rosbag2 SQLite browser ingest (first native step).

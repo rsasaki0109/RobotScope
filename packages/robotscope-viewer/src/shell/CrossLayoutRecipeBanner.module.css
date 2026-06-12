@@ -1,0 +1,86 @@
+.banner {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.4rem 0.55rem;
+  padding: 0.35rem 0.75rem;
+  border-bottom: 1px solid var(--rs-border);
+  background: rgba(15, 17, 23, 0.92);
+}
+
+.label {
+  font-size: 0.62rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--rs-text-muted);
+  flex-shrink: 0;
+}
+
+.liveBadge {
+  font-size: 0.58rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  color: #34d399;
+  border: 1px solid rgba(52, 211, 153, 0.45);
+  border-radius: 999px;
+  padding: 0.05rem 0.35rem;
+  flex-shrink: 0;
+}
+
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  flex: 1;
+  min-width: 0;
+}
+
+.chipAutoware,
+.chipNav2,
+.chipMoveit {
+  font-size: 0.68rem;
+  padding: 0.15rem 0.5rem;
+  border-radius: 999px;
+  white-space: nowrap;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  cursor: pointer;
+  border: 1px solid transparent;
+  background: transparent;
+}
+
+.chipAutoware {
+  color: #f5c46b;
+  border-color: rgba(245, 166, 35, 0.45);
+  background: rgba(245, 166, 35, 0.12);
+}
+
+.chipNav2 {
+  color: #8ec8ff;
+  border-color: rgba(110, 181, 255, 0.45);
+  background: rgba(110, 181, 255, 0.12);
+}
+
+.chipMoveit {
+  color: #c9a8ff;
+  border-color: rgba(180, 140, 255, 0.45);
+  background: rgba(180, 140, 255, 0.12);
+}
+
+.chipActive {
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.12);
+}
+
+.hint {
+  font-size: 0.6rem;
+  color: var(--rs-text-muted);
+  opacity: 0.85;
+  flex-shrink: 0;
+}
+
+@media (max-width: 900px) {
+  .hint {
+    display: none;
+  }
+}

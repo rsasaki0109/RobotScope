@@ -39,6 +39,8 @@ Open an MCAP file from the viewer (drag & drop) or click **Connect Live** for a 
 
 The timeline footer shows **all stack recipes** at the playhead (amber = Autoware, blue = Nav2, purple = MoveIt). Click colored ticks to jump.
 
+When recipes are active, the **cross-layout banner** below the command bar lists all stacks — click a chip to switch layout.
+
 **Live agent:** see [docs/live-agent.md](RobotScope/docs/live-agent.md) — preset **Local demo :8765** in the command bar, or `?live=1` to auto-connect.
 
 ```bash

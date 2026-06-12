@@ -3,6 +3,7 @@ import { useEffect } from "react";
 import { resolveLiveAgentUrlFromSearch } from "../config/live-agent";
 import { useViewerStore } from "../store/viewer-store";
 import { CommandBar } from "./CommandBar";
+import { CrossLayoutRecipeBanner } from "./CrossLayoutRecipeBanner";
 import { PluginRightColumn } from "./PluginRightColumn";
 import { SceneView3D } from "./SceneView3D";
 import { Sidebar } from "./Sidebar";
@@ -59,6 +60,7 @@ export function Workspace() {
   return (
     <div className={styles.workspace} data-layout={layoutId}>
       <CommandBar />
+      <CrossLayoutRecipeBanner />
       <div className={styles.main}>
         <Sidebar />
         <div className={styles.center}>

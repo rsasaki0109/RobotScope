@@ -1,6 +1,6 @@
 {
   "name": "@robotscope/plugin-example",
-  "version": "0.1.0",
+  "version": "0.2.0-alpha.0",
   "private": true,
   "description": "Minimal third-party plugin template for RobotScope v0.1",
   "license": "Apache-2.0",

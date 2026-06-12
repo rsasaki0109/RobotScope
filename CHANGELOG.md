@@ -4,6 +4,15 @@ All notable changes to RobotScope are documented in this file.
 
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and versioning follows [SemVer](https://semver.org/).
 
+## [0.2.0-alpha.0] - 2026-06-13
+
+First v0.2 alpha — cross-layout failure recipe banner.
+
+### Added
+
+- **Cross-layout recipe banner** in main shell — all-stack failure recipes at playhead; click chip to switch `?layout=`
+- Works for MCAP playback and live streaming (same evaluation as timeline strip)
+
 ## [0.1.0] - 2026-06-13
 
 First v0.1 general availability — stable plugin API, no breaking changes from rc.1.

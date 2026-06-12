@@ -5,7 +5,7 @@
  * Usage:
  *   node scripts/live-agent-demo.mjs [mcapPath] [--port 8765] [--loop]
  */
-import { readFileSync } from "node:fs";
+import { readFileSync, existsSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -15,9 +15,22 @@ import { WebSocketServer } from "ws";
 const LIVE_PROTOCOL_VERSION = "robotscope.live.v0.1";
 const repoRoot = join(dirname(fileURLToPath(import.meta.url)), "..");
 
+function defaultMcapPath() {
+  const candidates = [
+    resolve(repoRoot, "packages/robotscope-viewer/public/demo/demo-scene.mcap"),
+    resolve(repoRoot, "sample_data/demo-scene.mcap"),
+  ];
+  for (const candidate of candidates) {
+    if (existsSync(candidate)) {
+      return candidate;
+    }
+  }
+  return candidates[0];
+}
+
 function parseArgs(argv) {
   const options = {
-    mcapPath: resolve(repoRoot, "sample_data/demo-scene.mcap"),
+    mcapPath: defaultMcapPath(),
     port: 8765,
     loop: true,
   };

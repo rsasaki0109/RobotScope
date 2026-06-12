@@ -1,6 +1,6 @@
 {
   "name": "@robotscope/viewer",
-  "version": "0.1.0-alpha.6",
+  "version": "0.1.0-alpha.7",
   "private": true,
   "description": "RobotScope web viewer — React + Three.js",
   "license": "Apache-2.0",

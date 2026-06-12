@@ -20,6 +20,8 @@ const STACK_PREFIX: Record<RecipeStack, string> = {
   moveit: "MoveIt",
 };
 
+const LEGEND_STACKS: RecipeStack[] = ["autoware", "nav2", "moveit"];
+
 export interface FailureRecipeStripProps {
   markers: RecipeTimelineMarker[];
   currentTimeNs: number;
@@ -54,21 +56,32 @@ export function FailureRecipeStrip({
       </div>
 
       {markers.length > 0 ? (
-        <div className={styles.markerTrack} aria-hidden={markers.length === 0}>
-          {markers.map((marker) => {
-            const left = ((marker.time_ns - startNs) / span) * 100;
-            return (
-              <button
-                key={`${marker.stack}-${marker.recipe_id}-${marker.time_ns}`}
-                type="button"
-                className={`${styles.marker} ${STACK_MARKER[marker.stack]}`}
-                style={{ left: `${left}%` }}
-                title={`${STACK_PREFIX[marker.stack]}: ${marker.label} @ ${(marker.time_ns / 1e9).toFixed(2)}s`}
-                onClick={() => onSeek?.(marker.time_ns)}
-              />
-            );
-          })}
-        </div>
+        <>
+          <div className={styles.legend}>
+            {LEGEND_STACKS.map((stack) => (
+              <span key={stack} className={styles.legendItem}>
+                <span className={`${styles.legendSwatch} ${STACK_MARKER[stack]}`} />
+                {STACK_PREFIX[stack]}
+              </span>
+            ))}
+            <span className={styles.legendHint}>click ticks to seek</span>
+          </div>
+          <div className={styles.markerTrack}>
+            {markers.map((marker) => {
+              const left = ((marker.time_ns - startNs) / span) * 100;
+              return (
+                <button
+                  key={`${marker.stack}-${marker.recipe_id}-${marker.time_ns}`}
+                  type="button"
+                  className={`${styles.marker} ${STACK_MARKER[marker.stack]}`}
+                  style={{ left: `${left}%` }}
+                  title={`${STACK_PREFIX[marker.stack]}: ${marker.label} @ ${(marker.time_ns / 1e9).toFixed(2)}s`}
+                  onClick={() => onSeek?.(marker.time_ns)}
+                />
+              );
+            })}
+          </div>
+        </>
       ) : null}
     </>
   );

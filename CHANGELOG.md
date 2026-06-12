@@ -4,6 +4,21 @@ All notable changes to RobotScope are documented in this file.
 
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and versioning follows [SemVer](https://semver.org/).
 
+## [0.1.0-alpha.7] - 2026-06-13
+
+Live agent connection UX and failure recipe timeline legend.
+
+### Added
+
+- **Failure recipe timeline legend** (stack colors + “click ticks to seek”)
+- **Live agent URL preset** in command bar (`Local demo :8765`)
+- **`?live=1` / `?liveUrl=`** query params for auto-connect
+- [docs/live-agent.md](RobotScope/docs/live-agent.md) — demo agent, ROS2 agent, Pages note
+
+### Changed
+
+- `demo:live-agent` prefers `packages/robotscope-viewer/public/demo/demo-scene.mcap` when present
+
 ## [0.1.0-alpha.6] - 2026-06-13
 
 Unified failure recipe timeline across Autoware, Nav2, and MoveIt.

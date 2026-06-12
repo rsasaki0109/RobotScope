@@ -58,6 +58,36 @@
   color: var(--rs-text-muted);
 }
 
+.legend {
+  grid-column: 1 / -1;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.35rem 0.65rem;
+  margin-top: -0.1rem;
+}
+
+.legendItem {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  font-size: 0.62rem;
+  color: var(--rs-text-muted);
+}
+
+.legendSwatch {
+  display: inline-block;
+  width: 0.45rem;
+  height: 0.45rem;
+  border-radius: 2px;
+}
+
+.legendHint {
+  font-size: 0.6rem;
+  color: var(--rs-text-muted);
+  opacity: 0.85;
+}
+
 .markerTrack {
   grid-column: 1 / -1;
   position: relative;

@@ -3,11 +3,13 @@ import { useCallback, useState } from "react";
 import { parseSidecarManifest } from "@robotscope/core";
 
 import { listLayoutOptions } from "../plugins/registry";
+import {
+  DEFAULT_LIVE_AGENT_URL,
+  LIVE_AGENT_PRESETS,
+} from "../config/live-agent";
 import { findCompanionSidecarFile } from "../storage/live-recording-download";
 import { useViewerStore, type LiveConnectionPhase } from "../store/viewer-store";
 import styles from "./CommandBar.module.css";
-
-const DEFAULT_LIVE_URL = "ws://127.0.0.1:8765";
 
 const CONNECTION_LABELS: Record<LiveConnectionPhase, string> = {
   idle: "Offline",
@@ -33,7 +35,8 @@ export function CommandBar() {
   const disconnectLiveAgent = useViewerStore((s) => s.disconnectLiveAgent);
   const startLiveRecording = useViewerStore((s) => s.startLiveRecording);
   const stopLiveRecording = useViewerStore((s) => s.stopLiveRecording);
-  const [liveUrl, setLiveUrl] = useState(DEFAULT_LIVE_URL);
+  const [liveUrl, setLiveUrl] = useState(DEFAULT_LIVE_AGENT_URL);
+  const [livePresetId, setLivePresetId] = useState(LIVE_AGENT_PRESETS[0]?.id ?? "custom");
 
   const onFileChange = useCallback(
     async (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -106,13 +109,40 @@ export function CommandBar() {
             title={liveConnection.message || connectionLabel}
             aria-label={`Live connection: ${connectionLabel}`}
           />
+          <label className={styles.livePreset}>
+            <span className={styles.srOnly}>Live agent preset</span>
+            <select
+              value={livePresetId}
+              disabled={isLive}
+              onChange={(event) => {
+                const preset = LIVE_AGENT_PRESETS.find((entry) => entry.id === event.target.value);
+                if (preset) {
+                  setLivePresetId(preset.id);
+                  setLiveUrl(preset.url);
+                } else {
+                  setLivePresetId("custom");
+                }
+              }}
+            >
+              {LIVE_AGENT_PRESETS.map((preset) => (
+                <option key={preset.id} value={preset.id}>
+                  {preset.label}
+                </option>
+              ))}
+              <option value="custom">Custom URL</option>
+            </select>
+          </label>
           <input
             className={styles.liveUrl}
             value={liveUrl}
-            onChange={(event) => setLiveUrl(event.target.value)}
+            onChange={(event) => {
+              setLivePresetId("custom");
+              setLiveUrl(event.target.value);
+            }}
             spellCheck={false}
             aria-label="Live agent WebSocket URL"
             disabled={isLive}
+            placeholder="ws://127.0.0.1:8765"
           />
           {isLive ? (
             <button type="button" className={styles.buttonSecondary} onClick={onDisconnectLive}>

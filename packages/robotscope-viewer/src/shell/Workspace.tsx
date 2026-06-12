@@ -1,5 +1,6 @@
 import { useEffect } from "react";
 
+import { resolveLiveAgentUrlFromSearch } from "../config/live-agent";
 import { useViewerStore } from "../store/viewer-store";
 import { CommandBar } from "./CommandBar";
 import { PluginRightColumn } from "./PluginRightColumn";
@@ -22,6 +23,7 @@ function shouldAutoLoadDemo(): boolean {
 export function Workspace() {
   const setLayoutId = useViewerStore((s) => s.setLayoutId);
   const openMcapUrl = useViewerStore((s) => s.openMcapUrl);
+  const connectLiveAgent = useViewerStore((s) => s.connectLiveAgent);
   const session = useViewerStore((s) => s.session);
   const layoutId = useViewerStore((s) => s.layoutId);
 
@@ -39,6 +41,20 @@ export function Workspace() {
       useViewerStore.setState({ statusMessage: `Demo load failed: ${message}` });
     });
   }, [openMcapUrl, session]);
+
+  useEffect(() => {
+    if (shouldAutoLoadDemo()) {
+      return;
+    }
+    const liveUrl = resolveLiveAgentUrlFromSearch(window.location.search);
+    if (!liveUrl || session) {
+      return;
+    }
+    void connectLiveAgent(liveUrl).catch((error: unknown) => {
+      const message = error instanceof Error ? error.message : String(error);
+      useViewerStore.setState({ statusMessage: `Live connect failed: ${message}` });
+    });
+  }, [connectLiveAgent, session]);
 
   return (
     <div className={styles.workspace} data-layout={layoutId}>

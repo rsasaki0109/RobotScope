@@ -39,6 +39,8 @@ Open an MCAP file from the viewer (drag & drop) or click **Connect Live** for a 
 
 The timeline footer shows **all stack recipes** at the playhead (amber = Autoware, blue = Nav2, purple = MoveIt). Click colored ticks to jump.
 
+**Live agent:** see [docs/live-agent.md](RobotScope/docs/live-agent.md) — preset **Local demo :8765** in the command bar, or `?live=1` to auto-connect.
+
 ```bash
 # Generate demo recording (TF + odometry + Autoware topics)
 node scripts/create-tf-demo.mjs

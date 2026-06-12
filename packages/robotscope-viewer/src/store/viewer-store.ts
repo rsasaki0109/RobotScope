@@ -19,6 +19,7 @@ import {
   saveSidecarToCache,
 } from "../storage/sidecar-cache";
 import type { RecipeTimelineMarker } from "../failure-recipes/types.js";
+import { indexFailureRecipeMarkers } from "../failure-recipes/index-recipes.js";
 
 export type LiveConnectionPhase =
   | "idle"
@@ -191,7 +192,6 @@ async function loadFailureRecipeIndex(
     return [];
   }
 
-  const { indexFailureRecipeMarkers } = await import("../failure-recipes/index-recipes.js");
   return indexFailureRecipeMarkers(engine, session, onStatus);
 }
 

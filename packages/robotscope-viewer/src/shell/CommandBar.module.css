@@ -69,6 +69,28 @@
   gap: 0.35rem;
 }
 
+.livePreset select {
+  max-width: 9rem;
+  padding: 0.28rem 0.4rem;
+  border-radius: 6px;
+  border: 1px solid var(--rs-border);
+  background: var(--rs-bg);
+  color: inherit;
+  font-size: 0.72rem;
+}
+
+.srOnly {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
 .connectionDot {
   width: 0.55rem;
   height: 0.55rem;

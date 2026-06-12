@@ -86,9 +86,9 @@ RobotScope/
 └── sample_data/             Sample MCAP fetch scripts
 ```
 
-## v0.1 RC (0.1.0-rc.0)
+## v0.1.0 (GA)
 
-Release candidate — **API v0.1 frozen** for plugin authors. See [release notes](RobotScope/docs/release/v0.1.0-rc.0.md), [API contract](RobotScope/docs/api-v0.1.md), and [CHANGELOG.md](RobotScope/CHANGELOG.md).
+First stable **v0.1** release — MCAP + live agent + Autoware/Nav2/MoveIt plugins + failure recipe timeline. See [release notes](RobotScope/docs/release/v0.1.0.md), [API contract](RobotScope/docs/api-v0.1.md), and [CHANGELOG.md](RobotScope/CHANGELOG.md).
 
 **Shipped**
 
@@ -98,6 +98,7 @@ Release candidate — **API v0.1 frozen** for plugin authors. See [release notes
 | Viewer | Timeline, TF tree, 3D scene, entity inspector |
 | Plugins | Autoware · Nav2 · MoveIt · **Example SDK** (`?layout=…`) |
 | Failure recipes | 7 cross-stack heuristics + unified timeline strip + live evaluation |
+| Map | Lanelet2 RL2D 2D/3D preview + occupancy grid panel |
 | Deploy | [GitHub Pages demo](https://rsasaki0109.github.io/RobotScope/?layout=autoware&demo=1) |
 
 **Docs**
@@ -106,6 +107,7 @@ Release candidate — **API v0.1 frozen** for plugin authors. See [release notes
 - [Plugin SDK example](RobotScope/docs/plugin-sdk-example.md)
 - [API v0.1 (RC freeze)](RobotScope/docs/api-v0.1.md)
 - [Migration beta → RC](RobotScope/docs/migration/beta-to-rc.md)
+- [Migration RC → GA](RobotScope/docs/migration/rc-to-ga.md)
 - [Known limitations](RobotScope/docs/known-limitations.md)
 - [Architecture](RobotScope/docs/architecture.md)
 

@@ -1,8 +1,8 @@
 # Known limitations (v0.1 beta)
 
-Concrete scope boundaries for **0.1.0-rc.0**. These are product choices or not-yet-built features — not necessarily bugs.
+Concrete scope boundaries for **v0.1.0**. These are product choices or not-yet-built features — not necessarily bugs.
 
-Plugin manifest **`api: "0.1"`** is frozen at RC — see [api-v0.1.md](RobotScope/docs/api-v0.1.md).
+Plugin manifest **`api: "0.1"`** is stable since GA — see [api-v0.1.md](RobotScope/docs/api-v0.1.md).
 
 ## Data & ingest
 

@@ -4,6 +4,24 @@ All notable changes to RobotScope are documented in this file.
 
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and versioning follows [SemVer](https://semver.org/).
 
+## [0.1.0] - 2026-06-13
+
+First v0.1 general availability — stable plugin API, no breaking changes from rc.1.
+
+### Summary
+
+GA marks the completion of the v0.1 line: alpha → beta → RC → **0.1.0**. Daily Autoware/Nav2/MoveIt MCAP + live debug workflows, plugin SDK example, unified failure recipe timeline, GitHub Pages deploy.
+
+### Added
+
+- [docs/release/v0.1.0.md](RobotScope/docs/release/v0.1.0.md) — GA milestone notes
+- [docs/migration/rc-to-ga.md](RobotScope/docs/migration/rc-to-ga.md) — RC → GA checklist
+
+### Changed
+
+- README status section updated for **v0.1.0 GA**
+- Version series advances from `0.1.0-rc.1` to **`0.1.0`**
+
 ## [0.1.0-rc.1] - 2026-06-13
 
 Autoware Map panel Lanelet2 2D preview.

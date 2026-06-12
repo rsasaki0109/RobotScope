@@ -1,6 +1,6 @@
 # RobotScope API v0.1 (RC freeze)
 
-**Status:** frozen at **`0.1.0-rc.0`** for plugin authors and integrators.
+**Status:** stable since **`0.1.0`** (frozen at `0.1.0-rc.0`) for plugin authors and integrators.
 
 v0.1 targets daily Autoware / Nav2 / MoveIt debug workflows. Breaking changes to the surfaces below require a new **`api`** version (e.g. `"0.2"`) — not a silent patch.
 
@@ -92,11 +92,13 @@ New features may be added in **minor** v0.1.x releases without breaking the cont
 |------------|---------|
 | `0.1.0-alpha.*` | Feature exploration |
 | `0.1.0-beta.*` | Demo-ready; docs + SDK |
-| **`0.1.0-rc.*`** | **API freeze for integrators** |
-| `0.1.0` (planned) | v0.1 GA after RC soak |
+| **`0.1.0-rc.*`** | API freeze for integrators |
+| **`0.1.0`** | **v0.1 GA** — stable plugin API |
+| `0.1.x` | Patch fixes only (no breaking API changes) |
 
 ## Related docs
 
 - [Migration: beta → RC](RobotScope/docs/migration/beta-to-rc.md)
+- [Migration: RC → GA](RobotScope/docs/migration/rc-to-ga.md)
 - [Plugin SDK example](RobotScope/docs/plugin-sdk-example.md)
 - [Known limitations](RobotScope/docs/known-limitations.md)

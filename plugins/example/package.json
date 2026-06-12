@@ -1,8 +1,8 @@
 {
-  "name": "@robotscope/plugin-nav2",
+  "name": "@robotscope/plugin-example",
   "version": "0.1.0-beta.2",
   "private": true,
-  "description": "Nav2-native panels and topic profiles",
+  "description": "Minimal third-party plugin template for RobotScope v0.1",
   "license": "Apache-2.0",
   "type": "module",
   "exports": {

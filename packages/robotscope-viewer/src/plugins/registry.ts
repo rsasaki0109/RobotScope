@@ -1,4 +1,9 @@
 import { AutowareDock, AUTOWARE_PLUGIN_MANIFEST, useAutowareSnapshot } from "@robotscope/plugin-autoware";
+import {
+  ExampleDock,
+  EXAMPLE_PLUGIN_MANIFEST,
+  useExampleSnapshot,
+} from "@robotscope/plugin-example";
 import { MoveItDock, MOVEIT_PLUGIN_MANIFEST, useMoveItSnapshot } from "@robotscope/plugin-moveit";
 import { Nav2Dock, NAV2_PLUGIN_MANIFEST, useNav2Snapshot } from "@robotscope/plugin-nav2";
 import { layoutIdsFromManifest, type PluginManifest } from "@robotscope/core";
@@ -18,6 +23,8 @@ const LAYOUT_LABELS: Record<string, string> = {
   "nav2-daily-debug": "Nav2 Daily Debug",
   moveit: "MoveIt Debug",
   "moveit-manipulation-debug": "MoveIt Manipulation Debug",
+  example: "Example Plugin",
+  "example-starter": "Example Starter",
 };
 
 const registeredPlugins: RegisteredPlugin[] = [
@@ -38,6 +45,12 @@ const registeredPlugins: RegisteredPlugin[] = [
     layoutIdsFromManifest(MOVEIT_PLUGIN_MANIFEST),
     useMoveItSnapshot,
     MoveItDock,
+  ),
+  registerPlugin(
+    EXAMPLE_PLUGIN_MANIFEST,
+    layoutIdsFromManifest(EXAMPLE_PLUGIN_MANIFEST),
+    useExampleSnapshot,
+    ExampleDock,
   ),
 ];
 

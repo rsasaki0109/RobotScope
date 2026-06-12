@@ -4,6 +4,21 @@ All notable changes to RobotScope are documented in this file.
 
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and versioning follows [SemVer](https://semver.org/).
 
+## [0.1.0-beta.2] - 2026-06-13
+
+Plugin SDK minimal third-party example pack.
+
+### Added
+
+- **`plugins/example/`** — copyable template: manifest, profile, snapshot builder, dock, session panel
+- Layout **`example`** / **`example-starter`** registered in viewer + command bar
+- [docs/plugin-sdk-example.md](RobotScope/docs/plugin-sdk-example.md) — register, validate, snapshot hook pattern
+- `npm run demo:example` — opens `?layout=example&demo=1`
+
+### Changed
+
+- [docs/plugins.md](RobotScope/docs/plugins.md) links to SDK example
+
 ## [0.1.0-beta.1] - 2026-06-13
 
 Lanelet2 RL2D demo format parser and 3D boundary rendering.

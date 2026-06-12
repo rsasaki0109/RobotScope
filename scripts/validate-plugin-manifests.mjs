@@ -70,6 +70,7 @@ for (const pluginDir of pluginDirs) {
     tsManifest.AUTOWARE_PLUGIN_MANIFEST ??
     tsManifest.NAV2_PLUGIN_MANIFEST ??
     tsManifest.MOVEIT_PLUGIN_MANIFEST ??
+    tsManifest.EXAMPLE_PLUGIN_MANIFEST ??
     Object.values(tsManifest).find((value) => value?.contributes?.layouts);
 
   if (!manifestExport?.contributes?.layouts) {

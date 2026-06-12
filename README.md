@@ -56,6 +56,7 @@ npm run dev
 npm run demo:autoware
 npm run demo:nav2
 npm run demo:moveit
+npm run demo:example
 
 # Native ROS2 agent (requires sourced ROS distro)
 npm run demo:ros2-agent -- --profile autoware
@@ -77,7 +78,8 @@ RobotScope/
 ├── plugins/
 │   ├── autoware/            Autoware-native panels
 │   ├── nav2/                Nav2 stack panels
-│   └── moveit/              MoveIt panels
+│   ├── moveit/              MoveIt panels
+│   └── example/             Third-party plugin template (SDK)
 ├── schemas/                 RDM & plugin manifest schemas
 ├── agent/                   ROS2 live bridge (C++/Python)
 ├── examples/                Layouts & demo configs
@@ -94,13 +96,14 @@ First beta — alpha feature set complete. See [release notes](RobotScope/docs/r
 |-------|----------|
 | Ingest | MCAP + sidecar index, live WebSocket, Record Live → MCAP |
 | Viewer | Timeline, TF tree, 3D scene, entity inspector |
-| Plugins | Autoware · Nav2 · MoveIt (`?layout=…`) |
+| Plugins | Autoware · Nav2 · MoveIt · **Example SDK** (`?layout=…`) |
 | Failure recipes | 7 cross-stack heuristics + unified timeline strip + live evaluation |
 | Deploy | [GitHub Pages demo](https://rsasaki0109.github.io/RobotScope/?layout=autoware&demo=1) |
 
 **Docs**
 
 - [Live agent guide](RobotScope/docs/live-agent.md)
+- [Plugin SDK example](RobotScope/docs/plugin-sdk-example.md)
 - [Known limitations](RobotScope/docs/known-limitations.md)
 - [Architecture](RobotScope/docs/architecture.md)
 

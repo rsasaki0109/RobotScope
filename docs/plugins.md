@@ -41,6 +41,11 @@ node RobotScope/scripts/validate-plugin-manifests.mjs
 | `autoware` | robotscope-autoware |
 | `nav2` | robotscope-nav2 |
 | `moveit` | robotscope-moveit |
+| `example` | robotscope-example |
 | `default` | built-in Entity Inspector |
 
 Example: `http://localhost:5173/?layout=nav2`
+
+## Third-party template
+
+Copy `RobotScope/plugins/example/` — see [plugin-sdk-example.md](RobotScope/docs/plugin-sdk-example.md).

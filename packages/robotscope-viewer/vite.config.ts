@@ -29,12 +29,17 @@ export default defineConfig(({ mode }) => ({
         rootDir,
         "../../plugins/moveit/src/manifest.ts",
       ),
+      "@robotscope/plugin-example/manifest": path.resolve(
+        rootDir,
+        "../../plugins/example/src/manifest.ts",
+      ),
       "@robotscope/plugin-autoware": path.resolve(
         rootDir,
         "../../plugins/autoware/src/index.ts",
       ),
       "@robotscope/plugin-nav2": path.resolve(rootDir, "../../plugins/nav2/src/index.ts"),
       "@robotscope/plugin-moveit": path.resolve(rootDir, "../../plugins/moveit/src/index.ts"),
+      "@robotscope/plugin-example": path.resolve(rootDir, "../../plugins/example/src/index.ts"),
     },
   },
 }));

@@ -1,5 +1,17 @@
 import { extractPose, parseLaneletMapBin } from "@robotscope/core";
 
+import type {
+  AutowareControlView,
+  AutowareLanelet2View,
+  AutowareLocalizationView,
+  AutowareNdtView,
+  AutowareOccupancyMapView,
+  AutowarePerceptionObjectView,
+  AutowarePerceptionView,
+  AutowarePlanningView,
+} from "./types.js";
+import { AUTOWARE_PROFILE } from "./profile.js";
+
 function readNumber(value: unknown): number | undefined {
   return typeof value === "number" && Number.isFinite(value) ? value : undefined;
 }

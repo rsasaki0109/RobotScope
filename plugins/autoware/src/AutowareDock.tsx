@@ -4,6 +4,7 @@ import type { AutowareSnapshot } from "./types.js";
 import styles from "./AutowareDock.module.css";
 import { ControlErrorPanel } from "./panels/ControlErrorPanel.js";
 import { LocalizationPanel } from "./panels/LocalizationPanel.js";
+import { MapPanel } from "./panels/MapPanel.js";
 import { NdtScorePanel } from "./panels/NdtScorePanel.js";
 import { PlanningPanel } from "./panels/PlanningPanel.js";
 
@@ -49,6 +50,17 @@ export function AutowareDock({ snapshot, loading, inspector }: AutowareDockProps
             </ul>
           ) : null}
 
+          <MapPanel
+            map={snapshot?.map}
+            ego={
+              snapshot?.localization
+                ? {
+                    frame_id: snapshot.localization.header_frame,
+                    position: snapshot.localization.position,
+                  }
+                : undefined
+            }
+          />
           <LocalizationPanel data={snapshot?.localization} />
           <NdtScorePanel data={snapshot?.ndt} />
           <PlanningPanel data={snapshot?.planning} />

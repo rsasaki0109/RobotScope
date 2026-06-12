@@ -149,7 +149,7 @@ const RULES: TopicMappingRule[] = [
   },
   {
     id: "map.occupancy",
-    topicPattern: /\/map$|costmap/i,
+    topicPattern: /\/map$|\/map\/map$|costmap|pointcloud_map|occupancy/i,
     schemaPattern: /OccupancyGrid|Costmap/i,
     entityPath: "/world/map/occupancy",
     archetype: "OccupancyGrid",
@@ -158,6 +158,7 @@ const RULES: TopicMappingRule[] = [
   {
     id: "map.lanelet2",
     topicPattern: /\/map\/(vector_map|lanelet2_map)$/,
+    schemaPattern: /LaneletMapBin|MapBin|UInt8/i,
     entityPath: EntityPaths.world.map.lanelet2,
     archetype: "Lanelet2",
     kind: "world",

@@ -26,6 +26,7 @@ export const AUTOWARE_PLUGIN_MANIFEST: PluginManifest = {
       "autoware.planning",
       "autoware.control_error",
       "autoware.gnss",
+      "autoware.map",
     ],
     renderers: ["lanelet2", "perception_objects"],
     archetypes: ["Lanelet2", "AutowareNDTStatus"],

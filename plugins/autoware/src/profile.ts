@@ -27,6 +27,8 @@ export const AUTOWARE_PROFILE = {
       "/control/trajectory_follower/longitudinal/diagnostic",
     ],
     gnss_pose: ["/sensing/gnss/pose", "/sensing/gnss/pose_with_covariance"],
+    map_vector: ["/map/vector_map", "/map/lanelet2_map"],
+    map_occupancy: ["/map/map", "/map/pointcloud_map", "/map/occupancy_grid"],
   },
   ndt_warning_threshold: 1.2,
 } as const;
@@ -45,5 +47,7 @@ export function resolveAutowareTopics(
     control_lateral_error: pick(AUTOWARE_PROFILE.rules.control_lateral_error),
     control_longitudinal_error: pick(AUTOWARE_PROFILE.rules.control_longitudinal_error),
     gnss_pose: pick(AUTOWARE_PROFILE.rules.gnss_pose),
+    map_vector: pick(AUTOWARE_PROFILE.rules.map_vector),
+    map_occupancy: pick(AUTOWARE_PROFILE.rules.map_occupancy),
   };
 }

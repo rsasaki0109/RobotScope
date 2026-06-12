@@ -4,6 +4,21 @@ All notable changes to RobotScope are documented in this file.
 
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and versioning follows [SemVer](https://semver.org/).
 
+## [0.1.0-alpha.1] - 2026-06-13
+
+Post-alpha polish: Autoware map observability and demo data.
+
+### Added
+
+- **Autoware Map / Lanelet2 panel** — vector map payload stats, occupancy grid preview, ego pose overlay
+- Demo MCAP topics: `/map/vector_map` (LaneletMapBin) and `/map/map` (OccupancyGrid)
+- Autoware agent profile subscribes to map topics
+- Entity mapper rules for `/map/map` and Lanelet2 binary schemas
+
+### Changed
+
+- Autoware localization failure recipe includes `autoware.map` panel
+
 ## [0.1.0-alpha.0] - 2026-06-12
 
 First public alpha of the RobotScope OSS observability platform for ROS2, Autoware, Nav2, MoveIt, and Physical AI seed types.
@@ -65,4 +80,5 @@ First public alpha of the RobotScope OSS observability platform for ROS2, Autowa
 - Live agent and viewer are read-only in v0.1
 - Do not commit robot identifiers, keys, or raw dumps to the repo
 
-[0.1.0-alpha.0]: https://github.com/your-org/RobotScope/releases/tag/v0.1.0-alpha.0
+[0.1.0-alpha.1]: https://github.com/rsasaki0109/RobotScope/releases/tag/v0.1.0-alpha.1
+[0.1.0-alpha.0]: https://github.com/rsasaki0109/RobotScope/releases/tag/v0.1.0-alpha.0

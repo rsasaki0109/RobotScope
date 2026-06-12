@@ -5,6 +5,32 @@ export interface ResolvedAutowareTopics {
   control_lateral_error?: string;
   control_longitudinal_error?: string;
   gnss_pose?: string;
+  map_vector?: string;
+  map_occupancy?: string;
+}
+
+export interface AutowareLanelet2View {
+  topic: string;
+  byte_size: number;
+  format_version?: string | number;
+}
+
+export interface AutowareOccupancyMapView {
+  topic: string;
+  frame_id: string;
+  width: number;
+  height: number;
+  resolution_m: number;
+  origin_xy: [number, number];
+  occupied_cells: number;
+  free_cells: number;
+  unknown_cells: number;
+  cells: number[];
+}
+
+export interface AutowareMapView {
+  lanelet2?: AutowareLanelet2View;
+  occupancy?: AutowareOccupancyMapView;
 }
 
 export interface AutowareLocalizationView {
@@ -43,6 +69,7 @@ export interface AutowareControlView {
 export interface AutowareSnapshot {
   time_ns: number;
   topics: ResolvedAutowareTopics;
+  map?: AutowareMapView;
   localization?: AutowareLocalizationView;
   ndt?: AutowareNdtView;
   planning?: AutowarePlanningView;

@@ -20,6 +20,7 @@ contributes:
     - autoware.planning
     - autoware.control_error
     - autoware.gnss
+    - autoware.map
   renderers:
     - lanelet2
     - perception_objects

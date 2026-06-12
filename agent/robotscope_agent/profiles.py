@@ -15,6 +15,8 @@ PROFILE_TOPICS: dict[str, list[str]] = {
         "/planning/scenario_planning/trajectory",
         "/control/trajectory_follower/lateral_error",
         "/control/trajectory_follower/longitudinal_error",
+        "/map/vector_map",
+        "/map/map",
     ],
     "nav2": [
         "/tf",

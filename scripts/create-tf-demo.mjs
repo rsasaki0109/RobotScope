@@ -63,6 +63,12 @@ const poseStamped = loadWriter("geometry_msgs/msg/PoseStamped.msg");
 const twist = loadWriter("geometry_msgs/msg/Twist.msg");
 const occupancy = loadWriter("nav_msgs/msg/OccupancyGrid.msg");
 const jointState = loadWriter("sensor_msgs/msg/JointState.msg");
+const laneletSchemaText = `uint32 version
+string format_version
+uint8[] data`;
+
+const laneletWriter = new MessageWriter(parse(laneletSchemaText, { ros2: true }));
+
 const buffer = new TempBuffer();
 
 const writer = new McapWriter({ writable: buffer });
@@ -133,6 +139,12 @@ const jointStateSchemaId = await writer.registerSchema({
   name: "sensor_msgs/msg/JointState",
   encoding: "ros2msg",
   data: new TextEncoder().encode(jointState.text),
+});
+
+const laneletSchemaId = await writer.registerSchema({
+  name: "autoware_map_msgs/msg/LaneletMapBin",
+  encoding: "ros2msg",
+  data: new TextEncoder().encode(laneletSchemaText),
 });
 
 const odomChannelId = await writer.registerChannel({
@@ -223,6 +235,20 @@ const displayPathChannelId = await writer.registerChannel({
   topic: "/display_planned_path",
   messageEncoding: "cdr",
   schemaId: pathSchemaId,
+  metadata: new Map(),
+});
+
+const vectorMapChannelId = await writer.registerChannel({
+  topic: "/map/vector_map",
+  messageEncoding: "cdr",
+  schemaId: laneletSchemaId,
+  metadata: new Map(),
+});
+
+const mapGridChannelId = await writer.registerChannel({
+  topic: "/map/map",
+  messageEncoding: "cdr",
+  schemaId: occupancySchemaId,
   metadata: new Map(),
 });
 
@@ -326,6 +352,42 @@ function encodeCostmap(timeNs) {
   });
 }
 
+function encodeMapGrid(timeNs) {
+  const width = 24;
+  const height = 24;
+  const data = [];
+  for (let y = 0; y < height; y += 1) {
+    for (let x = 0; x < width; x += 1) {
+      const border = x === 0 || y === 0 || x === width - 1 || y === height - 1;
+      const lane = y === 12 && x > 2 && x < width - 3;
+      data.push(border || lane ? 100 : 0);
+    }
+  }
+  return occupancy.writer.writeMessage({
+    header: { stamp: stamp(timeNs), frame_id: "map" },
+    info: {
+      map_load_time: stamp(0),
+      resolution: 0.1,
+      width,
+      height,
+      origin: {
+        position: { x: -1.2, y: -1.2, z: 0 },
+        orientation: { x: 0, y: 0, z: 0, w: 1 },
+      },
+    },
+    data,
+  });
+}
+
+function encodeVectorMap() {
+  const data = new Array(512).fill(0).map((_, index) => index % 256);
+  return laneletWriter.writeMessage({
+    version: 1,
+    format_version: "1.0.0-demo",
+    data,
+  });
+}
+
 function encodeLocalPlan(maxX) {
   return encodePath(maxX);
 }
@@ -403,6 +465,22 @@ await writer.addMessage({
   logTime: 0n,
   publishTime: 0n,
   data: encodeGoalPose(),
+});
+
+await writer.addMessage({
+  channelId: vectorMapChannelId,
+  sequence: 0,
+  logTime: 0n,
+  publishTime: 0n,
+  data: encodeVectorMap(),
+});
+
+await writer.addMessage({
+  channelId: mapGridChannelId,
+  sequence: 0,
+  logTime: 0n,
+  publishTime: 0n,
+  data: encodeMapGrid(0),
 });
 
 for (let i = 0; i < 20; i += 1) {

@@ -40,13 +40,14 @@ rules:
       - /map/vector_map
       - /map/lanelet2_map
 
-failure_recipes:
+  failure_recipes:
   localization_drift:
     symptoms:
       - ndt_score_worsens
       - covariance_grows
       - map_odom_stale
     panels:
+      - autoware.map
       - autoware.ndt_score
       - autoware.localization
       - tf_health

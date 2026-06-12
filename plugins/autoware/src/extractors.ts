@@ -2,8 +2,10 @@ import { extractPose } from "@robotscope/core";
 
 import type {
   AutowareControlView,
+  AutowareLanelet2View,
   AutowareLocalizationView,
   AutowareNdtView,
+  AutowareOccupancyMapView,
   AutowarePlanningView,
 } from "./types.js";
 import { AUTOWARE_PROFILE } from "./profile.js";
@@ -167,4 +169,82 @@ function readControlError(decoded: unknown): number | undefined {
     readNumber(msg.lateral_error) ??
     readNumber(msg.longitudinal_error)
   );
+}
+
+export function extractLanelet2View(
+  topic: string,
+  decoded: unknown,
+): AutowareLanelet2View | undefined {
+  const msg = decoded as Record<string, unknown>;
+  const raw = msg.data;
+  let byte_size = 0;
+  if (Array.isArray(raw)) {
+    byte_size = raw.length;
+  } else if (raw instanceof Uint8Array) {
+    byte_size = raw.byteLength;
+  }
+
+  if (byte_size === 0) {
+    return undefined;
+  }
+
+  const format_version =
+    typeof msg.format_version === "string"
+      ? msg.format_version
+      : readNumber(msg.version) ?? readNumber(msg.format_version);
+
+  return {
+    topic,
+    byte_size,
+    format_version,
+  };
+}
+
+export function extractOccupancyMapView(
+  topic: string,
+  decoded: unknown,
+): AutowareOccupancyMapView | undefined {
+  const msg = decoded as {
+    header?: { frame_id?: string };
+    info?: {
+      width?: number;
+      height?: number;
+      resolution?: number;
+      origin?: { position?: { x?: number; y?: number } };
+    };
+    data?: number[];
+  };
+
+  const width = msg.info?.width ?? 0;
+  const height = msg.info?.height ?? 0;
+  if (width <= 0 || height <= 0) {
+    return undefined;
+  }
+
+  const cells = msg.data ?? [];
+  let occupied = 0;
+  let free = 0;
+  let unknown = 0;
+  for (const cell of cells) {
+    if (cell < 0) {
+      unknown += 1;
+    } else if (cell > 50) {
+      occupied += 1;
+    } else {
+      free += 1;
+    }
+  }
+
+  return {
+    topic,
+    frame_id: msg.header?.frame_id ?? "map",
+    width,
+    height,
+    resolution_m: msg.info?.resolution ?? 0,
+    origin_xy: [msg.info?.origin?.position?.x ?? 0, msg.info?.origin?.position?.y ?? 0],
+    occupied_cells: occupied,
+    free_cells: free,
+    unknown_cells: unknown,
+    cells,
+  };
 }

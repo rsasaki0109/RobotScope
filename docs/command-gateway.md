@@ -1,4 +1,4 @@
-# Command gateway (v0.8 beta)
+# Command gateway (v0.8)
 
 Permission-gated **live publish** from the viewer to a local ROS 2 agent.
 

@@ -99,6 +99,27 @@ RobotScope/
 └── sample_data/             Sample MCAP fetch scripts
 ```
 
+## v0.8.0 (GA)
+
+Permission-gated command gateway on v0.7 foundations. See [release notes](RobotScope/docs/release/v0.8.0.md) and [CHANGELOG.md](RobotScope/CHANGELOG.md).
+
+**Shipped**
+
+| Layer | Features |
+|-------|----------|
+| Live | **Command gateway** — opt-in publish to allowlisted topics (zero `/cmd_vel`) |
+| v0.7 carry-over | OSM regulatory elements · lanelet relations · rosbag2 · failure recipes |
+
+**Docs**
+
+- [Command gateway guide](RobotScope/docs/command-gateway.md)
+- [Migration v0.8 beta → GA](RobotScope/docs/migration/v0.8-beta-to-ga.md)
+- [Known limitations](RobotScope/docs/known-limitations.md)
+
+**Out of scope (v0.8)**
+
+- Service/action gateway · arbitrary message editor · native Lanelet2 boost bin · cloud/fleet
+
 ## v0.8.0-beta.0
 
 Permission-gated command gateway on v0.7 foundations. See [release notes](RobotScope/docs/release/v0.8.0-beta.0.md) and [CHANGELOG.md](RobotScope/CHANGELOG.md).

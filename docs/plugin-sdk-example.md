@@ -63,6 +63,8 @@ npm run validate:plugins
 
 Schema: `RobotScope/schemas/plugin/v0.1/manifest.json`
 
+**API stability:** `api: "0.1"` is frozen at RC — see [api-v0.1.md](RobotScope/docs/api-v0.1.md).
+
 ## Snapshot hook pattern
 
 Plugins receive viewer slice `{ ingest, session, currentTimeNs }` and return `{ snapshot, loading }`:

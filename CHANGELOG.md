@@ -4,6 +4,20 @@ All notable changes to RobotScope are documented in this file.
 
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and versioning follows [SemVer](https://semver.org/).
 
+## [0.1.0-rc.0] - 2026-06-13
+
+First v0.1 release candidate — API freeze for integrators.
+
+### Added
+
+- [docs/api-v0.1.md](RobotScope/docs/api-v0.1.md) — frozen plugin manifest, query API, URL params, live protocol
+- [docs/migration/beta-to-rc.md](RobotScope/docs/migration/beta-to-rc.md) — beta → RC checklist for plugin authors
+
+### Changed
+
+- README status section updated for RC (`0.1.0-rc.0`)
+- Version series advances from `0.1.0-beta.*` to `0.1.0-rc.0` (no intentional breaking API changes)
+
 ## [0.1.0-beta.2] - 2026-06-13
 
 Plugin SDK minimal third-party example pack.

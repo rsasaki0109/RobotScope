@@ -1,3 +1,4 @@
+/** Frozen at v0.1.0-rc.0 — see docs/api-v0.1.md. Bump only with a new schema directory. */
 export const PLUGIN_API_VERSION = "0.1" as const;
 
 export type PluginCapability =

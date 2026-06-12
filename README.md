@@ -86,9 +86,9 @@ RobotScope/
 └── sample_data/             Sample MCAP fetch scripts
 ```
 
-## v0.1 beta (0.1.0-beta.0)
+## v0.1 RC (0.1.0-rc.0)
 
-First beta — alpha feature set complete. See [release notes](RobotScope/docs/release/v0.1.0-beta.0.md) and [CHANGELOG.md](RobotScope/CHANGELOG.md).
+Release candidate — **API v0.1 frozen** for plugin authors. See [release notes](RobotScope/docs/release/v0.1.0-rc.0.md), [API contract](RobotScope/docs/api-v0.1.md), and [CHANGELOG.md](RobotScope/CHANGELOG.md).
 
 **Shipped**
 
@@ -104,6 +104,8 @@ First beta — alpha feature set complete. See [release notes](RobotScope/docs/r
 
 - [Live agent guide](RobotScope/docs/live-agent.md)
 - [Plugin SDK example](RobotScope/docs/plugin-sdk-example.md)
+- [API v0.1 (RC freeze)](RobotScope/docs/api-v0.1.md)
+- [Migration beta → RC](RobotScope/docs/migration/beta-to-rc.md)
 - [Known limitations](RobotScope/docs/known-limitations.md)
 - [Architecture](RobotScope/docs/architecture.md)
 

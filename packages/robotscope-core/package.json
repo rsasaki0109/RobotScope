@@ -1,6 +1,6 @@
 {
   "name": "@robotscope/core",
-  "version": "0.7.0-alpha.0",
+  "version": "0.7.0-beta.0",
   "description": "RobotScope Data Model, query API, and ingest core",
   "license": "Apache-2.0",
   "type": "module",

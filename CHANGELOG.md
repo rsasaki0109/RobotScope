@@ -4,6 +4,23 @@ All notable changes to RobotScope are documented in this file.
 
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and versioning follows [SemVer](https://semver.org/).
 
+## [0.1.0-alpha.2] - 2026-06-13
+
+Autoware debug UX: 3D map layers and failure recipe panel highlighting.
+
+### Added
+
+- **3D occupancy map rendering** — `/map/map` and mapped OccupancyGrid topics as textured meshes in the viewport
+- **Lanelet2 centerlines in 3D** — Path topics (e.g. `/map/lanelet2_centerlines`) rendered as amber polylines
+- **`parseOccupancyGrid()`** in `@robotscope/core`
+- **Autoware failure recipe UI** — detects localization drift / phantom stop patterns and highlights relevant panels
+- Demo MCAP lanelet centerlines topic; agent autoware profile extended
+
+### Changed
+
+- README clone URL → `rsasaki0109/RobotScope`
+- Fixed `failure_recipes` indentation in `autoware.universe.yaml`
+
 ## [0.1.0-alpha.1] - 2026-06-13
 
 Post-alpha polish: Autoware map observability and demo data.
@@ -80,5 +97,6 @@ First public alpha of the RobotScope OSS observability platform for ROS2, Autowa
 - Live agent and viewer are read-only in v0.1
 - Do not commit robot identifiers, keys, or raw dumps to the repo
 
+[0.1.0-alpha.2]: https://github.com/rsasaki0109/RobotScope/releases/tag/v0.1.0-alpha.2
 [0.1.0-alpha.1]: https://github.com/rsasaki0109/RobotScope/releases/tag/v0.1.0-alpha.1
 [0.1.0-alpha.0]: https://github.com/rsasaki0109/RobotScope/releases/tag/v0.1.0-alpha.0

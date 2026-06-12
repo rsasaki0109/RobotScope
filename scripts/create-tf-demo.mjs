@@ -252,6 +252,13 @@ const mapGridChannelId = await writer.registerChannel({
   metadata: new Map(),
 });
 
+const laneletCenterlinesChannelId = await writer.registerChannel({
+  topic: "/map/lanelet2_centerlines",
+  messageEncoding: "cdr",
+  schemaId: pathSchemaId,
+  metadata: new Map(),
+});
+
 function stamp(timeNs) {
   return { sec: Math.floor(timeNs / 1e9), nanosec: timeNs % 1e9 };
 }
@@ -379,6 +386,22 @@ function encodeMapGrid(timeNs) {
   });
 }
 
+function encodeLaneletCenterlines() {
+  const poses = [];
+  for (let x = -1; x <= 1.2; x += 0.2) {
+    poses.push({
+      header: { stamp: { sec: 0, nanosec: 0 }, frame_id: "map" },
+      pose: {
+        position: { x, y: 0.05, z: 0.02 },
+        orientation: { x: 0, y: 0, z: 0, w: 1 },
+      },
+    });
+  }
+  return pathMsg.writer.writeMessage({
+    header: { stamp: { sec: 0, nanosec: 0 }, frame_id: "map" },
+    poses,
+  });
+}
 function encodeVectorMap() {
   const data = new Array(512).fill(0).map((_, index) => index % 256);
   return laneletWriter.writeMessage({
@@ -481,6 +504,14 @@ await writer.addMessage({
   logTime: 0n,
   publishTime: 0n,
   data: encodeMapGrid(0),
+});
+
+await writer.addMessage({
+  channelId: laneletCenterlinesChannelId,
+  sequence: 0,
+  logTime: 0n,
+  publishTime: 0n,
+  data: encodeLaneletCenterlines(),
 });
 
 for (let i = 0; i < 20; i += 1) {

@@ -40,7 +40,7 @@ rules:
       - /map/vector_map
       - /map/lanelet2_map
 
-  failure_recipes:
+failure_recipes:
   localization_drift:
     symptoms:
       - ndt_score_worsens

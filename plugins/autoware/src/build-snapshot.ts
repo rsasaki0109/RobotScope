@@ -8,6 +8,7 @@ import {
   extractOccupancyMapView,
   extractPlanningView,
 } from "./extractors.js";
+import { evaluateFailureRecipes } from "./failure-recipes.js";
 import { resolveAutowareTopics } from "./profile.js";
 import type { AutowareMapView, AutowareSnapshot } from "./types.js";
 
@@ -105,7 +106,7 @@ export async function buildAutowareSnapshot(
     warnings.push(`NDT score below threshold (${ndt.score.toFixed(2)} < ${ndt.threshold})`);
   }
 
-  return {
+  const draft: AutowareSnapshot = {
     time_ns,
     topics,
     map: map.lanelet2 || map.occupancy ? map : undefined,
@@ -114,5 +115,15 @@ export async function buildAutowareSnapshot(
     planning,
     control,
     warnings,
+    failure_recipe: null,
+    highlight_panels: [],
+  };
+
+  const failure_recipe = evaluateFailureRecipes(draft);
+
+  return {
+    ...draft,
+    failure_recipe,
+    highlight_panels: failure_recipe?.highlight_panels ?? [],
   };
 }

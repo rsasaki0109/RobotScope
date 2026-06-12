@@ -164,6 +164,14 @@ const RULES: TopicMappingRule[] = [
     kind: "world",
   },
   {
+    id: "map.lanelet2.centerlines",
+    topicPattern: /\/map\/lanelet2_centerlines$/,
+    schemaPattern: /Path/i,
+    entityPath: EntityPaths.world.map.lanelet2,
+    archetype: "Lanelet2",
+    kind: "world",
+  },
+  {
     id: "policy.vla",
     topicPattern: /vla|policy/i,
     entityPath: EntityPaths.policy.main.vlaState,

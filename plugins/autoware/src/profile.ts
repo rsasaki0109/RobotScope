@@ -29,6 +29,7 @@ export const AUTOWARE_PROFILE = {
     gnss_pose: ["/sensing/gnss/pose", "/sensing/gnss/pose_with_covariance"],
     map_vector: ["/map/vector_map", "/map/lanelet2_map"],
     map_occupancy: ["/map/map", "/map/pointcloud_map", "/map/occupancy_grid"],
+    map_lanelet_centerlines: ["/map/lanelet2_centerlines"],
   },
   ndt_warning_threshold: 1.2,
 } as const;

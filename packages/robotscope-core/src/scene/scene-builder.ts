@@ -1,6 +1,7 @@
 import type { MappedTopic } from "../mapping/entity-mapper.js";
 import type { ArchetypeName } from "../rdm.js";
 import type { RawMessage } from "../query.js";
+import { parseOccupancyGrid, transformOccupancyGridToFixed } from "../ros2/occupancy-grid.js";
 import { parsePointCloud2, type DecodedPointCloud2 } from "../ros2/pointcloud2.js";
 import { extractPose, transformPoseToFixed } from "../ros2/pose.js";
 import { extractTrajectory, transformTrajectoryToFixed } from "../ros2/trajectory.js";
@@ -32,8 +33,22 @@ export interface ScenePointCloud {
 export interface SceneTrajectory {
   topic: string;
   entity_path: string;
+  archetype: "Trajectory" | "Lanelet2";
   points: Float32Array;
   point_count: number;
+}
+
+export interface SceneOccupancyGrid {
+  topic: string;
+  entity_path: string;
+  width: number;
+  height: number;
+  resolution: number;
+  origin: {
+    position: [number, number, number];
+    rotation: [number, number, number, number];
+  };
+  rgba: Uint8Array;
 }
 
 export interface SceneSnapshot {
@@ -43,10 +58,17 @@ export interface SceneSnapshot {
   poses: ScenePose[];
   point_clouds: ScenePointCloud[];
   trajectories: SceneTrajectory[];
+  occupancy_grids: SceneOccupancyGrid[];
   warnings: string[];
 }
 
-const SCENE_ARCHETYPES = new Set<ArchetypeName>(["PointCloud", "Pose", "Trajectory"]);
+const SCENE_ARCHETYPES = new Set<ArchetypeName>([
+  "PointCloud",
+  "Pose",
+  "Trajectory",
+  "OccupancyGrid",
+  "Lanelet2",
+]);
 
 export interface SceneBuildOptions {
   fixed_frame?: string;
@@ -98,6 +120,7 @@ export async function buildSceneSnapshot(
   const poses: ScenePose[] = [];
   const point_clouds: ScenePointCloud[] = [];
   const trajectories: SceneTrajectory[] = [];
+  const occupancy_grids: SceneOccupancyGrid[] = [];
 
   for (const mapped of sceneTopics) {
     const raw = await getRawMessage(mapped.topic, time_ns);
@@ -148,9 +171,12 @@ export async function buildSceneSnapshot(
       continue;
     }
 
-    if (mapped.archetype === "Trajectory") {
+    if (mapped.archetype === "Trajectory" || mapped.archetype === "Lanelet2") {
       const trajectory = extractTrajectory(raw.decoded);
       if (!trajectory || trajectory.point_count === 0) {
+        if (mapped.archetype === "Lanelet2") {
+          continue;
+        }
         warnings.push(`Failed to parse trajectory from ${mapped.topic}`);
         continue;
       }
@@ -165,8 +191,29 @@ export async function buildSceneSnapshot(
       trajectories.push({
         topic: mapped.topic,
         entity_path: mapped.entity_path,
+        archetype: mapped.archetype === "Lanelet2" ? "Lanelet2" : "Trajectory",
         points: resolved.points,
         point_count: resolved.point_count,
+      });
+      continue;
+    }
+
+    if (mapped.archetype === "OccupancyGrid") {
+      const grid = parseOccupancyGrid(raw.decoded);
+      if (!grid) {
+        warnings.push(`Failed to parse occupancy grid from ${mapped.topic}`);
+        continue;
+      }
+      const toFixed = tfBuffer.lookupTransformToFixed(grid.frame_id, fixed_frame, time_ns);
+      const resolved = toFixed ? transformOccupancyGridToFixed(grid, toFixed) : grid;
+      occupancy_grids.push({
+        topic: mapped.topic,
+        entity_path: mapped.entity_path,
+        width: resolved.width,
+        height: resolved.height,
+        resolution: resolved.resolution,
+        origin: resolved.origin,
+        rgba: resolved.rgba,
       });
     }
   }
@@ -178,6 +225,7 @@ export async function buildSceneSnapshot(
     poses,
     point_clouds,
     trajectories,
+    occupancy_grids,
     warnings,
   };
 }

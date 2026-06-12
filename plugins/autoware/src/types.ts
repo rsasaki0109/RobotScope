@@ -75,4 +75,6 @@ export interface AutowareSnapshot {
   planning?: AutowarePlanningView;
   control?: AutowareControlView;
   warnings: string[];
+  failure_recipe?: import("./failure-recipes.js").FailureRecipeMatch | null;
+  highlight_panels: import("./failure-recipes.js").AutowarePanelId[];
 }

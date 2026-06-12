@@ -11,6 +11,7 @@ export * from "./scene/scene-builder.js";
 export * from "./ros2/pointcloud2.js";
 export * from "./ros2/pose.js";
 export * from "./ros2/trajectory.js";
+export * from "./ros2/occupancy-grid.js";
 export * from "./tf/transform-math.js";
 export * from "./storage/sidecar.js";
 export * from "./storage/topic-time-index.js";

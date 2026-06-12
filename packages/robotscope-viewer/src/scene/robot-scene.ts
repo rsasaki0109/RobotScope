@@ -1,18 +1,23 @@
-import type { SceneSnapshot } from "@robotscope/core";
+import type { SceneOccupancyGrid, SceneSnapshot } from "@robotscope/core";
 import type { WebGLRenderer } from "three";
 import {
   AmbientLight,
   AxesHelper,
   BufferAttribute,
   BufferGeometry,
+  CanvasTexture,
   Color,
   DirectionalLight,
+  DoubleSide,
   GridHelper,
   Group,
   Line,
   LineBasicMaterial,
+  Mesh,
+  MeshBasicMaterial,
   Object3D,
   PerspectiveCamera,
+  PlaneGeometry,
   Points,
   PointsMaterial,
   Quaternion,
@@ -26,6 +31,62 @@ export interface RobotSceneController {
   updateScene: (snapshot: SceneSnapshot | null) => void;
   render: () => void;
   dispose: () => void;
+}
+
+function occupancyTexture(grid: SceneOccupancyGrid): CanvasTexture {
+  const canvas = document.createElement("canvas");
+  canvas.width = grid.width;
+  canvas.height = grid.height;
+  const ctx = canvas.getContext("2d");
+  if (!ctx) {
+    return new CanvasTexture(canvas);
+  }
+
+  const image = ctx.createImageData(grid.width, grid.height);
+  for (let y = 0; y < grid.height; y += 1) {
+    for (let x = 0; x < grid.width; x += 1) {
+      const src = x + y * grid.width;
+      const dst = x + (grid.height - 1 - y) * grid.width;
+      const offset = dst * 4;
+      const sourceOffset = src * 4;
+      image.data[offset] = grid.rgba[sourceOffset] ?? 0;
+      image.data[offset + 1] = grid.rgba[sourceOffset + 1] ?? 0;
+      image.data[offset + 2] = grid.rgba[sourceOffset + 2] ?? 0;
+      image.data[offset + 3] = grid.rgba[sourceOffset + 3] ?? 255;
+    }
+  }
+  ctx.putImageData(image, 0, 0);
+  const texture = new CanvasTexture(canvas);
+  texture.needsUpdate = true;
+  return texture;
+}
+
+function addOccupancyGridMesh(group: Group, grid: SceneOccupancyGrid): void {
+  const widthM = grid.width * grid.resolution;
+  const heightM = grid.height * grid.resolution;
+  const geometry = new PlaneGeometry(widthM, heightM);
+  const material = new MeshBasicMaterial({
+    map: occupancyTexture(grid),
+    transparent: true,
+    opacity: 0.92,
+    side: DoubleSide,
+    depthWrite: false,
+  });
+  const mesh = new Mesh(geometry, material);
+
+  const rotation = new Quaternion(
+    grid.origin.rotation[0],
+    grid.origin.rotation[1],
+    grid.origin.rotation[2],
+    grid.origin.rotation[3],
+  );
+  const centerOffset = new Vector3(widthM / 2, heightM / 2, 0).applyQuaternion(rotation);
+  mesh.position.set(grid.origin.position[0], grid.origin.position[1], grid.origin.position[2]);
+  mesh.position.add(centerOffset);
+  mesh.setRotationFromQuaternion(rotation);
+  mesh.position.z = grid.origin.position[2] - 0.01;
+  mesh.userData.topic = grid.topic;
+  group.add(mesh);
 }
 
 export function createRobotSceneController(
@@ -52,12 +113,19 @@ export function createRobotSceneController(
   scene.add(dynamicRoot);
 
   const layers = {
+    maps: new Group(),
     tf: new Group(),
     poses: new Group(),
     clouds: new Group(),
     trajectories: new Group(),
   };
-  dynamicRoot.add(layers.tf, layers.poses, layers.clouds, layers.trajectories);
+  dynamicRoot.add(
+    layers.maps,
+    layers.tf,
+    layers.trajectories,
+    layers.poses,
+    layers.clouds,
+  );
 
   let followPose: Vector3 | undefined;
 
@@ -65,13 +133,18 @@ export function createRobotSceneController(
     object.traverse((child) => {
       const mesh = child as Object3D & {
         geometry?: BufferGeometry;
-        material?: LineBasicMaterial | PointsMaterial | LineBasicMaterial[];
+        material?: MeshBasicMaterial | LineBasicMaterial | PointsMaterial | MeshBasicMaterial[];
       };
       mesh.geometry?.dispose();
-      if (Array.isArray(mesh.material)) {
-        mesh.material.forEach((material) => material.dispose());
-      } else {
-        mesh.material?.dispose();
+      const material = mesh.material;
+      if (Array.isArray(material)) {
+        material.forEach((entry) => {
+          entry.map?.dispose();
+          entry.dispose();
+        });
+      } else if (material) {
+        material.map?.dispose();
+        material.dispose();
       }
     });
   };
@@ -86,6 +159,7 @@ export function createRobotSceneController(
   };
 
   const updateScene = (snapshot: SceneSnapshot | null) => {
+    clearGroup(layers.maps);
     clearGroup(layers.tf);
     clearGroup(layers.poses);
     clearGroup(layers.clouds);
@@ -95,6 +169,10 @@ export function createRobotSceneController(
     if (!snapshot) {
       return;
     }
+
+    snapshot.occupancy_grids.forEach((grid) => {
+      addOccupancyGridMesh(layers.maps, grid);
+    });
 
     snapshot.tf_frames.forEach((frame) => {
       const axes = new AxesHelper(frame.frame_id === snapshot.fixed_frame ? 1.2 : 0.6);
@@ -144,12 +222,22 @@ export function createRobotSceneController(
     snapshot.trajectories.forEach((trajectory) => {
       const geometry = new BufferGeometry();
       geometry.setAttribute("position", new BufferAttribute(trajectory.points, 3));
-      const material = new LineBasicMaterial({ color: 0x3dd68c, linewidth: 2 });
+      const color = trajectory.archetype === "Lanelet2" ? 0xf5a623 : 0x3dd68c;
+      const material = new LineBasicMaterial({ color, linewidth: 2 });
       layers.trajectories.add(new Line(geometry, material));
     });
 
     if (followPose) {
       controls.target.copy(followPose);
+    } else if (snapshot.occupancy_grids.length > 0) {
+      const grid = snapshot.occupancy_grids[0]!;
+      const widthM = grid.width * grid.resolution;
+      const heightM = grid.height * grid.resolution;
+      controls.target.set(
+        grid.origin.position[0] + widthM / 2,
+        grid.origin.position[1] + heightM / 2,
+        grid.origin.position[2],
+      );
     } else if (snapshot.tf_frames.length > 0) {
       const origin = snapshot.tf_frames.find((f) => f.frame_id === snapshot.fixed_frame);
       if (origin) {
@@ -170,6 +258,7 @@ export function createRobotSceneController(
       renderer.render(scene, camera);
     },
     dispose() {
+      clearGroup(layers.maps);
       clearGroup(layers.tf);
       clearGroup(layers.poses);
       clearGroup(layers.clouds);

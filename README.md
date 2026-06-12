@@ -21,7 +21,7 @@ Do not compete head-on with Foxglove on viewer polish, Rerun on generic data lay
 ## Quick start
 
 ```bash
-git clone https://github.com/your-org/RobotScope.git
+git clone git@github.com:rsasaki0109/RobotScope.git
 cd RobotScope
 npm install
 npm run dev

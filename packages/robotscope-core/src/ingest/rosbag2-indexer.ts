@@ -8,6 +8,7 @@ import {
 } from "../ros2/decoder.js";
 import { TopicTimeIndex } from "../storage/topic-time-index.js";
 import { TfBuffer } from "../tf/tf-buffer.js";
+import { encodeRosbag2StorageId } from "./rosbag2-storage-id.js";
 
 export interface Rosbag2IndexProgress {
   messages_read: number;
@@ -67,6 +68,7 @@ function readTopics(db: Database): Rosbag2TopicRow[] {
 export function indexRosbag2Messages(
   db: Database,
   onProgress?: (progress: Rosbag2IndexProgress) => void,
+  fileIndex = 0,
 ): Rosbag2IndexResult {
   const topics = readTopics(db);
   if (topics.length === 0) {
@@ -107,7 +109,8 @@ export function indexRosbag2Messages(
 
     const payload =
       data instanceof Uint8Array ? data : Uint8Array.from(data.map((value) => Number(value) & 0xff));
-    messagePayloads.set(messageId, payload);
+    const storageId = encodeRosbag2StorageId(fileIndex, messageId);
+    messagePayloads.set(storageId, payload);
 
     const topic = topicById.get(topicId);
     if (!topic) {
@@ -116,7 +119,7 @@ export function indexRosbag2Messages(
 
     topicIndex.add(topic.name, topic.id, topic.type, {
       log_time_ns,
-      storage_id: messageId,
+      storage_id: storageId,
     });
 
     const schema = schemaFromTopicType(topic.type);
@@ -198,6 +201,119 @@ export function rosbag2TimeBounds(db: Database): { start_ns: number; end_ns: num
   };
 }
 
+export function rosbag2FolderTimeBounds(
+  databases: Database[],
+): { start_ns: number; end_ns: number } {
+  let start_ns = Number.POSITIVE_INFINITY;
+  let end_ns = 0;
+
+  for (const db of databases) {
+    const bounds = rosbag2TimeBounds(db);
+    if (bounds.end_ns === 0 && bounds.start_ns === 0) {
+      continue;
+    }
+    start_ns = Math.min(start_ns, bounds.start_ns);
+    end_ns = Math.max(end_ns, bounds.end_ns);
+  }
+
+  if (!Number.isFinite(start_ns)) {
+    return { start_ns: 0, end_ns: 0 };
+  }
+
+  return { start_ns, end_ns };
+}
+
+/** Merge index results from multiple sqlite storage files (metadata.yaml folder bag). */
+export function indexRosbag2FolderMessages(
+  databases: Database[],
+  onProgress?: (progress: Rosbag2IndexProgress) => void,
+): Rosbag2IndexResult {
+  const topicIndex = TopicTimeIndex.empty();
+  const messagePayloads = new Map<number, Uint8Array>();
+  const tfBuffer = new TfBuffer();
+  const tfTopics = new Set<string>();
+  let messages_read = 0;
+
+  for (let fileIndex = 0; fileIndex < databases.length; fileIndex += 1) {
+    const partial = indexRosbag2Messages(databases[fileIndex]!, (progress) => {
+      onProgress?.({
+        messages_read: messages_read + progress.messages_read,
+        transforms_added: tfBuffer.transformCount,
+        topics_indexed: topicIndex.topicCount(),
+      });
+    }, fileIndex);
+
+    for (const [storageId, payload] of partial.messagePayloads) {
+      messagePayloads.set(storageId, payload);
+    }
+    for (const topic of partial.topicIndex.exportTopics()) {
+      for (const entry of topic.entries) {
+        topicIndex.add(topic.topic, topic.channel_id, topic.schema, entry);
+      }
+    }
+    for (const topic of partial.tf_topics) {
+      tfTopics.add(topic);
+    }
+    messages_read += partial.tf_message_count;
+    tfBuffer.importTransforms(partial.tfBuffer);
+  }
+
+  topicIndex.finalize();
+
+  return {
+    tfBuffer,
+    topicIndex,
+    tf_message_count: messages_read,
+    tf_transform_count: tfBuffer.transformCount,
+    tf_topics: [...tfTopics].sort(),
+    messagePayloads,
+  };
+}
+
+/** Load payloads from all folder storage files when sidecar supplies topic timestamps. */
+export function loadRosbag2FolderPayloads(
+  databases: Database[],
+): Map<number, Uint8Array> {
+  const messagePayloads = new Map<number, Uint8Array>();
+  for (let fileIndex = 0; fileIndex < databases.length; fileIndex += 1) {
+    for (const [storageId, payload] of loadRosbag2Payloads(databases[fileIndex]!, fileIndex)) {
+      messagePayloads.set(storageId, payload);
+    }
+  }
+  return messagePayloads;
+}
+
+export function indexRosbag2FolderTfOnly(
+  databases: Database[],
+  onProgress?: (progress: Rosbag2IndexProgress) => void,
+): Pick<Rosbag2IndexResult, "tfBuffer" | "tf_message_count" | "tf_transform_count" | "tf_topics"> {
+  const tfBuffer = new TfBuffer();
+  const tfTopics = new Set<string>();
+  let messages_read = 0;
+
+  for (let fileIndex = 0; fileIndex < databases.length; fileIndex += 1) {
+    const partial = indexRosbag2TfOnly(
+      databases[fileIndex]!,
+      (progress) => {
+        onProgress?.({
+          messages_read: messages_read + progress.messages_read,
+          transforms_added: tfBuffer.transformCount + progress.transforms_added,
+          topics_indexed: tfTopics.size,
+        });
+      },
+      { tfBuffer, tfTopics },
+    );
+    messages_read += partial.tf_message_count;
+  }
+
+  return {
+    tfBuffer,
+    tf_message_count: messages_read,
+    tf_transform_count: tfBuffer.transformCount,
+    tf_topics: [...tfTopics].sort(),
+  };
+}
+
 function payloadFromRow(data: unknown): Uint8Array | null {
   if (!(data instanceof Uint8Array) && !Array.isArray(data)) {
     return null;
@@ -207,15 +323,15 @@ function payloadFromRow(data: unknown): Uint8Array | null {
     : Uint8Array.from(data.map((value) => Number(value) & 0xff));
 }
 
-/** Load all message blobs keyed by sqlite row id (required for playback). */
-export function loadRosbag2Payloads(db: Database): Map<number, Uint8Array> {
+/** Load all message blobs keyed by encoded storage id (required for playback). */
+export function loadRosbag2Payloads(db: Database, fileIndex = 0): Map<number, Uint8Array> {
   const messagePayloads = new Map<number, Uint8Array>();
   const rows = db.exec("SELECT id, data FROM messages");
   for (const row of rows[0]?.values ?? []) {
     const messageId = Number(row[0]);
     const payload = payloadFromRow(row[1]);
     if (payload) {
-      messagePayloads.set(messageId, payload);
+      messagePayloads.set(encodeRosbag2StorageId(fileIndex, messageId), payload);
     }
   }
   return messagePayloads;
@@ -225,11 +341,13 @@ export function loadRosbag2Payloads(db: Database): Map<number, Uint8Array> {
 export function indexRosbag2TfOnly(
   db: Database,
   onProgress?: (progress: Rosbag2IndexProgress) => void,
+  targets?: { tfBuffer: TfBuffer; tfTopics: Set<string> },
 ): Pick<Rosbag2IndexResult, "tfBuffer" | "tf_message_count" | "tf_transform_count" | "tf_topics"> {
   const topics = readTopics(db);
   const topicById = new Map(topics.map((topic) => [topic.id, topic]));
-  const tfBuffer = new TfBuffer();
-  const tfTopics = new Set<string>();
+  const tfBuffer = targets?.tfBuffer ?? new TfBuffer();
+  const tfTopics = targets?.tfTopics ?? new Set<string>();
+  const transformsBefore = tfBuffer.transformCount;
 
   for (const topic of topics) {
     if (isTfTopic(topic.name)) {
@@ -305,7 +423,7 @@ export function indexRosbag2TfOnly(
   return {
     tfBuffer,
     tf_message_count: messages_read,
-    tf_transform_count: transforms_added,
+    tf_transform_count: targets ? transforms_added : tfBuffer.transformCount - transformsBefore,
     tf_topics: [...tfTopics].sort(),
   };
 }

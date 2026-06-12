@@ -1,6 +1,6 @@
-# Known limitations (v0.3)
+# Known limitations (v0.4 alpha)
 
-Concrete scope boundaries for **v0.3.0**. Product choices or not-yet-built — not necessarily bugs.
+Concrete scope boundaries for **v0.4.0-alpha.0**. Product choices or not-yet-built — not necessarily bugs.
 
 Plugin manifest **`api: "0.1"`** remains stable (from v0.1 GA) — see [api-v0.1.md](RobotScope/docs/api-v0.1.md).
 
@@ -8,7 +8,7 @@ Plugin manifest **`api: "0.1"`** remains stable (from v0.1 GA) — see [api-v0.1
 
 | Limitation | Workaround |
 |------------|------------|
-| **rosbag2 SQLite** (`.db3`) | Browser playback + **IndexedDB sidecar** on re-open — see [rosbag2.md](RobotScope/docs/rosbag2.md) | Multi-file bags; custom schemas without embedded defs; payloads always reloaded |
+| **rosbag2 SQLite** (`.db3` or folder) | Browser playback + **IndexedDB sidecar** — single `.db3` or **folder bag** (`metadata.yaml`) — see [rosbag2.md](RobotScope/docs/rosbag2.md) | Custom schemas without embedded defs; payloads always reloaded; mcap/zstd storage plugins |
 | **Proprietary log formats** unsupported | Export to MCAP |
 | Large MCAP files index in-browser | Sidecar JSON + IndexedDB cache; CLI: `scripts/write-sidecar.mjs` |
 | Live agent requires local WebSocket | Run `npm run demo:live-agent` or ROS2 agent on your machine |

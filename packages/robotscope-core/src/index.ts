@@ -2,7 +2,7 @@ export * from "./rdm.js";
 export * from "./query.js";
 export * from "./entity-paths.js";
 export { openMcap, McapQueryEngineImpl } from "./ingest/mcap.js";
-export { isRosbag2Filename, isMcapFilename } from "./ingest/recording-format.js";
+export { isRosbag2Filename, isRosbag2MetadataFilename, isMcapFilename } from "./ingest/recording-format.js";
 export type { McapOpenOptions } from "./ingest/mcap.js";
 export { openLive } from "./live/open-live.js";
 export type { LiveRecordingResult } from "./query.js";

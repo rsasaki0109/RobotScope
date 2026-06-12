@@ -16,6 +16,16 @@ export function fileFingerprint(file: File): FileFingerprint {
   };
 }
 
+export function folderBagFingerprint(metadataFile: File, files: File[]): FileFingerprint {
+  const totalSize = files.reduce((sum, entry) => sum + entry.size, 0);
+  const lastModified = Math.max(...files.map((entry) => entry.lastModified));
+  return {
+    name: metadataFile.name,
+    size: totalSize,
+    last_modified_ms: lastModified,
+  };
+}
+
 function openDb(): Promise<IDBDatabase> {
   return new Promise((resolve, reject) => {
     const request = indexedDB.open(DB_NAME, 1);

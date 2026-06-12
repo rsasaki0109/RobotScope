@@ -4,6 +4,21 @@ All notable changes to RobotScope are documented in this file.
 
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and versioning follows [SemVer](https://semver.org/).
 
+## [0.4.0-alpha.0] - 2026-06-12
+
+Rosbag2 folder bag ingest (`metadata.yaml` + multiple `.db3`).
+
+### Added
+
+- **`openRosbag2Folder()`** — parse `metadata.yaml` `relative_file_paths` and merge sqlite storage files
+- Viewer **Open bag folder** command (directory picker with `metadata.yaml`)
+- Encoded storage ids `(file_index, sqlite_row_id)` for multi-file payload lookup
+- Folder bag sidecar cache (fingerprint = metadata + total folder file sizes)
+
+### Changed
+
+- [docs/rosbag2.md](RobotScope/docs/rosbag2.md) + [known-limitations.md](RobotScope/docs/known-limitations.md) updated for v0.4 alpha
+
 ## [0.3.0] - 2026-06-12
 
 Third GA release — rosbag2 sidecar cache.

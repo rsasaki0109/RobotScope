@@ -60,6 +60,20 @@ export class TfBuffer {
     return count;
   }
 
+  listTransforms(): StoredTransform[] {
+    const transforms: StoredTransform[] = [];
+    for (const edge of this.edges.values()) {
+      transforms.push(...edge.samples);
+    }
+    return transforms;
+  }
+
+  importTransforms(other: TfBuffer): void {
+    for (const transform of other.listTransforms()) {
+      this.addTransform(transform);
+    }
+  }
+
   addTransform(transform: StoredTransform): void {
     const key = edgeKey(transform.parent_frame_id, transform.child_frame_id);
     let edge = this.edges.get(key);

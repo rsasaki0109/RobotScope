@@ -15,6 +15,7 @@ import { create } from "zustand";
 import { downloadLiveRecordingBundle } from "../storage/live-recording-download";
 import {
   fileFingerprint,
+  folderBagFingerprint,
   loadSidecarFromCache,
   saveSidecarToCache,
 } from "../storage/sidecar-cache";
@@ -145,6 +146,7 @@ export interface ViewerState {
   liveActiveRecipes: RecipeTimelineMarker[];
   recipeIndexLoading: boolean;
   openMcapFile: (file: File, options?: { sidecar?: SidecarManifest }) => Promise<void>;
+  openRosbag2Folder: (files: FileList | File[]) => Promise<void>;
   openMcapUrl: (url: string, options?: { sidecar?: SidecarManifest }) => Promise<void>;
   connectLiveAgent: (url: string) => Promise<void>;
   disconnectLiveAgent: () => Promise<void>;
@@ -332,6 +334,90 @@ export const useViewerStore = create<ViewerState>((set, get) => ({
           recipeMarkers: markers,
           recipeIndexLoading: false,
           statusMessage: `Loaded ${file.name} — ${session.topics.length} topics, ${markers.length} failure recipe markers${session.sidecar_message_count ? " · sidecar" : ""}`,
+        });
+      } catch {
+        set({ recipeIndexLoading: false });
+      }
+    })();
+  },
+
+  async openRosbag2Folder(files) {
+    const fileArray = [...files];
+    const metadataFile = fileArray.find((file) => file.name.toLowerCase() === "metadata.yaml");
+    if (!metadataFile) {
+      throw new Error("Folder must contain metadata.yaml");
+    }
+
+    set({
+      statusMessage: `Opening rosbag2 folder (${metadataFile.webkitRelativePath || metadataFile.name})…`,
+      inspectLoading: true,
+      sceneLoading: true,
+    });
+
+    const previous = get().ingest;
+    if (previous) {
+      await previous.close();
+    }
+
+    const metadataYaml = await metadataFile.text();
+    const storageFiles = fileArray.filter((file) => file.name.toLowerCase().endsWith(".db3"));
+    const folderFiles = await Promise.all(
+      storageFiles.map(async (file) => ({
+        relativePath: file.webkitRelativePath || file.name,
+        data: new Uint8Array(await file.arrayBuffer()),
+      })),
+    );
+
+    const fingerprint = folderBagFingerprint(metadataFile, fileArray);
+    const cached = await loadSidecarFromCache(fingerprint);
+    const sidecar =
+      cached && validateSidecarFingerprint(cached, fingerprint) ? cached : undefined;
+
+    const handle = await (
+      await import("@robotscope/core/ingest/rosbag2")
+    ).openRosbag2Folder(metadataYaml, folderFiles, {
+      sidecar,
+      fingerprint,
+      onProgress: (p: IngestProgress) =>
+        set({
+          statusMessage: p.message ?? `${p.phase}${p.percent != null ? ` (${p.percent}%)` : ""}`,
+        }),
+    });
+
+    if (isMcapQueryEngine(handle.engine)) {
+      await saveSidecarToCache(fingerprint, handle.engine.getSidecarManifest());
+    }
+
+    const session = await handle.engine.getSessionInfo();
+    const bounds = await handle.engine.getTimelineBounds();
+    const mappedTopics = isMcapQueryEngine(handle.engine)
+      ? handle.engine.getMappedTopics()
+      : [];
+    const displayName = metadataFile.webkitRelativePath.split("/")[0] ?? metadataFile.name;
+
+    const nextState = {
+      ingest: handle,
+      session,
+      topics: session.topics,
+      mappedTopics,
+      currentTimeNs: bounds.start_ns,
+      liveConnection: idleLiveConnection,
+      statusMessage: `Loaded ${displayName} (${session.source}) — ${session.topics.length} topics, ${mappedTopics.length} mapped entities, ${session.tf_transform_count ?? 0} TF transforms${session.sidecar_message_count ? " · sidecar" : ""}`,
+    };
+
+    set(nextState);
+    set(await loadViewerData({ ...get(), ...nextState }));
+
+    void (async () => {
+      set({ recipeMarkers: [], liveActiveRecipes: [], recipeIndexLoading: true });
+      try {
+        const markers = await loadFailureRecipeIndex(handle, session, (message) => {
+          set({ statusMessage: message });
+        });
+        set({
+          recipeMarkers: markers,
+          recipeIndexLoading: false,
+          statusMessage: `Loaded ${displayName} — ${session.topics.length} topics, ${markers.length} failure recipe markers${session.sidecar_message_count ? " · sidecar" : ""}`,
         });
       } catch {
         set({ recipeIndexLoading: false });

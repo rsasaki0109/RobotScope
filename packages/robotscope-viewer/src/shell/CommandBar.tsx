@@ -31,6 +31,7 @@ export function CommandBar() {
   const fixedFrame = useViewerStore((s) => s.fixedFrame);
   const setFixedFrame = useViewerStore((s) => s.setFixedFrame);
   const openMcapFile = useViewerStore((s) => s.openMcapFile);
+  const openRosbag2Folder = useViewerStore((s) => s.openRosbag2Folder);
   const connectLiveAgent = useViewerStore((s) => s.connectLiveAgent);
   const disconnectLiveAgent = useViewerStore((s) => s.disconnectLiveAgent);
   const startLiveRecording = useViewerStore((s) => s.startLiveRecording);
@@ -64,6 +65,24 @@ export function CommandBar() {
       event.target.value = "";
     },
     [openMcapFile],
+  );
+
+  const onFolderChange = useCallback(
+    async (event: React.ChangeEvent<HTMLInputElement>) => {
+      const files = event.target.files;
+      if (!files?.length) {
+        return;
+      }
+
+      try {
+        await openRosbag2Folder(files);
+      } catch (error) {
+        const message = error instanceof Error ? error.message : String(error);
+        window.alert(message);
+      }
+      event.target.value = "";
+    },
+    [openRosbag2Folder],
   );
 
   const onConnectLive = useCallback(async () => {
@@ -103,6 +122,11 @@ export function CommandBar() {
             hidden
             onChange={onFileChange}
           />
+        </label>
+
+        <label className={styles.button}>
+          Open bag folder
+          <input type="file" multiple hidden onChange={onFolderChange} {...({ webkitdirectory: "" } as const)} />
         </label>
 
         <div className={styles.liveConnect}>

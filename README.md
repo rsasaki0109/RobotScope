@@ -88,6 +88,16 @@ RobotScope/
 └── sample_data/             Sample MCAP fetch scripts
 ```
 
+## v0.4 alpha (0.4.0-alpha.0)
+
+Rosbag2 folder bags on v0.3 foundations. See [release notes](RobotScope/docs/release/v0.4.0-alpha.0.md).
+
+**New in v0.4**
+
+| Layer | Features |
+|-------|----------|
+| Rosbag2 | **Folder bag** — `metadata.yaml` + multiple `.db3` via **Open bag folder** |
+
 ## v0.3.0 (GA)
 
 Rosbag2 sidecar cache on v0.2 foundations. See [release notes](RobotScope/docs/release/v0.3.0.md) and [CHANGELOG.md](RobotScope/CHANGELOG.md).
@@ -107,7 +117,7 @@ Rosbag2 sidecar cache on v0.2 foundations. See [release notes](RobotScope/docs/r
 
 **Out of scope (v0.3)**
 
-- Native Lanelet2 `lanelet2_io` · rosbag2 folder bags · command gateway · cloud/fleet
+- Native Lanelet2 `lanelet2_io` · command gateway · cloud/fleet
 
 ## v0.2.0 (GA)
 

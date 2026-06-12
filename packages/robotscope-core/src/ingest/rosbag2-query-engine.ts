@@ -34,7 +34,7 @@ export class Rosbag2QueryEngineImpl implements McapQueryEngine {
   private rawMessageCache = new Map<string, RawMessage>();
 
   private constructor(
-    private readonly db: Database,
+    private readonly databases: Database[],
     private readonly session: SessionInfo,
     private readonly tfBuffer: TfBuffer,
     private readonly topicIndex: TopicTimeIndex,
@@ -45,7 +45,7 @@ export class Rosbag2QueryEngineImpl implements McapQueryEngine {
   ) {}
 
   static create(
-    db: Database,
+    databases: Database[],
     session: SessionInfo,
     tfBuffer: TfBuffer,
     topicIndex: TopicTimeIndex,
@@ -77,7 +77,7 @@ export class Rosbag2QueryEngineImpl implements McapQueryEngine {
     };
 
     const engine = new Rosbag2QueryEngineImpl(
-      db,
+      databases,
       enrichedSession,
       tfBuffer,
       topicIndex,
@@ -207,6 +207,8 @@ export class Rosbag2QueryEngineImpl implements McapQueryEngine {
   }
 
   close(): void {
-    this.db.close();
+    for (const db of this.databases) {
+      db.close();
+    }
   }
 }

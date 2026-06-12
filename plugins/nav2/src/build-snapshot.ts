@@ -7,6 +7,7 @@ import {
   extractGoalView,
   extractPlanView,
 } from "./extractors.js";
+import { evaluateFailureRecipes } from "./failure-recipes.js";
 import { resolveNav2Topics } from "./profile.js";
 import type { Nav2Snapshot } from "./types.js";
 
@@ -78,7 +79,7 @@ export async function buildNav2Snapshot(
     warnings.push(`AMCL covariance elevated (${amcl.covariance_xy_m.toFixed(2)} m)`);
   }
 
-  return {
+  const draft: Nav2Snapshot = {
     time_ns,
     topics,
     amcl,
@@ -88,5 +89,15 @@ export async function buildNav2Snapshot(
     goal,
     controller,
     warnings,
+    failure_recipe: null,
+    highlight_panels: [],
+  };
+
+  const failure_recipe = evaluateFailureRecipes(draft);
+
+  return {
+    ...draft,
+    failure_recipe,
+    highlight_panels: failure_recipe?.highlight_panels ?? [],
   };
 }

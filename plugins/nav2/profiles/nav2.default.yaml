@@ -17,3 +17,22 @@ rules:
     - /goal_pose
   cmd_vel:
     - /cmd_vel
+
+failure_recipes:
+  nav2_controller_stuck:
+    symptoms:
+      - local_plan_short
+      - cmd_vel_stalled
+      - goal_active
+    panels:
+      - nav2.local_plan
+      - nav2.controller
+      - nav2.goal
+
+  nav2_localization_uncertainty:
+    symptoms:
+      - amcl_covariance_high
+      - costmap_unknown_heavy
+    panels:
+      - nav2.amcl
+      - nav2.costmap

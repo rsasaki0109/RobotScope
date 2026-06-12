@@ -92,6 +92,15 @@ float64 z`;
 
 const perceptionWriter = new MessageWriter(parse(perceptionSchemaText, { ros2: true }));
 
+const planningSceneSchemaText = `string name
+uint32 robot_joint_count
+demo/CollisionStub[] collision_objects
+================================================================================
+MSG: demo/CollisionStub
+string id`;
+
+const planningSceneWriter = new MessageWriter(parse(planningSceneSchemaText, { ros2: true }));
+
 const buffer = new TempBuffer();
 
 const writer = new McapWriter({ writable: buffer });
@@ -174,6 +183,12 @@ const perceptionSchemaId = await writer.registerSchema({
   name: "autoware_perception_msgs/msg/DetectedObjects",
   encoding: "ros2msg",
   data: new TextEncoder().encode(perceptionSchemaText),
+});
+
+const planningSceneSchemaId = await writer.registerSchema({
+  name: "moveit_msgs/msg/PlanningScene",
+  encoding: "ros2msg",
+  data: new TextEncoder().encode(planningSceneSchemaText),
 });
 
 const odomChannelId = await writer.registerChannel({
@@ -295,6 +310,13 @@ const perceptionChannelId = await writer.registerChannel({
   metadata: new Map(),
 });
 
+const planningSceneChannelId = await writer.registerChannel({
+  topic: "/monitored_planning_scene",
+  messageEncoding: "cdr",
+  schemaId: planningSceneSchemaId,
+  metadata: new Map(),
+});
+
 function stamp(timeNs) {
   return { sec: Math.floor(timeNs / 1e9), nanosec: timeNs % 1e9 };
 }
@@ -378,7 +400,10 @@ function encodeFloat32(value) {
   return float32.writer.writeMessage({ data: value });
 }
 
-function encodeAmclPose(x, timeNs) {
+function encodeAmclPose(x, timeNs, i = 0) {
+  const locUncertainty = i >= 17;
+  const covXY = locUncertainty ? 0.22 : 0.04;
+  const covYaw = locUncertainty ? 0.08 : 0.02;
   return poseCov.writer.writeMessage({
     header: { stamp: stamp(timeNs), frame_id: "map" },
     pose: {
@@ -386,7 +411,10 @@ function encodeAmclPose(x, timeNs) {
         position: { x, y: 0.05, z: 0 },
         orientation: { x: 0, y: 0, z: 0, w: 1 },
       },
-      covariance: [0.04, 0, 0, 0, 0.04, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0.02, 0, 0, 0],
+      covariance: [
+        covXY, 0, 0, 0, covXY, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+        0, 0, 0, 0, 0, 0, 0, 0, covYaw,
+      ],
     },
   });
 }
@@ -402,20 +430,27 @@ function encodeGoalPose() {
 }
 
 function encodeCmdVel(i) {
+  const nav2Stuck = i >= 4 && i <= 6;
   const trackingFailure = i >= 8 && i <= 12;
+  const slow = nav2Stuck || trackingFailure;
   return twist.writer.writeMessage({
-    linear: { x: trackingFailure ? 0.03 : 0.35, y: 0, z: 0 },
-    angular: { x: 0, y: 0, z: trackingFailure ? 0.02 : Math.sin(i * 0.25) * 0.15 },
+    linear: { x: slow ? 0.03 : 0.35, y: 0, z: 0 },
+    angular: { x: 0, y: 0, z: slow ? 0.02 : Math.sin(i * 0.25) * 0.15 },
   });
 }
 
-function encodeCostmap(timeNs) {
+function encodeCostmap(timeNs, i = 0) {
+  const locUncertainty = i >= 17;
   const width = 10;
   const height = 10;
   const data = [];
   for (let y = 0; y < height; y += 1) {
     for (let x = 0; x < width; x += 1) {
-      data.push((x + y) % 3 === 0 ? 100 : 0);
+      if (locUncertainty) {
+        data.push(x < 3 && y < 3 ? 100 : -1);
+      } else {
+        data.push((x + y) % 3 === 0 ? 100 : 0);
+      }
     }
   }
   return occupancy.writer.writeMessage({
@@ -494,12 +529,34 @@ function encodeJointStates(i, timeNs) {
   const names = ["shoulder_pan", "shoulder_lift", "elbow", "wrist"];
   const t = i * 0.2;
   const positions = names.map((_, index) => Math.sin(t + index) * 0.6);
-  const velocities = names.map((_, index) => Math.cos(t + index) * (index === 2 ? 2.8 : 0.4));
+  const overspeed = i >= 6 && i <= 8;
+  const idle = i >= 17;
+  const velocities = names.map((_, index) => {
+    if (idle) {
+      return 0.05;
+    }
+    if (overspeed && index === 2) {
+      return 3.2;
+    }
+    return Math.cos(t + index) * (index === 2 ? 2.8 : 0.4);
+  });
   return jointState.writer.writeMessage({
     header: { stamp: stamp(timeNs), frame_id: "base_link" },
     name: names,
     position: positions,
     velocity: velocities,
+  });
+}
+
+function encodePlanningScene(collisionCount) {
+  const collision_objects = [];
+  for (let n = 0; n < collisionCount; n += 1) {
+    collision_objects.push({ id: `box_${n}` });
+  }
+  return planningSceneWriter.writeMessage({
+    name: "workcell",
+    robot_joint_count: 6,
+    collision_objects,
   });
 }
 
@@ -636,21 +693,21 @@ for (let i = 0; i < 20; i += 1) {
     sequence: i,
     logTime: t,
     publishTime: t,
-    data: encodeAmclPose(i * 0.1, timeNs),
+    data: encodeAmclPose(i * 0.1, timeNs, i),
   });
   await writer.addMessage({
     channelId: costmapChannelId,
     sequence: i,
     logTime: t,
     publishTime: t,
-    data: encodeCostmap(timeNs),
+    data: encodeCostmap(timeNs, i),
   });
   await writer.addMessage({
     channelId: localPlanChannelId,
     sequence: i,
     logTime: t,
     publishTime: t,
-    data: encodeLocalPlan(Math.min(2, i * 0.15)),
+    data: i >= 4 && i <= 6 ? encodeStalledPlan() : encodeLocalPlan(Math.min(2, i * 0.15)),
   });
   await writer.addMessage({
     channelId: pathChannelId,
@@ -679,6 +736,13 @@ for (let i = 0; i < 20; i += 1) {
     logTime: t,
     publishTime: t,
     data: encodeJointStates(i, timeNs),
+  });
+  await writer.addMessage({
+    channelId: planningSceneChannelId,
+    sequence: i,
+    logTime: t,
+    publishTime: t,
+    data: encodePlanningScene(i >= 17 ? 2 : 0),
   });
 }
 

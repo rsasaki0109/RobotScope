@@ -9,6 +9,7 @@ export type {
 } from "./types.js";
 export { NAV2_PROFILE, resolveNav2Topics } from "./profile.js";
 export { buildNav2Snapshot } from "./build-snapshot.js";
+export { NAV2_FAILURE_RECIPES, evaluateFailureRecipes } from "./failure-recipes.js";
 export { NAV2_PLUGIN_MANIFEST } from "./manifest.js";
 export { Nav2Dock } from "./Nav2Dock.js";
 export { useNav2Snapshot } from "./hooks/useNav2Snapshot.js";

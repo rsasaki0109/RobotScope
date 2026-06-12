@@ -64,3 +64,54 @@
 .warnings li + li {
   margin-top: 0.25rem;
 }
+
+.recipeBanner {
+  border: 1px solid rgba(245, 166, 35, 0.55);
+  border-radius: 8px;
+  background: rgba(245, 166, 35, 0.1);
+  padding: 0.65rem;
+}
+
+.recipeHeader {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.recipeTitle {
+  margin: 0;
+  font-size: 0.82rem;
+  color: #f5c46b;
+}
+
+.recipeBadge {
+  font-size: 0.62rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--rs-warning);
+}
+
+.recipeDescription {
+  margin: 0.35rem 0 0;
+  font-size: 0.72rem;
+  color: var(--rs-text-muted);
+  line-height: 1.45;
+}
+
+.recipeSymptoms {
+  margin: 0.45rem 0 0;
+  padding-left: 1.1rem;
+  font-size: 0.7rem;
+  color: var(--rs-warning);
+}
+
+.panelWrap,
+.panelHighlight {
+  border-radius: 8px;
+}
+
+.panelHighlight {
+  box-shadow: 0 0 0 1px rgba(245, 166, 35, 0.45);
+  background: rgba(245, 166, 35, 0.06);
+}

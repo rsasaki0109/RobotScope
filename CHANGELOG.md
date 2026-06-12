@@ -4,6 +4,22 @@ All notable changes to RobotScope are documented in this file.
 
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and versioning follows [SemVer](https://semver.org/).
 
+## [0.1.0-alpha.5] - 2026-06-13
+
+Nav2 and MoveIt failure recipe UI on the shared demo MCAP.
+
+### Added
+
+- **Nav2 failure recipe UI** — controller stuck + localization uncertainty; panel highlight banner
+- **MoveIt failure recipe UI** — joint overspeed + scene collision; panel highlight banner
+- Demo MCAP: Nav2 stuck window (~0.5s), MoveIt overspeed (~0.7s), end-of-clip localization/collision scenarios
+- Demo topic `/monitored_planning_scene` (MoveIt collision stub)
+
+### Changed
+
+- `extractPlanningSceneView()` accepts demo stub `collision_objects` / `robot_joint_count` fields
+- README demo table covers Autoware, Nav2, and MoveIt scrub times on GitHub Pages
+
 ## [0.1.0-alpha.4] - 2026-06-12
 
 GitHub Pages demo deploy and control tracking failure recipe.

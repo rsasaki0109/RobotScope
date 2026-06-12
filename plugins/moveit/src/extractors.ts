@@ -62,8 +62,14 @@ export function extractPlanningSceneView(
     attached_collision_objects?: unknown[];
   };
 
-  const robotJoints = msg.robot_state?.joint_state?.name?.length ?? 0;
-  const collisionObjects = msg.world?.collision_objects?.length ?? 0;
+  const robotJoints =
+    msg.robot_state?.joint_state?.name?.length ??
+    readNumber((msg as { robot_joint_count?: number }).robot_joint_count) ??
+    0;
+  const collisionObjects =
+    msg.world?.collision_objects?.length ??
+    (msg as { collision_objects?: unknown[] }).collision_objects?.length ??
+    0;
   const attached = msg.attached_collision_objects?.length ?? 0;
 
   if (robotJoints === 0 && collisionObjects === 0 && attached === 0 && !msg.name) {

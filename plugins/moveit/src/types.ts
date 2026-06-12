@@ -35,4 +35,6 @@ export interface MoveItSnapshot {
   planning_scene?: MoveItPlanningSceneView;
   trajectory?: MoveItTrajectoryView;
   warnings: string[];
+  failure_recipe?: import("./failure-recipes.js").FailureRecipeMatch | null;
+  highlight_panels: import("./failure-recipes.js").MoveItPanelId[];
 }

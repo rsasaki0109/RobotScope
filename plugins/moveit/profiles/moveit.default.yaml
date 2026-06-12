@@ -9,3 +9,20 @@ rules:
   display_trajectory:
     - /display_planned_path
     - /trajectory_execution/display_planned_path
+
+failure_recipes:
+  moveit_joint_overspeed:
+    symptoms:
+      - joint_velocity_high
+      - trajectory_active
+    panels:
+      - moveit.joint_states
+      - moveit.trajectory
+
+  moveit_scene_collision:
+    symptoms:
+      - scene_has_collisions
+      - joint_motion_idle
+    panels:
+      - moveit.planning_scene
+      - moveit.joint_states

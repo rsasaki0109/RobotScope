@@ -29,7 +29,13 @@ npm run dev
 
 Open an MCAP file from the viewer (drag & drop) or click **Connect Live** for a WebSocket agent.
 
-**Live demo (GitHub Pages):** [Autoware layout + bundled MCAP](https://rsasaki0109.github.io/RobotScope/?layout=autoware&demo=1) — scrub ~0.9s (control tracking), ~1.4s (phantom stop), end (localization drift).
+**Live demo (GitHub Pages):** [Autoware layout + bundled MCAP](https://rsasaki0109.github.io/RobotScope/?layout=autoware&demo=1) — same MCAP works with `layout=nav2` or `layout=moveit`.
+
+| Layout | Scrub to | Failure recipe |
+|--------|----------|----------------|
+| `autoware` | ~0.9s / ~1.4s / end | Control tracking / phantom stop / localization drift |
+| `nav2` | ~0.5s / ~1.8s | Controller stuck / localization uncertainty |
+| `moveit` | ~0.7s / ~1.8s | Joint overspeed / scene collision |
 
 ```bash
 # Generate demo recording (TF + odometry + Autoware topics)

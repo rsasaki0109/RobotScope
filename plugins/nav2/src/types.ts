@@ -57,4 +57,6 @@ export interface Nav2Snapshot {
   goal?: Nav2GoalView;
   controller?: Nav2ControllerView;
   warnings: string[];
+  failure_recipe?: import("./failure-recipes.js").FailureRecipeMatch | null;
+  highlight_panels: import("./failure-recipes.js").Nav2PanelId[];
 }

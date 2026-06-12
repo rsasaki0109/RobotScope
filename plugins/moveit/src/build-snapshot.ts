@@ -5,6 +5,7 @@ import {
   extractPlanningSceneView,
   extractTrajectoryView,
 } from "./extractors.js";
+import { evaluateFailureRecipes } from "./failure-recipes.js";
 import { resolveMoveItTopics } from "./profile.js";
 import type { MoveItSnapshot } from "./types.js";
 
@@ -51,12 +52,22 @@ export async function buildMoveItSnapshot(
     warnings.push(`High joint velocity (${joint_states.max_velocity_rps.toFixed(2)} rad/s)`);
   }
 
-  return {
+  const draft: MoveItSnapshot = {
     time_ns,
     topics,
     joint_states,
     planning_scene,
     trajectory,
     warnings,
+    failure_recipe: null,
+    highlight_panels: [],
+  };
+
+  const failure_recipe = evaluateFailureRecipes(draft);
+
+  return {
+    ...draft,
+    failure_recipe,
+    highlight_panels: failure_recipe?.highlight_panels ?? [],
   };
 }

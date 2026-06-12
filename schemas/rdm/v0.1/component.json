@@ -1,0 +1,25 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://robotscope.dev/schemas/rdm/v0.1/component.json",
+  "title": "RobotScope Component",
+  "type": "object",
+  "required": ["name", "type", "time"],
+  "properties": {
+    "name": { "type": "string" },
+    "type": { "type": "string" },
+    "value": {},
+    "buffer_ref": { "type": "string" },
+    "time": { "$ref": "timeline.json" },
+    "frame": { "$ref": "frame.json" },
+    "quality": {
+      "type": "object",
+      "properties": {
+        "score": { "type": "number" },
+        "uncertainty": { "type": "number" },
+        "flags": { "type": "array", "items": { "type": "string" } }
+      }
+    },
+    "source": { "$ref": "provenance.json" }
+  },
+  "additionalProperties": false
+}

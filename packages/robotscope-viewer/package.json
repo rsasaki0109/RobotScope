@@ -1,0 +1,33 @@
+{
+  "name": "@robotscope/viewer",
+  "version": "0.1.0-alpha.0",
+  "private": true,
+  "description": "RobotScope web viewer — React + Three.js",
+  "license": "Apache-2.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc -p tsconfig.json --noEmit && vite build",
+    "preview": "vite preview",
+    "typecheck": "tsc -p tsconfig.json --noEmit"
+  },
+  "dependencies": {
+    "@robotscope/core": "*",
+    "@robotscope/plugin-autoware": "*",
+    "@robotscope/plugin-nav2": "*",
+    "@robotscope/plugin-moveit": "*",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0",
+    "three": "^0.172.0",
+    "zustand": "^5.0.3"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.7",
+    "@types/react": "^19.0.8",
+    "@types/react-dom": "^19.0.3",
+    "@types/three": "^0.172.0",
+    "@vitejs/plugin-react": "^4.3.4",
+    "typescript": "^5.7.3",
+    "vite": "^6.0.11"
+  }
+}

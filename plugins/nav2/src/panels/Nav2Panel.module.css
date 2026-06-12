@@ -1,0 +1,91 @@
+.panel {
+  border: 1px solid var(--rs-border);
+  border-radius: 8px;
+  background: rgba(15, 17, 23, 0.55);
+  padding: 0.65rem;
+}
+
+.header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.5rem;
+  margin-bottom: 0.45rem;
+}
+
+.title {
+  margin: 0;
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  color: var(--rs-text-muted);
+}
+
+.badgeOk,
+.badgeWarn,
+.badgeMissing {
+  font-size: 0.65rem;
+  padding: 0.15rem 0.4rem;
+  border-radius: 999px;
+}
+
+.badgeOk {
+  color: var(--rs-success);
+  background: rgba(61, 214, 140, 0.12);
+}
+
+.badgeWarn {
+  color: var(--rs-warning);
+  background: rgba(245, 166, 35, 0.12);
+}
+
+.badgeMissing {
+  color: var(--rs-text-muted);
+  background: rgba(154, 163, 178, 0.12);
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: 7.5rem 1fr;
+  gap: 0.3rem 0.45rem;
+  margin: 0;
+  font-size: 0.78rem;
+}
+
+.grid dt {
+  color: var(--rs-text-muted);
+}
+
+.grid dd {
+  margin: 0;
+  word-break: break-word;
+}
+
+.mono {
+  font-family: ui-monospace, monospace;
+  font-size: 0.72rem;
+}
+
+.empty {
+  margin: 0;
+  font-size: 0.75rem;
+  color: var(--rs-text-muted);
+}
+
+.barTrack {
+  margin-top: 0.45rem;
+  height: 6px;
+  border-radius: 999px;
+  background: rgba(42, 49, 66, 0.9);
+  overflow: hidden;
+}
+
+.barFill {
+  height: 100%;
+  background: var(--rs-accent);
+}
+
+.barFillWarn {
+  composes: barFill;
+  background: var(--rs-warning);
+}

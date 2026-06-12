@@ -1,0 +1,60 @@
+# Autoware Universe topic profile
+# Maps semantic RDM entities to candidate ROS2 topics (first match wins).
+profile: autoware.universe
+version: 0.1
+
+rules:
+  localization.pose:
+    entity_path: /robot/ego/localization/pose
+    candidates:
+      - /localization/kinematic_state
+      - /localization/pose_estimator/pose_with_covariance
+
+  localization.ndt_score:
+    entity_path: /robot/ego/localization/ndt
+    candidates:
+      - /localization/pose_estimator/ndt_score
+      - /localization/pose_estimator/exe_time_ms
+
+  planning.trajectory:
+    entity_path: /robot/ego/planning/trajectory
+    candidates:
+      - /planning/scenario_planning/trajectory
+      - /planning/trajectory
+
+  perception.objects:
+    entity_path: /world/objects
+    candidates:
+      - /perception/object_recognition/objects
+      - /perception/object_recognition/tracking/objects
+
+  control.command:
+    entity_path: /robot/ego/control/command
+    candidates:
+      - /control/command/control_cmd
+      - /control/command/actuation_cmd
+
+  map.lanelet2:
+    entity_path: /world/map/lanelet2
+    candidates:
+      - /map/vector_map
+      - /map/lanelet2_map
+
+failure_recipes:
+  localization_drift:
+    symptoms:
+      - ndt_score_worsens
+      - covariance_grows
+      - map_odom_stale
+    panels:
+      - autoware.ndt_score
+      - autoware.localization
+      - tf_health
+
+  phantom_obstacle_stop:
+    symptoms:
+      - trajectory_velocity_zero
+      - brief_perception_object
+    panels:
+      - autoware.planning
+      - perception_objects

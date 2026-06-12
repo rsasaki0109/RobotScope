@@ -1,0 +1,15 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://robotscope.dev/schemas/rdm/v0.1/provenance.json",
+  "title": "RobotScope Provenance",
+  "type": "object",
+  "properties": {
+    "topic": { "type": "string" },
+    "node": { "type": "string" },
+    "schema": { "type": "string" },
+    "qos": { "type": "object" },
+    "channel_id": { "type": "integer" },
+    "sequence": { "type": "integer" }
+  },
+  "additionalProperties": true
+}

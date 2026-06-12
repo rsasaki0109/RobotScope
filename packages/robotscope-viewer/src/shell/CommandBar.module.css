@@ -1,0 +1,203 @@
+.bar {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: 1rem;
+  padding: 0.6rem 1rem;
+  border-bottom: 1px solid var(--rs-border);
+  background: var(--rs-panel);
+}
+
+.brand {
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+}
+
+.logo {
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  color: var(--rs-accent);
+}
+
+.tagline {
+  font-size: 0.72rem;
+  color: var(--rs-text-muted);
+}
+
+.actions {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  justify-content: center;
+}
+
+.button {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.35rem 0.75rem;
+  border-radius: 6px;
+  background: var(--rs-accent-dim);
+  color: #fff;
+  font-size: 0.85rem;
+  border: 1px solid transparent;
+}
+
+.button:hover {
+  background: var(--rs-accent);
+}
+
+.buttonSecondary {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.35rem 0.75rem;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--rs-text);
+  font-size: 0.85rem;
+  border: 1px solid var(--rs-border);
+}
+
+.buttonSecondary:hover {
+  border-color: var(--rs-accent);
+  color: var(--rs-accent);
+}
+
+.liveConnect {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.connectionDot {
+  width: 0.55rem;
+  height: 0.55rem;
+  border-radius: 999px;
+  flex-shrink: 0;
+  background: var(--rs-text-muted);
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.08);
+}
+
+.connection_idle,
+.connection_disconnected {
+  background: #6b7280;
+}
+
+.connection_connecting {
+  background: #60a5fa;
+  animation: pulse 1.2s ease-in-out infinite;
+}
+
+.connection_waiting_for_topics {
+  background: var(--rs-warning);
+  animation: pulse 1.6s ease-in-out infinite;
+}
+
+.connection_streaming {
+  background: #34d399;
+}
+
+.connection_error {
+  background: #f87171;
+}
+
+@keyframes pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.45;
+  }
+}
+
+.liveUrl {
+  width: 11rem;
+  padding: 0.3rem 0.45rem;
+  border-radius: 6px;
+  border: 1px solid var(--rs-border);
+  background: var(--rs-bg);
+  color: inherit;
+  font-size: 0.78rem;
+}
+
+.liveBadge {
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  color: var(--rs-warning);
+  padding: 0.2rem 0.45rem;
+  border: 1px solid rgba(245, 166, 35, 0.45);
+  border-radius: 999px;
+}
+
+.recordButton,
+.recordActive {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.35rem 0.75rem;
+  border-radius: 6px;
+  font-size: 0.82rem;
+  border: 1px solid transparent;
+}
+
+.recordButton {
+  background: rgba(214, 61, 92, 0.15);
+  color: #f08a9a;
+  border-color: rgba(214, 61, 92, 0.35);
+}
+
+.recordButton:hover {
+  background: rgba(214, 61, 92, 0.28);
+}
+
+.recordActive {
+  background: rgba(214, 61, 92, 0.35);
+  color: #fff;
+  border-color: rgba(214, 61, 92, 0.65);
+}
+
+.layoutSelect {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.75rem;
+  color: var(--rs-text-muted);
+}
+
+.layoutSelect select {
+  padding: 0.25rem 0.4rem;
+  border-radius: 4px;
+  border: 1px solid var(--rs-border);
+  background: var(--rs-bg);
+  color: inherit;
+  max-width: 11rem;
+}
+
+.frameSelect {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.75rem;
+  color: var(--rs-text-muted);
+}
+
+.frameSelect input {
+  width: 6rem;
+  padding: 0.25rem 0.4rem;
+  border-radius: 4px;
+  border: 1px solid var(--rs-border);
+  background: var(--rs-bg);
+  color: inherit;
+}
+
+.status {
+  margin: 0;
+  font-size: 0.78rem;
+  color: var(--rs-text-muted);
+  text-align: right;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 28rem;
+}

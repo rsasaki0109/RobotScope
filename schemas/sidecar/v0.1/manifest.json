@@ -1,0 +1,44 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://robotscope.dev/schemas/sidecar/v0.1/manifest.json",
+  "title": "RobotScope Sidecar Index v0.1",
+  "type": "object",
+  "required": ["version", "start_ns", "end_ns", "topics", "built_at_ms"],
+  "properties": {
+    "version": { "const": "0.1" },
+    "fingerprint": {
+      "type": "object",
+      "properties": {
+        "name": { "type": "string" },
+        "size": { "type": "integer" },
+        "last_modified_ms": { "type": "number" }
+      }
+    },
+    "start_ns": { "type": "integer" },
+    "end_ns": { "type": "integer" },
+    "built_at_ms": { "type": "number" },
+    "tf_message_count": { "type": "integer" },
+    "tf_transform_count": { "type": "integer" },
+    "topics": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["topic", "schema", "channel_id", "times"],
+        "properties": {
+          "topic": { "type": "string" },
+          "schema": { "type": "string" },
+          "channel_id": { "type": "integer" },
+          "times": {
+            "type": "array",
+            "items": {
+              "type": "array",
+              "items": { "type": "integer" },
+              "minItems": 1,
+              "maxItems": 2
+            }
+          }
+        }
+      }
+    }
+  }
+}

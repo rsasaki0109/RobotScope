@@ -1,0 +1,11 @@
+id: moveit.default
+version: "0.1"
+rules:
+  joint_states:
+    - /joint_states
+  planning_scene:
+    - /monitored_planning_scene
+    - /planning_scene
+  display_trajectory:
+    - /display_planned_path
+    - /trajectory_execution/display_planned_path

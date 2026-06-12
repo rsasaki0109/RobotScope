@@ -1,0 +1,31 @@
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "useDefineForClassFields": true,
+    "lib": ["ES2022", "DOM", "DOM.Iterable"],
+    "module": "ESNext",
+    "skipLibCheck": true,
+    "moduleResolution": "bundler",
+    "allowImportingTsExtensions": true,
+    "isolatedModules": true,
+    "moduleDetection": "force",
+    "noEmit": true,
+    "jsx": "react-jsx",
+    "strict": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "noFallthroughCasesInSwitch": true,
+    "noUncheckedSideEffectImports": true,
+    "paths": {
+      "@robotscope/core": ["../robotscope-core/src/index.ts"],
+      "@robotscope/core/*": ["../robotscope-core/src/*"],
+      "@robotscope/plugin-autoware": ["../../plugins/autoware/src/index.ts"],
+      "@robotscope/plugin-autoware/manifest": ["../../plugins/autoware/src/manifest.ts"],
+      "@robotscope/plugin-nav2": ["../../plugins/nav2/src/index.ts"],
+      "@robotscope/plugin-nav2/manifest": ["../../plugins/nav2/src/manifest.ts"],
+      "@robotscope/plugin-moveit": ["../../plugins/moveit/src/index.ts"],
+      "@robotscope/plugin-moveit/manifest": ["../../plugins/moveit/src/manifest.ts"]
+    }
+  },
+  "include": ["src"]
+}

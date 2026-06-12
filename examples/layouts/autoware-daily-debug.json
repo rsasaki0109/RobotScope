@@ -1,0 +1,16 @@
+{
+  "id": "autoware-daily-debug",
+  "name": "Autoware Daily Debug",
+  "description": "Killer demo layout — localization failure in 90 seconds",
+  "panels": [
+    { "id": "scene3d", "type": "builtin.scene3d", "region": "center-left", "weight": 2 },
+    { "id": "ndt", "type": "autoware.ndt_score", "region": "center-right" },
+    { "id": "localization", "type": "autoware.localization", "region": "center-right" },
+    { "id": "planning", "type": "autoware.planning", "region": "center-right" },
+    { "id": "control", "type": "autoware.control_error", "region": "center-right" },
+    { "id": "tf", "type": "builtin.tf_tree", "region": "sidebar" },
+    { "id": "topics", "type": "builtin.topics", "region": "sidebar" },
+    { "id": "timeline", "type": "builtin.timeline", "region": "bottom" }
+  ],
+  "fixed_frame": "map"
+}

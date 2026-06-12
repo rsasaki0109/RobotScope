@@ -1,0 +1,27 @@
+import type { PluginManifest } from "../../../packages/robotscope-core/src/plugin/manifest.js";
+
+export const NAV2_PLUGIN_MANIFEST: PluginManifest = {
+  name: "robotscope-nav2",
+  version: "0.1.0",
+  api: "0.1",
+  license: "Apache-2.0",
+  entrypoints: {
+    frontend: "dist/frontend.js",
+  },
+  capabilities: ["read.entities", "read.ros_graph", "register.panels"],
+  permissions: {
+    "command.publish": false,
+    "command.service_call": false,
+    network: false,
+  },
+  contributes: {
+    panels: [
+      "nav2.costmap",
+      "nav2.global_plan",
+      "nav2.local_plan",
+      "nav2.goal",
+      "nav2.controller",
+    ],
+    layouts: ["nav2", "nav2-daily-debug"],
+  },
+};

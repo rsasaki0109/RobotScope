@@ -1,0 +1,75 @@
+.sidebar {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  padding: 0.75rem;
+  background: var(--rs-panel);
+  overflow: auto;
+}
+
+.section h2 {
+  margin: 0 0 0.5rem;
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--rs-text-muted);
+}
+
+.empty,
+.hint {
+  margin: 0;
+  font-size: 0.8rem;
+  color: var(--rs-text-muted);
+}
+
+.topicList,
+.panelList {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.topicList {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.topic,
+.topicActive {
+  width: 100%;
+  text-align: left;
+  padding: 0.4rem 0.5rem;
+  border-radius: 6px;
+  border: 1px solid transparent;
+  background: transparent;
+  color: inherit;
+}
+
+.topic:hover {
+  background: rgba(78, 161, 255, 0.08);
+}
+
+.topicActive {
+  background: rgba(78, 161, 255, 0.15);
+  border-color: var(--rs-accent-dim);
+}
+
+.topicName {
+  display: block;
+  font-size: 0.78rem;
+  word-break: break-all;
+}
+
+.topicSchema {
+  display: block;
+  font-size: 0.68rem;
+  color: var(--rs-text-muted);
+  margin-top: 0.15rem;
+}
+
+.panelList li {
+  font-size: 0.8rem;
+  padding: 0.3rem 0;
+  color: var(--rs-text-muted);
+}

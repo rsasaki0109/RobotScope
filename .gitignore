@@ -1,0 +1,42 @@
+# Dependencies
+node_modules/
+.pnpm-store/
+
+# Build outputs
+dist/
+build/
+target/
+*.tsbuildinfo
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Env & secrets
+.env
+.env.*
+!.env.example
+
+# Logs & caches
+*.log
+.cache/
+.turbo/
+.robotscope/
+*.mcap.robotscope/
+
+# Sample data (large files — fetch via scripts)
+sample_data/*.mcap
+sample_data/*.bag
+sample_data/**/*.mcap
+
+# Test coverage
+coverage/
+
+# Rust
+Cargo.lock

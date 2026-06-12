@@ -1,0 +1,53 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://robotscope.dev/schemas/plugin/v0.1/manifest.json",
+  "title": "RobotScope Plugin Manifest v0.1",
+  "type": "object",
+  "required": ["name", "version", "api", "license", "entrypoints"],
+  "properties": {
+    "name": { "type": "string", "pattern": "^robotscope-" },
+    "version": { "type": "string" },
+    "api": { "type": "string", "const": "0.1" },
+    "license": { "type": "string" },
+    "entrypoints": {
+      "type": "object",
+      "properties": {
+        "frontend": { "type": "string" },
+        "backend": { "type": "string" }
+      }
+    },
+    "capabilities": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "enum": [
+          "read.entities",
+          "read.ros_graph",
+          "render.scene",
+          "register.panels",
+          "register.decoders",
+          "register.renderers",
+          "register.transforms"
+        ]
+      }
+    },
+    "permissions": {
+      "type": "object",
+      "properties": {
+        "command.publish": { "type": "boolean", "default": false },
+        "command.service_call": { "type": "boolean", "default": false },
+        "network": { "type": "boolean", "default": false }
+      }
+    },
+    "contributes": {
+      "type": "object",
+      "properties": {
+        "panels": { "type": "array", "items": { "type": "string" } },
+        "renderers": { "type": "array", "items": { "type": "string" } },
+        "archetypes": { "type": "array", "items": { "type": "string" } },
+        "layouts": { "type": "array", "items": { "type": "string" } }
+      }
+    }
+  },
+  "additionalProperties": false
+}

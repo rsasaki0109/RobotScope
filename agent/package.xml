@@ -1,0 +1,18 @@
+<?xml version="1.0"?>
+<package format="3">
+  <name>robotscope_agent</name>
+  <version>0.1.0</version>
+  <description>RobotScope ROS 2 live bridge for the web viewer</description>
+  <maintainer email="dev@robotscope.dev">RobotScope Contributors</maintainer>
+  <license>Apache-2.0</license>
+
+  <buildtool_depend>ament_python</buildtool_depend>
+
+  <exec_depend>rclpy</exec_depend>
+  <exec_depend>rosidl_runtime_py</exec_depend>
+  <exec_depend>python3-websockets</exec_depend>
+
+  <export>
+    <build_type>ament_python</build_type>
+  </export>
+</package>

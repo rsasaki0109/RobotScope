@@ -1,0 +1,16 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://robotscope.dev/schemas/rdm/v0.1/timeline.json",
+  "title": "RobotScope Timeline",
+  "description": "Multi-clock time coordinates for robotics and Physical AI",
+  "type": "object",
+  "properties": {
+    "log_time_ns": { "type": "integer", "description": "MCAP / ingest receive time" },
+    "sensor_time_ns": { "type": "integer", "description": "Sensor header stamp" },
+    "valid_time_ns": { "type": "integer", "description": "State validity time" },
+    "sim_time_ns": { "type": "integer", "description": "Simulation clock" },
+    "model_step": { "type": "integer", "description": "Policy / world model step" },
+    "episode_step": { "type": "integer", "description": "Dataset episode step" }
+  },
+  "additionalProperties": false
+}

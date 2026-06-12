@@ -1,0 +1,10 @@
+{
+  "id": "default",
+  "name": "Default",
+  "panels": [
+    { "id": "topics", "type": "builtin.topics", "region": "sidebar" },
+    { "id": "scene3d", "type": "builtin.scene3d", "region": "center" },
+    { "id": "inspector", "type": "builtin.inspector", "region": "right" },
+    { "id": "timeline", "type": "builtin.timeline", "region": "bottom" }
+  ]
+}

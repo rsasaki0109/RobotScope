@@ -1,0 +1,19 @@
+id: nav2.default
+version: "0.1"
+rules:
+  amcl_pose:
+    - /amcl_pose
+    - /odom
+  global_costmap:
+    - /global_costmap/costmap
+    - /local_costmap/costmap
+  global_plan:
+    - /plan
+    - /received_global_plan
+  local_plan:
+    - /local_plan
+    - /transformed_global_plan
+  goal:
+    - /goal_pose
+  cmd_vel:
+    - /cmd_vel

@@ -1,0 +1,74 @@
+.section {
+  margin-top: 0.5rem;
+}
+
+.header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.header h2 {
+  margin: 0;
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--rs-text-muted);
+}
+
+.meta {
+  font-size: 0.68rem;
+  color: var(--rs-text-muted);
+}
+
+.empty {
+  margin: 0;
+  font-size: 0.78rem;
+  color: var(--rs-text-muted);
+}
+
+.issues {
+  margin: 0 0 0.5rem;
+  padding-left: 1rem;
+  font-size: 0.72rem;
+  color: var(--rs-warning);
+  line-height: 1.4;
+}
+
+.tree {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  max-height: 14rem;
+  overflow: auto;
+}
+
+.node {
+  display: grid;
+  grid-template-columns: 1fr auto auto auto;
+  gap: 0.35rem;
+  align-items: center;
+  padding: 0.25rem 0;
+  border-bottom: 1px solid rgba(42, 49, 66, 0.6);
+  font-size: 0.72rem;
+}
+
+.frame {
+  font-family: ui-monospace, monospace;
+  color: #dce3ef;
+}
+
+.edge {
+  color: var(--rs-text-muted);
+}
+
+.age {
+  color: var(--rs-warning);
+}
+
+.static {
+  color: var(--rs-success);
+  font-size: 0.65rem;
+}

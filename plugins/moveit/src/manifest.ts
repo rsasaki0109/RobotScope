@@ -1,0 +1,21 @@
+import type { PluginManifest } from "../../../packages/robotscope-core/src/plugin/manifest.js";
+
+export const MOVEIT_PLUGIN_MANIFEST: PluginManifest = {
+  name: "robotscope-moveit",
+  version: "0.1.0",
+  api: "0.1",
+  license: "Apache-2.0",
+  entrypoints: {
+    frontend: "dist/frontend.js",
+  },
+  capabilities: ["read.entities", "read.ros_graph", "register.panels"],
+  permissions: {
+    "command.publish": false,
+    "command.service_call": false,
+    network: false,
+  },
+  contributes: {
+    panels: ["moveit.joint_states", "moveit.planning_scene", "moveit.trajectory"],
+    layouts: ["moveit", "moveit-manipulation-debug"],
+  },
+};

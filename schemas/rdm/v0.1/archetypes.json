@@ -1,0 +1,65 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://robotscope.dev/schemas/rdm/v0.1/archetypes.json",
+  "title": "RobotScope Archetypes v0.1",
+  "description": "Required and optional components per semantic archetype",
+  "type": "object",
+  "properties": {
+    "Image": {
+      "required": ["width", "height", "encoding", "frame_id", "sensor_time"],
+      "optional": ["intrinsics", "distortion", "camera_info", "compression"]
+    },
+    "PointCloud": {
+      "required": ["points", "fields", "frame_id", "sensor_time"],
+      "optional": ["intensity", "rgb", "covariance", "bounds", "lod"]
+    },
+    "Pose": {
+      "required": ["translation", "rotation", "frame_id", "child_frame_id", "time"],
+      "optional": ["covariance", "twist", "source_score"]
+    },
+    "Trajectory": {
+      "required": ["poses", "time_offsets"],
+      "optional": ["velocity", "lane_ids", "covariance"]
+    },
+    "RobotModel": {
+      "required": ["model_format", "model_uri", "root_frame"],
+      "optional": ["meshes", "collision", "joint_limits"]
+    },
+    "TF": {
+      "required": ["parent_frame", "child_frame", "transform", "time"],
+      "optional": ["static", "authority", "covariance"]
+    },
+    "OccupancyGrid": {
+      "required": ["resolution", "width", "height", "origin", "values"],
+      "optional": ["probability", "unknown_value"]
+    },
+    "Costmap": {
+      "required": ["resolution", "width", "height", "origin", "cost_values"],
+      "optional": ["layers", "inflation", "lethal_threshold"]
+    },
+    "Lanelet2": {
+      "required": ["lanelets", "linestrings"],
+      "optional": ["regulatory_elements", "route", "map_version"]
+    },
+    "Observation": {
+      "required": ["observation_id", "modalities", "time"],
+      "optional": ["instruction", "proprioception", "sensor_refs"]
+    },
+    "Action": {
+      "required": ["action_id", "action_type", "command", "time"],
+      "optional": ["goal", "feedback", "safety_filter", "clipped_command"]
+    },
+    "VLAState": {
+      "required": ["instruction", "observation_refs", "action_output", "model_id"],
+      "optional": ["checkpoint_hash", "confidence", "latency_ms", "memory_refs"]
+    },
+    "WorldModel": {
+      "required": ["model_id", "state_ref", "prediction_horizon"],
+      "optional": ["predicted_occupancy", "predicted_trajectories", "uncertainty"]
+    },
+    "HumanoidState": {
+      "required": ["joint_positions", "joint_velocities", "base_pose"],
+      "optional": ["contacts", "com", "zmp", "support_polygon"]
+    }
+  }
+}

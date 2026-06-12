@@ -1,0 +1,28 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://robotscope.dev/schemas/rdm/v0.1/causality.json",
+  "title": "RobotScope Causality Link",
+  "type": "object",
+  "required": ["id", "produced_by", "time_ns"],
+  "properties": {
+    "id": { "type": "string" },
+    "produced_by": { "type": "string", "description": "Producer entity or node id" },
+    "consumed": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "input_refs": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "output_refs": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "action_id": { "type": "string" },
+    "observation_id": { "type": "string" },
+    "model_id": { "type": "string" },
+    "time_ns": { "type": "integer" }
+  },
+  "additionalProperties": false
+}

@@ -1,0 +1,53 @@
+:root {
+  color-scheme: dark;
+  font-family:
+    "IBM Plex Sans",
+    "Segoe UI",
+    system-ui,
+    -apple-system,
+    sans-serif;
+  line-height: 1.5;
+  font-weight: 400;
+  color: #e8eaed;
+  background-color: #0f1117;
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+
+  --rs-bg: #0f1117;
+  --rs-panel: #161922;
+  --rs-border: #2a3142;
+  --rs-accent: #4ea1ff;
+  --rs-accent-dim: #2d6cb5;
+  --rs-text-muted: #9aa3b2;
+  --rs-success: #3dd68c;
+  --rs-warning: #f5a623;
+  --rs-danger: #ff5c5c;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  margin: 0;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+}
+
+button,
+input {
+  font: inherit;
+}
+
+button {
+  cursor: pointer;
+}
+
+a {
+  color: var(--rs-accent);
+}

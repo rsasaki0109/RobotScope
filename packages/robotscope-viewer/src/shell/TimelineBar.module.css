@@ -1,0 +1,74 @@
+.bar {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.5rem 0.75rem;
+  border-top: 1px solid var(--rs-border);
+  background: var(--rs-panel);
+  position: relative;
+}
+
+.placeholder {
+  margin: 0;
+  grid-column: 1 / -1;
+  text-align: center;
+  font-size: 0.8rem;
+  color: var(--rs-text-muted);
+}
+
+.followButton,
+.followActive {
+  min-width: 4.5rem;
+  height: 2rem;
+  border-radius: 6px;
+  border: 1px solid var(--rs-border);
+  background: var(--rs-bg);
+  font-size: 0.72rem;
+  letter-spacing: 0.04em;
+}
+
+.followButton {
+  color: var(--rs-text-muted);
+}
+
+.followActive {
+  color: var(--rs-warning);
+  border-color: rgba(245, 166, 35, 0.45);
+}
+
+.playButton {
+  width: 2rem;
+  height: 2rem;
+  border-radius: 6px;
+  border: 1px solid var(--rs-border);
+  background: var(--rs-bg);
+  color: var(--rs-accent);
+}
+
+.slider {
+  width: 100%;
+  accent-color: var(--rs-accent);
+}
+
+.time {
+  font-size: 0.75rem;
+  font-family: ui-monospace, monospace;
+  color: var(--rs-text-muted);
+  white-space: nowrap;
+}
+
+.progressTrack {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 2px;
+  background: transparent;
+}
+
+.progressFill {
+  height: 100%;
+  background: var(--rs-accent);
+  opacity: 0.6;
+}

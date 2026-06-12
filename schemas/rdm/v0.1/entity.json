@@ -1,0 +1,47 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://robotscope.dev/schemas/rdm/v0.1/entity.json",
+  "title": "RobotScope Entity",
+  "description": "Semantic entity in the RobotScope Data Model (RDM)",
+  "type": "object",
+  "required": ["id", "path", "kind"],
+  "properties": {
+    "id": {
+      "type": "string",
+      "description": "Stable entity identifier"
+    },
+    "path": {
+      "type": "string",
+      "pattern": "^/",
+      "description": "Semantic entity path, e.g. /robot/ego/localization/pose"
+    },
+    "kind": {
+      "type": "string",
+      "enum": [
+        "world",
+        "robot",
+        "sensor",
+        "policy",
+        "world_model",
+        "annotation",
+        "system"
+      ]
+    },
+    "parent": {
+      "type": "string",
+      "description": "Parent entity id"
+    },
+    "components": {
+      "type": "array",
+      "items": { "$ref": "component.json" }
+    },
+    "tags": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "provenance": {
+      "$ref": "provenance.json"
+    }
+  },
+  "additionalProperties": false
+}

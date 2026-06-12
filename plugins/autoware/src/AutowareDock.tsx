@@ -8,6 +8,7 @@ import { LocalizationPanel } from "./panels/LocalizationPanel.js";
 import { MapPanel } from "./panels/MapPanel.js";
 import { NdtScorePanel } from "./panels/NdtScorePanel.js";
 import { PlanningPanel } from "./panels/PlanningPanel.js";
+import { PerceptionPanel } from "./panels/PerceptionPanel.js";
 
 export interface AutowareDockProps {
   snapshot: AutowareSnapshot | null;
@@ -108,6 +109,9 @@ export function AutowareDock({ snapshot, loading, inspector }: AutowareDockProps
           </RecipePanel>
           <RecipePanel panelId="autoware.planning" snapshot={snapshot}>
             <PlanningPanel data={snapshot?.planning} />
+          </RecipePanel>
+          <RecipePanel panelId="perception_objects" snapshot={snapshot}>
+            <PerceptionPanel data={snapshot?.perception} />
           </RecipePanel>
           <RecipePanel panelId="autoware.control_error" snapshot={snapshot}>
             <ControlErrorPanel data={snapshot?.control} />

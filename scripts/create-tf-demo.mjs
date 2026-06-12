@@ -69,6 +69,29 @@ uint8[] data`;
 
 const laneletWriter = new MessageWriter(parse(laneletSchemaText, { ros2: true }));
 
+const perceptionSchemaText = `std_msgs/Header header
+demo/DetectedObjectStub[] objects
+================================================================================
+MSG: std_msgs/Header
+builtin_interfaces/Time stamp
+string frame_id
+================================================================================
+MSG: builtin_interfaces/Time
+int32 sec
+uint32 nanosec
+================================================================================
+MSG: demo/DetectedObjectStub
+float32 existence_probability
+string label
+geometry_msgs/Point position
+================================================================================
+MSG: geometry_msgs/Point
+float64 x
+float64 y
+float64 z`;
+
+const perceptionWriter = new MessageWriter(parse(perceptionSchemaText, { ros2: true }));
+
 const buffer = new TempBuffer();
 
 const writer = new McapWriter({ writable: buffer });
@@ -145,6 +168,12 @@ const laneletSchemaId = await writer.registerSchema({
   name: "autoware_map_msgs/msg/LaneletMapBin",
   encoding: "ros2msg",
   data: new TextEncoder().encode(laneletSchemaText),
+});
+
+const perceptionSchemaId = await writer.registerSchema({
+  name: "autoware_perception_msgs/msg/DetectedObjects",
+  encoding: "ros2msg",
+  data: new TextEncoder().encode(perceptionSchemaText),
 });
 
 const odomChannelId = await writer.registerChannel({
@@ -259,6 +288,13 @@ const laneletCenterlinesChannelId = await writer.registerChannel({
   metadata: new Map(),
 });
 
+const perceptionChannelId = await writer.registerChannel({
+  topic: "/perception/object_recognition/objects",
+  messageEncoding: "cdr",
+  schemaId: perceptionSchemaId,
+  metadata: new Map(),
+});
+
 function stamp(timeNs) {
   return { sec: Math.floor(timeNs / 1e9), nanosec: timeNs % 1e9 };
 }
@@ -297,6 +333,44 @@ function encodePath(maxX) {
   return pathMsg.writer.writeMessage({
     header: { stamp: { sec: 0, nanosec: 0 }, frame_id: "map" },
     poses,
+  });
+}
+
+function encodeStalledPlan() {
+  return pathMsg.writer.writeMessage({
+    header: { stamp: { sec: 0, nanosec: 0 }, frame_id: "map" },
+    poses: [
+      {
+        header: { stamp: { sec: 0, nanosec: 0 }, frame_id: "map" },
+        pose: {
+          position: { x: 1.0, y: 0, z: 0 },
+          orientation: { x: 0, y: 0, z: 0, w: 1 },
+        },
+      },
+      {
+        header: { stamp: { sec: 0, nanosec: 0 }, frame_id: "map" },
+        pose: {
+          position: { x: 1.05, y: 0, z: 0 },
+          orientation: { x: 0, y: 0, z: 0, w: 1 },
+        },
+      },
+    ],
+  });
+}
+
+function encodePerceptionObjects(timeNs, includePhantom) {
+  const objects = includePhantom
+    ? [
+        {
+          existence_probability: 0.38,
+          label: "unknown",
+          position: { x: 1.15, y: 0.05, z: 0 },
+        },
+      ]
+    : [];
+  return perceptionWriter.writeMessage({
+    header: { stamp: stamp(timeNs), frame_id: "map" },
+    objects,
   });
 }
 
@@ -575,6 +649,20 @@ for (let i = 0; i < 20; i += 1) {
     logTime: t,
     publishTime: t,
     data: encodeLocalPlan(Math.min(2, i * 0.15)),
+  });
+  await writer.addMessage({
+    channelId: pathChannelId,
+    sequence: i,
+    logTime: t,
+    publishTime: t,
+    data: i >= 14 ? encodeStalledPlan() : encodePath(Math.min(4, 1 + i * 0.2)),
+  });
+  await writer.addMessage({
+    channelId: perceptionChannelId,
+    sequence: i,
+    logTime: t,
+    publishTime: t,
+    data: encodePerceptionObjects(timeNs, i >= 14),
   });
   await writer.addMessage({
     channelId: cmdVelChannelId,

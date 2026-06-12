@@ -24,6 +24,7 @@ export const AUTOWARE_PLUGIN_MANIFEST: PluginManifest = {
       "autoware.localization",
       "autoware.ndt_score",
       "autoware.planning",
+      "autoware.perception",
       "autoware.control_error",
       "autoware.gnss",
       "autoware.map",

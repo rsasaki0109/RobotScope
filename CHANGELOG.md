@@ -4,6 +4,22 @@ All notable changes to RobotScope are documented in this file.
 
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and versioning follows [SemVer](https://semver.org/).
 
+## [0.1.0-alpha.3] - 2026-06-12
+
+Autoware perception observability and phantom obstacle failure recipe demo.
+
+### Added
+
+- **Autoware Perception Objects panel** — object count, max confidence, low-confidence count, brief-spike flag
+- **`extractPerceptionView()`** with 150ms lookback for brief detection spikes
+- **Phantom obstacle stop failure recipe** — requires stalled planning + brief perception object; highlights Planning and Perception panels
+- Demo MCAP: `/perception/object_recognition/objects` with phantom object from frame 14; planning trajectory stalls in sync
+- Agent autoware profile subscribes to perception objects topic
+
+### Changed
+
+- Demo script fixes LaneletMapBin schema registration (was incorrectly aliased to PredictedObjects)
+
 ## [0.1.0-alpha.2] - 2026-06-13
 
 Autoware debug UX: 3D map layers and failure recipe panel highlighting.

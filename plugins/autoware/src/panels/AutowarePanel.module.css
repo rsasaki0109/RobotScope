@@ -110,3 +110,11 @@
   composes: barFill;
   background: var(--rs-warning);
 }
+
+.objectList {
+  margin: 0.45rem 0 0;
+  padding-left: 1rem;
+  font-size: 0.72rem;
+  color: var(--rs-text-muted);
+  line-height: 1.45;
+}

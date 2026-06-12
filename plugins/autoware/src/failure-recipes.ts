@@ -60,7 +60,10 @@ const SYMPTOM_CHECKS: Record<string, SymptomEvaluator> = {
     }
     return planning.point_count > 1 && planning.length_m < 0.35;
   },
-  brief_perception_object: () => false,
+  brief_perception_object: (snapshot) =>
+    snapshot.perception?.brief_spike === true ||
+    (snapshot.perception?.object_count ?? 0) > 0 &&
+      (snapshot.perception?.low_confidence_count ?? 0) > 0,
 };
 
 export function evaluateFailureRecipes(
@@ -80,7 +83,7 @@ export function evaluateFailureRecipes(
     }
 
     const score = matched_symptoms.length / recipe.symptoms.length;
-    const minMatches = recipe.id === "localization_drift" ? 1 : 1;
+    const minMatches = recipe.id === "phantom_obstacle_stop" ? 2 : 1;
     if (matched_symptoms.length < minMatches) {
       continue;
     }

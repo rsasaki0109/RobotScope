@@ -6,6 +6,7 @@ import {
   extractLocalizationView,
   extractNdtView,
   extractOccupancyMapView,
+  extractPerceptionView,
   extractPlanningView,
 } from "./extractors.js";
 import { evaluateFailureRecipes } from "./failure-recipes.js";
@@ -28,6 +29,8 @@ export async function buildAutowareSnapshot(
     longitudinalRaw,
     mapVectorRaw,
     mapOccupancyRaw,
+    perceptionRaw,
+    perceptionPriorRaw,
   ] = await Promise.all([
     topics.localization_pose
       ? engine.getRawMessageNearTime(topics.localization_pose, time_ns)
@@ -49,6 +52,12 @@ export async function buildAutowareSnapshot(
       : Promise.resolve(null),
     topics.map_occupancy
       ? engine.getRawMessageNearTime(topics.map_occupancy, time_ns)
+      : Promise.resolve(null),
+    topics.perception_objects
+      ? engine.getRawMessageNearTime(topics.perception_objects, time_ns)
+      : Promise.resolve(null),
+    topics.perception_objects
+      ? engine.getRawMessageNearTime(topics.perception_objects, Math.max(0, time_ns - 150_000_000))
       : Promise.resolve(null),
   ]);
 
@@ -82,6 +91,25 @@ export async function buildAutowareSnapshot(
     longitudinalRaw?.decoded,
   );
 
+  const priorPerception =
+    topics.perception_objects && perceptionPriorRaw?.decoded
+      ? extractPerceptionView(topics.perception_objects, perceptionPriorRaw.decoded)
+      : undefined;
+  let perception =
+    topics.perception_objects && perceptionRaw?.decoded
+      ? extractPerceptionView(topics.perception_objects, perceptionRaw.decoded)
+      : undefined;
+  if (perception) {
+    perception = {
+      ...perception,
+      brief_spike: perception.object_count > 0 && (priorPerception?.object_count ?? 0) === 0,
+    };
+  }
+
+  if (!topics.perception_objects) {
+    warnings.push("Perception objects topic not found");
+  }
+
   const map: AutowareMapView = {
     lanelet2:
       topics.map_vector && mapVectorRaw?.decoded
@@ -114,6 +142,7 @@ export async function buildAutowareSnapshot(
     ndt,
     planning,
     control,
+    perception,
     warnings,
     failure_recipe: null,
     highlight_panels: [],

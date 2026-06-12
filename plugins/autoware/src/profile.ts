@@ -30,6 +30,10 @@ export const AUTOWARE_PROFILE = {
     map_vector: ["/map/vector_map", "/map/lanelet2_map"],
     map_occupancy: ["/map/map", "/map/pointcloud_map", "/map/occupancy_grid"],
     map_lanelet_centerlines: ["/map/lanelet2_centerlines"],
+    perception_objects: [
+      "/perception/object_recognition/objects",
+      "/perception/object_recognition/tracking/objects",
+    ],
   },
   ndt_warning_threshold: 1.2,
 } as const;
@@ -50,5 +54,6 @@ export function resolveAutowareTopics(
     gnss_pose: pick(AUTOWARE_PROFILE.rules.gnss_pose),
     map_vector: pick(AUTOWARE_PROFILE.rules.map_vector),
     map_occupancy: pick(AUTOWARE_PROFILE.rules.map_occupancy),
+    perception_objects: pick(AUTOWARE_PROFILE.rules.perception_objects),
   };
 }

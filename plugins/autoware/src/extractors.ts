@@ -6,6 +6,8 @@ import type {
   AutowareLocalizationView,
   AutowareNdtView,
   AutowareOccupancyMapView,
+  AutowarePerceptionObjectView,
+  AutowarePerceptionView,
   AutowarePlanningView,
 } from "./types.js";
 import { AUTOWARE_PROFILE } from "./profile.js";
@@ -246,5 +248,70 @@ export function extractOccupancyMapView(
     free_cells: free,
     unknown_cells: unknown,
     cells,
+  };
+}
+
+const LOW_CONFIDENCE_THRESHOLD = 0.55;
+
+export function extractPerceptionView(
+  topic: string,
+  decoded: unknown,
+  options: { brief_spike?: boolean } = {},
+): AutowarePerceptionView | undefined {
+  const msg = decoded as {
+    header?: { frame_id?: string };
+    objects?: Array<{
+      existence_probability?: number;
+      label?: string;
+      classification?: { label?: string };
+      kinematics?: {
+        pose_with_covariance?: { pose?: { position?: { x?: number; y?: number; z?: number } } };
+      };
+      position?: { x?: number; y?: number; z?: number };
+    }>;
+  };
+
+  const rawObjects = msg.objects ?? [];
+  const objects: AutowarePerceptionObjectView[] = [];
+
+  for (const object of rawObjects) {
+    const probability = readNumber(object.existence_probability) ?? 0;
+    const label = object.label ?? object.classification?.label ?? "unknown";
+    const position = object.position ?? object.kinematics?.pose_with_covariance?.pose?.position;
+    objects.push({
+      label,
+      existence_probability: probability,
+      position: [position?.x ?? 0, position?.y ?? 0, position?.z ?? 0],
+    });
+  }
+
+  if (objects.length === 0 && rawObjects.length === 0) {
+    return {
+      topic,
+      frame_id: msg.header?.frame_id ?? "map",
+      object_count: 0,
+      max_existence_probability: 0,
+      low_confidence_count: 0,
+      brief_spike: false,
+      objects: [],
+    };
+  }
+
+  const max_existence_probability = objects.reduce(
+    (max, object) => Math.max(max, object.existence_probability),
+    0,
+  );
+  const low_confidence_count = objects.filter(
+    (object) => object.existence_probability < LOW_CONFIDENCE_THRESHOLD,
+  ).length;
+
+  return {
+    topic,
+    frame_id: msg.header?.frame_id ?? "map",
+    object_count: objects.length,
+    max_existence_probability,
+    low_confidence_count,
+    brief_spike: options.brief_spike ?? false,
+    objects,
   };
 }

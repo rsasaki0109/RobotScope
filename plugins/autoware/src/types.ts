@@ -7,6 +7,7 @@ export interface ResolvedAutowareTopics {
   gnss_pose?: string;
   map_vector?: string;
   map_occupancy?: string;
+  perception_objects?: string;
 }
 
 export interface AutowareLanelet2View {
@@ -66,6 +67,22 @@ export interface AutowareControlView {
   longitudinal_error_m?: number;
 }
 
+export interface AutowarePerceptionObjectView {
+  label: string;
+  existence_probability: number;
+  position: [number, number, number];
+}
+
+export interface AutowarePerceptionView {
+  topic: string;
+  frame_id: string;
+  object_count: number;
+  max_existence_probability: number;
+  low_confidence_count: number;
+  brief_spike: boolean;
+  objects: AutowarePerceptionObjectView[];
+}
+
 export interface AutowareSnapshot {
   time_ns: number;
   topics: ResolvedAutowareTopics;
@@ -74,6 +91,7 @@ export interface AutowareSnapshot {
   ndt?: AutowareNdtView;
   planning?: AutowarePlanningView;
   control?: AutowareControlView;
+  perception?: AutowarePerceptionView;
   warnings: string[];
   failure_recipe?: import("./failure-recipes.js").FailureRecipeMatch | null;
   highlight_panels: import("./failure-recipes.js").AutowarePanelId[];

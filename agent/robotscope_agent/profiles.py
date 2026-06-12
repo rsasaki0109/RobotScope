@@ -19,6 +19,7 @@ PROFILE_TOPICS: dict[str, list[str]] = {
         "/map/map",
         "/map/lanelet2_centerlines",
         "/perception/object_recognition/objects",
+        "/cmd_vel",
     ],
     "nav2": [
         "/tf",

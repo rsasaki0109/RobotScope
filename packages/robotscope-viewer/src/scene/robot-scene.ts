@@ -13,6 +13,7 @@ import {
   Group,
   Line,
   LineBasicMaterial,
+  LineLoop,
   Mesh,
   MeshBasicMaterial,
   Object3D,
@@ -222,9 +223,12 @@ export function createRobotSceneController(
     snapshot.trajectories.forEach((trajectory) => {
       const geometry = new BufferGeometry();
       geometry.setAttribute("position", new BufferAttribute(trajectory.points, 3));
-      const color = trajectory.archetype === "Lanelet2" ? 0xf5a623 : 0x3dd68c;
+      const isBoundary = trajectory.archetype === "Lanelet2" && trajectory.closed;
+      const color = isBoundary ? 0xc8820a : trajectory.archetype === "Lanelet2" ? 0xf5a623 : 0x3dd68c;
       const material = new LineBasicMaterial({ color, linewidth: 2 });
-      layers.trajectories.add(new Line(geometry, material));
+      layers.trajectories.add(
+        isBoundary ? new LineLoop(geometry, material) : new Line(geometry, material),
+      );
     });
 
     if (followPose) {

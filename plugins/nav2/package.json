@@ -1,6 +1,6 @@
 {
   "name": "@robotscope/plugin-nav2",
-  "version": "0.1.0-beta.0",
+  "version": "0.1.0-beta.1",
   "private": true,
   "description": "Nav2-native panels and topic profiles",
   "license": "Apache-2.0",

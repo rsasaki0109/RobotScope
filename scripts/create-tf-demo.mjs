@@ -512,8 +512,37 @@ function encodeLaneletCenterlines() {
     poses,
   });
 }
+function encodeDemoLaneletBin() {
+  const lanelets = [
+    [
+      [-0.5, -0.15],
+      [2.5, -0.15],
+      [2.5, 0.15],
+      [-0.5, 0.15],
+    ],
+    [
+      [-0.5, 0.35],
+      [2.5, 0.35],
+      [2.5, 0.65],
+      [-0.5, 0.65],
+    ],
+  ];
+  const bytes = [0x52, 0x4c, 0x32, 0x44, 1, lanelets.length & 0xff, (lanelets.length >> 8) & 0xff];
+  for (const polygon of lanelets) {
+    bytes.push(polygon.length);
+    for (const [x, y] of polygon) {
+      const buffer = new ArrayBuffer(8);
+      const view = new DataView(buffer);
+      view.setFloat32(0, x, true);
+      view.setFloat32(4, y, true);
+      bytes.push(...new Uint8Array(buffer));
+    }
+  }
+  return bytes;
+}
+
 function encodeVectorMap() {
-  const data = new Array(512).fill(0).map((_, index) => index % 256);
+  const data = encodeDemoLaneletBin();
   return laneletWriter.writeMessage({
     version: 1,
     format_version: "1.0.0-demo",

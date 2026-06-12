@@ -15,6 +15,9 @@ export interface AutowareLanelet2View {
   topic: string;
   byte_size: number;
   format_version?: string | number;
+  lanelet_count?: number;
+  boundary_point_count?: number;
+  parse_format?: "demo-rl2d" | "unknown";
 }
 
 export interface AutowareOccupancyMapView {

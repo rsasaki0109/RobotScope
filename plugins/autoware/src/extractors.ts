@@ -1,16 +1,4 @@
-import { extractPose } from "@robotscope/core";
-
-import type {
-  AutowareControlView,
-  AutowareLanelet2View,
-  AutowareLocalizationView,
-  AutowareNdtView,
-  AutowareOccupancyMapView,
-  AutowarePerceptionObjectView,
-  AutowarePerceptionView,
-  AutowarePlanningView,
-} from "./types.js";
-import { AUTOWARE_PROFILE } from "./profile.js";
+import { extractPose, parseLaneletMapBin } from "@robotscope/core";
 
 function readNumber(value: unknown): number | undefined {
   return typeof value === "number" && Number.isFinite(value) ? value : undefined;
@@ -211,10 +199,15 @@ export function extractLanelet2View(
       ? msg.format_version
       : readNumber(msg.version) ?? readNumber(msg.format_version);
 
+  const parsed = parseLaneletMapBin(decoded);
+
   return {
     topic,
     byte_size,
     format_version,
+    lanelet_count: parsed?.lanelet_count,
+    boundary_point_count: parsed?.boundary_point_count,
+    parse_format: parsed?.format,
   };
 }
 

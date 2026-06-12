@@ -1,6 +1,7 @@
 import type { MappedTopic } from "../mapping/entity-mapper.js";
 import type { ArchetypeName } from "../rdm.js";
 import type { RawMessage } from "../query.js";
+import { parseLaneletMapBin } from "../ros2/lanelet-map-bin.js";
 import { parseOccupancyGrid, transformOccupancyGridToFixed } from "../ros2/occupancy-grid.js";
 import { parsePointCloud2, type DecodedPointCloud2 } from "../ros2/pointcloud2.js";
 import { extractPose, transformPoseToFixed } from "../ros2/pose.js";
@@ -36,6 +37,7 @@ export interface SceneTrajectory {
   archetype: "Trajectory" | "Lanelet2";
   points: Float32Array;
   point_count: number;
+  closed?: boolean;
 }
 
 export interface SceneOccupancyGrid {
@@ -173,28 +175,51 @@ export async function buildSceneSnapshot(
 
     if (mapped.archetype === "Trajectory" || mapped.archetype === "Lanelet2") {
       const trajectory = extractTrajectory(raw.decoded);
-      if (!trajectory || trajectory.point_count === 0) {
-        if (mapped.archetype === "Lanelet2") {
-          continue;
-        }
-        warnings.push(`Failed to parse trajectory from ${mapped.topic}`);
+      if (trajectory && trajectory.point_count > 0) {
+        const toFixed = tfBuffer.lookupTransformToFixed(
+          trajectory.frame_id,
+          fixed_frame,
+          time_ns,
+        );
+        const resolved = toFixed
+          ? transformTrajectoryToFixed(trajectory, toFixed)
+          : trajectory;
+        trajectories.push({
+          topic: mapped.topic,
+          entity_path: mapped.entity_path,
+          archetype: mapped.archetype === "Lanelet2" ? "Lanelet2" : "Trajectory",
+          points: resolved.points,
+          point_count: resolved.point_count,
+        });
         continue;
       }
-      const toFixed = tfBuffer.lookupTransformToFixed(
-        trajectory.frame_id,
-        fixed_frame,
-        time_ns,
-      );
-      const resolved = toFixed
-        ? transformTrajectoryToFixed(trajectory, toFixed)
-        : trajectory;
-      trajectories.push({
-        topic: mapped.topic,
-        entity_path: mapped.entity_path,
-        archetype: mapped.archetype === "Lanelet2" ? "Lanelet2" : "Trajectory",
-        points: resolved.points,
-        point_count: resolved.point_count,
-      });
+
+      if (mapped.archetype === "Lanelet2") {
+        const laneletMap = parseLaneletMapBin(raw.decoded);
+        if (laneletMap && laneletMap.lanelets.length > 0) {
+          for (const lanelet of laneletMap.lanelets) {
+            const points = new Float32Array(lanelet.boundary.length * 3);
+            for (let index = 0; index < lanelet.boundary.length; index += 1) {
+              const [x, y, z] = lanelet.boundary[index]!;
+              points[index * 3] = x;
+              points[index * 3 + 1] = y;
+              points[index * 3 + 2] = z;
+            }
+            trajectories.push({
+              topic: mapped.topic,
+              entity_path: mapped.entity_path,
+              archetype: "Lanelet2",
+              points,
+              point_count: lanelet.boundary.length,
+              closed: true,
+            });
+          }
+          continue;
+        }
+        continue;
+      }
+
+      warnings.push(`Failed to parse trajectory from ${mapped.topic}`);
       continue;
     }
 

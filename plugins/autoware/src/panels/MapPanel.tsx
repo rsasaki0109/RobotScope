@@ -115,6 +115,21 @@ export function MapPanel({
                   <dd>{String(lanelet.format_version)}</dd>
                 </>
               ) : null}
+              {lanelet.lanelet_count != null && lanelet.lanelet_count > 0 ? (
+                <>
+                  <dt>Lanelets</dt>
+                  <dd>
+                    {lanelet.lanelet_count} parsed
+                    {lanelet.parse_format === "demo-rl2d" ? " (RL2D demo)" : ""}
+                  </dd>
+                </>
+              ) : null}
+              {lanelet.boundary_point_count != null && lanelet.boundary_point_count > 0 ? (
+                <>
+                  <dt>Boundary pts</dt>
+                  <dd>{lanelet.boundary_point_count}</dd>
+                </>
+              ) : null}
             </dl>
           ) : (
             <p className={styles.empty}>Lanelet2 vector map not in recording</p>

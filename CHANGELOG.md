@@ -4,6 +4,21 @@ All notable changes to RobotScope are documented in this file.
 
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and versioning follows [SemVer](https://semver.org/).
 
+## [0.1.0-beta.1] - 2026-06-13
+
+Lanelet2 RL2D demo format parser and 3D boundary rendering.
+
+### Added
+
+- **`parseLaneletMapBin()`** — RobotScope demo RL2D v1 lanelet boundaries in `LaneletMapBin.data`
+- **3D closed boundary loops** for parsed lanelets (distinct from centerline polylines)
+- **Map panel** lanelet / boundary point counts when RL2D payload parses
+- Demo MCAP `/map/vector_map` encodes 2 RL2D lanelet polygons
+
+### Changed
+
+- [known-limitations.md](RobotScope/docs/known-limitations.md) — documents RL2D demo vs native Autoware bin
+
 ## [0.1.0-beta.0] - 2026-06-13
 
 First v0.1 beta — documentation and scope consolidation after alpha.8.

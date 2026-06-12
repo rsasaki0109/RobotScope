@@ -1,6 +1,17 @@
 # RobotScope
 
-**Open Observability for Robots and Physical AI**
+<p align="center">
+  <a href="https://rsasaki0109.github.io/RobotScope/?layout=autoware&demo=1">
+    <img src="docs/assets/readme-hero.gif" alt="RobotScope Autoware debug layout — MCAP replay, 3D scene, failure recipes, and cross-stack timeline" width="920" />
+  </a>
+</p>
+
+<p align="center">
+  <strong>Open Observability for Robots and Physical AI</strong><br />
+  <a href="https://rsasaki0109.github.io/RobotScope/?layout=autoware&demo=1">Live demo</a>
+  ·
+  <a href="#quick-start">Quick start</a>
+</p>
 
 Debug ROS2, Autoware, Nav2, MoveIt, VLA policies, humanoids, world models, and 3D robot scenes from one open platform.
 

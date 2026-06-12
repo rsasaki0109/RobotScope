@@ -3,6 +3,7 @@ import type { McapQueryEngine, SessionInfo } from "@robotscope/core";
 import {
   extractControlView,
   extractLanelet2View,
+  extractLaneletCenterlinesView,
   extractLocalizationView,
   extractNdtView,
   extractOccupancyMapView,
@@ -30,6 +31,7 @@ export async function buildAutowareSnapshot(
     cmdVelRaw,
     mapVectorRaw,
     mapOccupancyRaw,
+    mapCenterlinesRaw,
     perceptionRaw,
     perceptionPriorRaw,
   ] = await Promise.all([
@@ -56,6 +58,9 @@ export async function buildAutowareSnapshot(
       : Promise.resolve(null),
     topics.map_occupancy
       ? engine.getRawMessageNearTime(topics.map_occupancy, time_ns)
+      : Promise.resolve(null),
+    topics.map_lanelet_centerlines
+      ? engine.getRawMessageNearTime(topics.map_lanelet_centerlines, time_ns)
       : Promise.resolve(null),
     topics.perception_objects
       ? engine.getRawMessageNearTime(topics.perception_objects, time_ns)
@@ -126,6 +131,13 @@ export async function buildAutowareSnapshot(
         ? extractOccupancyMapView(topics.map_occupancy, mapOccupancyRaw.decoded)
         : undefined,
   };
+
+  if (map.lanelet2 && topics.map_lanelet_centerlines && mapCenterlinesRaw?.decoded) {
+    const centerlines = extractLaneletCenterlinesView(mapCenterlinesRaw.decoded);
+    if (centerlines) {
+      map.lanelet2 = { ...map.lanelet2, centerlines };
+    }
+  }
 
   if (!topics.map_vector && !topics.map_occupancy) {
     warnings.push("Map topics not found (/map/vector_map, /map/map)");

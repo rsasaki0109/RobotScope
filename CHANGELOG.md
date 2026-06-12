@@ -4,6 +4,20 @@ All notable changes to RobotScope are documented in this file.
 
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and versioning follows [SemVer](https://semver.org/).
 
+## [0.1.0-rc.1] - 2026-06-13
+
+Autoware Map panel Lanelet2 2D preview.
+
+### Added
+
+- **Lanelet2 2D canvas preview** in Autoware Map panel — RL2D boundary loops + centerline polylines + ego dot
+- `extractLaneletCenterlinesView()` — `/map/lanelet2_centerlines` Path → panel overlay
+- `map_lanelet_centerlines` topic slot in autoware profile
+
+### Changed
+
+- [known-limitations.md](RobotScope/docs/known-limitations.md) — documents 2D panel preview
+
 ## [0.1.0-rc.0] - 2026-06-13
 
 First v0.1 release candidate — API freeze for integrators.

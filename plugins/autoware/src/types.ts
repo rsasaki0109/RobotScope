@@ -8,7 +8,12 @@ export interface ResolvedAutowareTopics {
   gnss_pose?: string;
   map_vector?: string;
   map_occupancy?: string;
+  map_lanelet_centerlines?: string;
   perception_objects?: string;
+}
+
+export interface LaneletPolyline2D {
+  points: Array<[number, number]>;
 }
 
 export interface AutowareLanelet2View {
@@ -18,6 +23,8 @@ export interface AutowareLanelet2View {
   lanelet_count?: number;
   boundary_point_count?: number;
   parse_format?: "demo-rl2d" | "unknown";
+  boundaries?: LaneletPolyline2D[];
+  centerlines?: LaneletPolyline2D[];
 }
 
 export interface AutowareOccupancyMapView {

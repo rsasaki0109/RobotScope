@@ -1,6 +1,6 @@
 {
   "name": "@robotscope/plugin-autoware",
-  "version": "0.1.0-rc.0",
+  "version": "0.1.0-rc.1",
   "private": true,
   "description": "Autoware-native panels, renderers, and topic profiles",
   "license": "Apache-2.0",

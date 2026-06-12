@@ -1,6 +1,6 @@
 import { useEffect, useRef } from "react";
 
-import type { AutowareMapView, AutowareOccupancyMapView } from "../types.js";
+import type { AutowareLanelet2View, AutowareMapView, AutowareOccupancyMapView } from "../types.js";
 import styles from "./AutowarePanel.module.css";
 
 interface EgoPose {
@@ -79,6 +79,168 @@ function OccupancyPreview({
   return <canvas ref={canvasRef} className={styles.mapCanvas} aria-label="Occupancy map preview" />;
 }
 
+const LANELET_CANVAS_W = 320;
+const LANELET_CANVAS_H = 140;
+const LANELET_PAD = 10;
+
+interface WorldBounds {
+  minX: number;
+  maxX: number;
+  minY: number;
+  maxY: number;
+}
+
+function collectLaneletBounds(
+  lanelet: AutowareLanelet2View,
+  ego?: EgoPose,
+): WorldBounds | null {
+  let minX = Infinity;
+  let maxX = -Infinity;
+  let minY = Infinity;
+  let maxY = -Infinity;
+  let hasPoint = false;
+
+  const include = (x: number, y: number) => {
+    hasPoint = true;
+    minX = Math.min(minX, x);
+    maxX = Math.max(maxX, x);
+    minY = Math.min(minY, y);
+    maxY = Math.max(maxY, y);
+  };
+
+  for (const polyline of [...(lanelet.boundaries ?? []), ...(lanelet.centerlines ?? [])]) {
+    for (const [x, y] of polyline.points) {
+      include(x, y);
+    }
+  }
+
+  if (ego && (ego.frame_id === "map" || ego.frame_id === "odom")) {
+    include(ego.position[0], ego.position[1]);
+  }
+
+  if (!hasPoint) {
+    return null;
+  }
+
+  const spanX = Math.max(maxX - minX, 0.5);
+  const spanY = Math.max(maxY - minY, 0.5);
+  const marginX = spanX * 0.08;
+  const marginY = spanY * 0.12;
+
+  return {
+    minX: minX - marginX,
+    maxX: maxX + marginX,
+    minY: minY - marginY,
+    maxY: maxY + marginY,
+  };
+}
+
+function worldToCanvas(x: number, y: number, bounds: WorldBounds): [number, number] {
+  const spanX = Math.max(bounds.maxX - bounds.minX, 1e-6);
+  const spanY = Math.max(bounds.maxY - bounds.minY, 1e-6);
+  const scale = Math.min(
+    (LANELET_CANVAS_W - LANELET_PAD * 2) / spanX,
+    (LANELET_CANVAS_H - LANELET_PAD * 2) / spanY,
+  );
+  const cx = LANELET_PAD + (x - bounds.minX) * scale;
+  const cy = LANELET_CANVAS_H - LANELET_PAD - (y - bounds.minY) * scale;
+  return [cx, cy];
+}
+
+function drawLaneletPreview(
+  canvas: HTMLCanvasElement,
+  lanelet: AutowareLanelet2View,
+  ego?: EgoPose,
+): void {
+  const ctx = canvas.getContext("2d");
+  if (!ctx) {
+    return;
+  }
+
+  const bounds = collectLaneletBounds(lanelet, ego);
+  if (!bounds) {
+    return;
+  }
+
+  canvas.width = LANELET_CANVAS_W;
+  canvas.height = LANELET_CANVAS_H;
+
+  ctx.fillStyle = "#12151c";
+  ctx.fillRect(0, 0, LANELET_CANVAS_W, LANELET_CANVAS_H);
+
+  const drawPolyline = (
+    points: Array<[number, number]>,
+    color: string,
+    closed: boolean,
+  ) => {
+    if (points.length === 0) {
+      return;
+    }
+    ctx.strokeStyle = color;
+    ctx.lineWidth = closed ? 1.6 : 1.4;
+    ctx.beginPath();
+    const [startX, startY] = worldToCanvas(points[0]![0], points[0]![1], bounds);
+    ctx.moveTo(startX, startY);
+    for (let index = 1; index < points.length; index += 1) {
+      const [x, y] = points[index]!;
+      const [cx, cy] = worldToCanvas(x, y, bounds);
+      ctx.lineTo(cx, cy);
+    }
+    if (closed) {
+      ctx.closePath();
+    }
+    ctx.stroke();
+  };
+
+  for (const boundary of lanelet.boundaries ?? []) {
+    drawPolyline(boundary.points, "#c8820a", true);
+  }
+  for (const centerline of lanelet.centerlines ?? []) {
+    drawPolyline(centerline.points, "#f5a623", false);
+  }
+
+  if (ego && (ego.frame_id === "map" || ego.frame_id === "odom")) {
+    const [cx, cy] = worldToCanvas(ego.position[0], ego.position[1], bounds);
+    ctx.fillStyle = "#3dd68c";
+    ctx.beginPath();
+    ctx.arc(cx, cy, 3.2, 0, Math.PI * 2);
+    ctx.fill();
+  }
+}
+
+function Lanelet2Preview({
+  lanelet,
+  ego,
+}: {
+  lanelet: AutowareLanelet2View;
+  ego?: EgoPose;
+}) {
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const hasGeometry = Boolean(
+    (lanelet.boundaries?.length ?? 0) > 0 || (lanelet.centerlines?.length ?? 0) > 0,
+  );
+
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas || !hasGeometry) {
+      return;
+    }
+    drawLaneletPreview(canvas, lanelet, ego);
+  }, [lanelet, ego, hasGeometry]);
+
+  if (!hasGeometry) {
+    return null;
+  }
+
+  return (
+    <canvas
+      ref={canvasRef}
+      className={styles.mapCanvas}
+      aria-label="Lanelet2 map preview"
+    />
+  );
+}
+
 export function MapPanel({
   map,
   ego,
@@ -134,6 +296,10 @@ export function MapPanel({
           ) : (
             <p className={styles.empty}>Lanelet2 vector map not in recording</p>
           )}
+
+          {lanelet && (lanelet.boundaries?.length || lanelet.centerlines?.length) ? (
+            <Lanelet2Preview lanelet={lanelet} ego={ego} />
+          ) : null}
 
           {occupancy ? (
             <>

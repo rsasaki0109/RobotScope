@@ -60,6 +60,7 @@ export function resolveAutowareTopics(
     gnss_pose: pick(AUTOWARE_PROFILE.rules.gnss_pose),
     map_vector: pick(AUTOWARE_PROFILE.rules.map_vector),
     map_occupancy: pick(AUTOWARE_PROFILE.rules.map_occupancy),
+    map_lanelet_centerlines: pick(AUTOWARE_PROFILE.rules.map_lanelet_centerlines),
     perception_objects: pick(AUTOWARE_PROFILE.rules.perception_objects),
   };
 }

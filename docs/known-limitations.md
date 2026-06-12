@@ -17,7 +17,7 @@ Plugin manifest **`api: "0.1"`** is frozen at RC — see [api-v0.1.md](RobotScop
 
 | Limitation | Notes |
 |------------|-------|
-| **Lanelet2** — stats + centerline polylines + **RL2D demo bin** boundaries in 3D | Full Autoware `lanelet2_io` binary not parsed |
+| **Lanelet2** — stats + **2D panel preview** + centerline polylines + **RL2D demo bin** boundaries in 3D | Full Autoware `lanelet2_io` binary not parsed |
 | **Occupancy grid** — 2D preview + 3D mesh | No full costmap plugin parity with RViz |
 | **Point clouds** — basic decode + scene | No advanced filtering / accumulation UI |
 | **WebGPU** experimental | WebGL2 is the default render path |

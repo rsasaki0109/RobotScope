@@ -1,4 +1,4 @@
-import { extractPose, parseLaneletMapBin } from "@robotscope/core";
+import { extractPose, parseLaneletMapBin, extractTrajectory } from "@robotscope/core";
 
 import type {
   AutowareControlView,
@@ -9,6 +9,7 @@ import type {
   AutowarePerceptionObjectView,
   AutowarePerceptionView,
   AutowarePlanningView,
+  LaneletPolyline2D,
 } from "./types.js";
 import { AUTOWARE_PROFILE } from "./profile.js";
 
@@ -212,6 +213,11 @@ export function extractLanelet2View(
       : readNumber(msg.version) ?? readNumber(msg.format_version);
 
   const parsed = parseLaneletMapBin(decoded);
+  const boundaries: LaneletPolyline2D[] | undefined = parsed?.lanelets.length
+    ? parsed.lanelets.map((lanelet) => ({
+        points: lanelet.boundary.map(([x, y]) => [x, y] as [number, number]),
+      }))
+    : undefined;
 
   return {
     topic,
@@ -220,7 +226,22 @@ export function extractLanelet2View(
     lanelet_count: parsed?.lanelet_count,
     boundary_point_count: parsed?.boundary_point_count,
     parse_format: parsed?.format,
+    boundaries,
   };
+}
+
+export function extractLaneletCenterlinesView(decoded: unknown): LaneletPolyline2D[] | undefined {
+  const trajectory = extractTrajectory(decoded);
+  if (!trajectory || trajectory.point_count === 0) {
+    return undefined;
+  }
+
+  const points: Array<[number, number]> = [];
+  for (let index = 0; index < trajectory.point_count; index += 1) {
+    points.push([trajectory.points[index * 3]!, trajectory.points[index * 3 + 1]!]);
+  }
+
+  return points.length > 0 ? [{ points }] : undefined;
 }
 
 export function extractOccupancyMapView(

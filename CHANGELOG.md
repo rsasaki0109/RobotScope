@@ -4,6 +4,24 @@ All notable changes to RobotScope are documented in this file.
 
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and versioning follows [SemVer](https://semver.org/).
 
+## [0.9.0-beta.0] - 2026-06-13
+
+First v0.9 beta — scope consolidation after alpha.0.
+
+### Summary
+
+Beta consolidates Twist velocity editor on the command gateway. Documentation and known-limitations boundaries updated for local live cmd_vel workflows.
+
+### Added
+
+- [docs/release/v0.9.0-beta.0.md](RobotScope/docs/release/v0.9.0-beta.0.md)
+- [docs/migration/v0.9-alpha-to-beta.md](RobotScope/docs/migration/v0.9-alpha-to-beta.md)
+
+### Changed
+
+- README + [known-limitations.md](RobotScope/docs/known-limitations.md) updated for v0.9 beta boundaries
+- [docs/command-gateway.md](RobotScope/docs/command-gateway.md) — beta scope header
+
 ## [0.9.0-alpha.0] - 2026-06-13
 
 Twist velocity editor for command gateway.

@@ -2,10 +2,13 @@ import type { ComponentType, ReactNode } from "react";
 
 import type { PluginManifest } from "@robotscope/core";
 
+import type { ParsedLaneletOsmMap } from "@robotscope/core";
+
 export interface PluginViewerSlice {
   ingest: import("@robotscope/core").IngestHandle | null;
   session: import("@robotscope/core").SessionInfo | null;
   currentTimeNs: number;
+  laneletOsmOverlay?: ParsedLaneletOsmMap | null;
 }
 
 export interface PluginSnapshotState<TSnapshot> {

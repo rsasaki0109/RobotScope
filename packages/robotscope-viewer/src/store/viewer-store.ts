@@ -2,6 +2,7 @@ import type {
   IngestHandle,
   IngestProgress,
   MappedTopic,
+  ParsedLaneletOsmMap,
   RawMessage,
   SceneSnapshot,
   SessionInfo,
@@ -145,8 +146,11 @@ export interface ViewerState {
   recipeMarkers: RecipeTimelineMarker[];
   liveActiveRecipes: RecipeTimelineMarker[];
   recipeIndexLoading: boolean;
+  laneletOsmOverlay: ParsedLaneletOsmMap | null;
   openMcapFile: (file: File, options?: { sidecar?: SidecarManifest }) => Promise<void>;
   openRosbag2Folder: (files: FileList | File[]) => Promise<void>;
+  openLaneletOsmFile: (file: File) => Promise<void>;
+  clearLaneletOsmOverlay: () => void;
   openMcapUrl: (url: string, options?: { sidecar?: SidecarManifest }) => Promise<void>;
   connectLiveAgent: (url: string) => Promise<void>;
   disconnectLiveAgent: () => Promise<void>;
@@ -186,6 +190,7 @@ const initialState = {
   recipeMarkers: [] as RecipeTimelineMarker[],
   liveActiveRecipes: [] as RecipeTimelineMarker[],
   recipeIndexLoading: false,
+  laneletOsmOverlay: null as ParsedLaneletOsmMap | null,
 };
 
 let refreshTimer: ReturnType<typeof setTimeout> | undefined;
@@ -423,6 +428,24 @@ export const useViewerStore = create<ViewerState>((set, get) => ({
         set({ recipeIndexLoading: false });
       }
     })();
+  },
+
+  async openLaneletOsmFile(file) {
+    set({ statusMessage: `Loading ${file.name}…` });
+    const { parseLaneletOsm } = await import("@robotscope/core");
+    const xml = await file.text();
+    const parsed = parseLaneletOsm(xml);
+    if (!parsed) {
+      throw new Error("Not a Lanelet2 OSM map (expected local_x/local_y nodes and ways)");
+    }
+    set({
+      laneletOsmOverlay: parsed,
+      statusMessage: `Loaded OSM map ${file.name} — ${parsed.way_count} ways, ${parsed.node_count} nodes`,
+    });
+  },
+
+  clearLaneletOsmOverlay() {
+    set({ laneletOsmOverlay: null, statusMessage: "Cleared OSM map overlay" });
   },
 
   async openMcapUrl(url, options) {

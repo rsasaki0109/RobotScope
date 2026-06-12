@@ -14,6 +14,7 @@ export interface AutowareViewerSlice {
   ingest: { engine: QueryEngine } | null;
   session: SessionInfo | null;
   currentTimeNs: number;
+  laneletOsmOverlay?: import("@robotscope/core").ParsedLaneletOsmMap | null;
 }
 
 export function useAutowareSnapshot(slice: AutowareViewerSlice): AutowareDataState {
@@ -32,7 +33,22 @@ export function useAutowareSnapshot(slice: AutowareViewerSlice): AutowareDataSta
 
     void buildAutowareSnapshot(engine, slice.session, slice.currentTimeNs).then((next) => {
       if (!cancelled) {
-        setSnapshot(next);
+        const withOsm =
+          slice.laneletOsmOverlay && next
+            ? {
+                ...next,
+                map: {
+                  ...next.map,
+                  osm_sidecar: {
+                    format: slice.laneletOsmOverlay.format,
+                    node_count: slice.laneletOsmOverlay.node_count,
+                    way_count: slice.laneletOsmOverlay.way_count,
+                    ways: slice.laneletOsmOverlay.ways.map((way) => ({ points: way.points })),
+                  },
+                },
+              }
+            : next;
+        setSnapshot(withOsm);
         setLoading(false);
       }
     });
@@ -40,7 +56,7 @@ export function useAutowareSnapshot(slice: AutowareViewerSlice): AutowareDataSta
     return () => {
       cancelled = true;
     };
-  }, [slice.ingest, slice.session, slice.currentTimeNs]);
+  }, [slice.ingest, slice.session, slice.currentTimeNs, slice.laneletOsmOverlay]);
 
   return { snapshot, loading };
 }

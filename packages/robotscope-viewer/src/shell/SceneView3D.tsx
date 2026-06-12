@@ -1,5 +1,7 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useMemo, useRef } from "react";
 import { WebGLRenderer } from "three";
+
+import { laneletOsmToSceneTrajectories } from "@robotscope/core";
 
 import { createRobotSceneController } from "../scene/robot-scene";
 import { useViewerStore } from "../store/viewer-store";
@@ -13,7 +15,21 @@ export function SceneView3D() {
   const fixedFrame = useViewerStore((s) => s.fixedFrame);
   const session = useViewerStore((s) => s.session);
   const sceneSnapshot = useViewerStore((s) => s.sceneSnapshot);
+  const laneletOsmOverlay = useViewerStore((s) => s.laneletOsmOverlay);
   const sceneLoading = useViewerStore((s) => s.sceneLoading);
+
+  const mergedSnapshot = useMemo(() => {
+    if (!sceneSnapshot || !laneletOsmOverlay) {
+      return sceneSnapshot;
+    }
+    return {
+      ...sceneSnapshot,
+      trajectories: [
+        ...sceneSnapshot.trajectories,
+        ...laneletOsmToSceneTrajectories(laneletOsmOverlay),
+      ],
+    };
+  }, [sceneSnapshot, laneletOsmOverlay]);
 
   useEffect(() => {
     const container = containerRef.current;
@@ -53,13 +69,13 @@ export function SceneView3D() {
   }, []);
 
   useEffect(() => {
-    controllerRef.current?.updateScene(sceneSnapshot);
-  }, [sceneSnapshot]);
+    controllerRef.current?.updateScene(mergedSnapshot);
+  }, [mergedSnapshot]);
 
   const hudParts = [
     `fixed: ${fixedFrame}`,
-    sceneSnapshot
-      ? `${sceneSnapshot.tf_frames.length} tf · ${sceneSnapshot.poses.length} pose · ${sceneSnapshot.point_clouds.length} cloud · ${sceneSnapshot.trajectories.length} path`
+    mergedSnapshot
+      ? `${mergedSnapshot.tf_frames.length} tf · ${mergedSnapshot.poses.length} pose · ${mergedSnapshot.point_clouds.length} cloud · ${mergedSnapshot.trajectories.length} path`
       : session
         ? "building scene…"
         : "no data",

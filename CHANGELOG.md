@@ -4,6 +4,21 @@ All notable changes to RobotScope are documented in this file.
 
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and versioning follows [SemVer](https://semver.org/).
 
+## [0.5.0-alpha.0] - 2026-06-12
+
+Lanelet2 OSM sidecar overlay (first native map ingest step).
+
+### Added
+
+- **`parseLaneletOsm()`** — Autoware OSM subset (`local_x`/`local_y` nodes + ways)
+- Viewer **Load map OSM** / **Clear OSM** commands
+- Map panel 2D preview + 3D trajectory merge for OSM sidecar
+- [docs/lanelet2-osm.md](RobotScope/docs/lanelet2-osm.md)
+
+### Changed
+
+- [known-limitations.md](RobotScope/docs/known-limitations.md) updated for v0.5 alpha
+
 ## [0.4.0] - 2026-06-12
 
 Fourth GA release — rosbag2 folder bags.

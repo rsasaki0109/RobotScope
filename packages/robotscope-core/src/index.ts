@@ -15,6 +15,7 @@ export * from "./ros2/pose.js";
 export * from "./ros2/trajectory.js";
 export * from "./ros2/occupancy-grid.js";
 export * from "./ros2/lanelet-map-bin.js";
+export * from "./ros2/lanelet-osm.js";
 export * from "./tf/transform-math.js";
 export * from "./storage/sidecar.js";
 export * from "./storage/topic-time-index.js";

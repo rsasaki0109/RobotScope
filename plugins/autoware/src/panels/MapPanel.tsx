@@ -147,6 +147,39 @@ function worldToCanvas(x: number, y: number, bounds: WorldBounds): [number, numb
   return [cx, cy];
 }
 
+function drawOsmWays(
+  ctx: CanvasRenderingContext2D,
+  ways: Array<{ points: Array<[number, number]> }>,
+  bounds: { minX: number; maxX: number; minY: number; maxY: number },
+  width: number,
+  height: number,
+  padding: number,
+): void {
+  const spanX = Math.max(bounds.maxX - bounds.minX, 1);
+  const spanY = Math.max(bounds.maxY - bounds.minY, 1);
+  const scale = Math.min((width - padding * 2) / spanX, (height - padding * 2) / spanY);
+
+  ctx.strokeStyle = "#6ec1ff";
+  ctx.lineWidth = 1.2;
+  for (const way of ways) {
+    if (way.points.length < 2) {
+      continue;
+    }
+    ctx.beginPath();
+    for (let index = 0; index < way.points.length; index += 1) {
+      const [x, y] = way.points[index]!;
+      const px = padding + (x - bounds.minX) * scale;
+      const py = height - padding - (y - bounds.minY) * scale;
+      if (index === 0) {
+        ctx.moveTo(px, py);
+      } else {
+        ctx.lineTo(px, py);
+      }
+    }
+    ctx.stroke();
+  }
+}
+
 function drawLaneletPreview(
   canvas: HTMLCanvasElement,
   lanelet: AutowareLanelet2View,
@@ -208,6 +241,67 @@ function drawLaneletPreview(
   }
 }
 
+function OsmSidecarPreview({
+  ways,
+  ego,
+}: {
+  ways: Array<{ points: Array<[number, number]> }>;
+  ego?: EgoPose;
+}) {
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas || ways.length === 0) {
+      return;
+    }
+
+    let minX = Number.POSITIVE_INFINITY;
+    let maxX = Number.NEGATIVE_INFINITY;
+    let minY = Number.POSITIVE_INFINITY;
+    let maxY = Number.NEGATIVE_INFINITY;
+    for (const way of ways) {
+      for (const [x, y] of way.points) {
+        minX = Math.min(minX, x);
+        maxX = Math.max(maxX, x);
+        minY = Math.min(minY, y);
+        maxY = Math.max(maxY, y);
+      }
+    }
+    if (ego) {
+      minX = Math.min(minX, ego.position[0]);
+      maxX = Math.max(maxX, ego.position[0]);
+      minY = Math.min(minY, ego.position[1]);
+      maxY = Math.max(maxY, ego.position[1]);
+    }
+
+    canvas.width = LANELET_CANVAS_W;
+    canvas.height = LANELET_CANVAS_H;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) {
+      return;
+    }
+    ctx.fillStyle = "#12151c";
+    ctx.fillRect(0, 0, LANELET_CANVAS_W, LANELET_CANVAS_H);
+    drawOsmWays(
+      ctx,
+      ways,
+      { minX, maxX, minY, maxY },
+      LANELET_CANVAS_W,
+      LANELET_CANVAS_H,
+      LANELET_PAD,
+    );
+  }, [ways, ego]);
+
+  return (
+    <canvas
+      ref={canvasRef}
+      className={styles.mapCanvas}
+      aria-label="Lanelet2 OSM sidecar preview"
+    />
+  );
+}
+
 function Lanelet2Preview({
   lanelet,
   ego,
@@ -250,7 +344,8 @@ export function MapPanel({
 }) {
   const lanelet = map?.lanelet2;
   const occupancy = map?.occupancy;
-  const hasData = Boolean(lanelet || occupancy);
+  const osmSidecar = map?.osm_sidecar;
+  const hasData = Boolean(lanelet || occupancy || osmSidecar);
 
   return (
     <section className={styles.panel}>
@@ -262,9 +357,20 @@ export function MapPanel({
       </div>
 
       {!hasData ? (
-        <p className={styles.empty}>Waiting for /map/vector_map or /map/map…</p>
+        <p className={styles.empty}>
+          Waiting for /map/vector_map, /map/map, or load an OSM sidecar…
+        </p>
       ) : (
         <>
+          {osmSidecar ? (
+            <dl className={styles.grid}>
+              <dt>OSM sidecar</dt>
+              <dd>
+                {osmSidecar.way_count} ways · {osmSidecar.node_count} nodes
+              </dd>
+            </dl>
+          ) : null}
+
           {lanelet ? (
             <dl className={styles.grid}>
               <dt>Lanelet2</dt>
@@ -299,6 +405,10 @@ export function MapPanel({
 
           {lanelet && (lanelet.boundaries?.length || lanelet.centerlines?.length) ? (
             <Lanelet2Preview lanelet={lanelet} ego={ego} />
+          ) : null}
+
+          {osmSidecar?.ways.length ? (
+            <OsmSidecarPreview ways={osmSidecar.ways} ego={ego} />
           ) : null}
 
           {occupancy ? (

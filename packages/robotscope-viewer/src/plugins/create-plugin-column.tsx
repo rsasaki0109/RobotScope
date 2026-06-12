@@ -12,11 +12,13 @@ export function createPluginRightColumn<TSnapshot>(
     const ingest = useViewerStore((s) => s.ingest);
     const session = useViewerStore((s) => s.session);
     const currentTimeNs = useViewerStore((s) => s.currentTimeNs);
+    const laneletOsmOverlay = useViewerStore((s) => s.laneletOsmOverlay);
 
     const { snapshot, loading } = useSnapshot({
       ingest,
       session,
       currentTimeNs,
+      laneletOsmOverlay,
     });
 
     return (

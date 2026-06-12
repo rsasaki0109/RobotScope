@@ -88,6 +88,16 @@ RobotScope/
 └── sample_data/             Sample MCAP fetch scripts
 ```
 
+## v0.5 alpha (0.5.0-alpha.0)
+
+Lanelet2 OSM sidecar on v0.4 foundations. See [release notes](RobotScope/docs/release/v0.5.0-alpha.0.md).
+
+**New in v0.5**
+
+| Layer | Features |
+|-------|----------|
+| Map | **Load map OSM** — Autoware `.osm` sidecar overlay (2D panel + 3D) |
+
 ## v0.4.0 (GA)
 
 Rosbag2 folder bags on v0.3 foundations. See [release notes](RobotScope/docs/release/v0.4.0.md) and [CHANGELOG.md](RobotScope/CHANGELOG.md).

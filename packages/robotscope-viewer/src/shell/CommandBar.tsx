@@ -32,6 +32,9 @@ export function CommandBar() {
   const setFixedFrame = useViewerStore((s) => s.setFixedFrame);
   const openMcapFile = useViewerStore((s) => s.openMcapFile);
   const openRosbag2Folder = useViewerStore((s) => s.openRosbag2Folder);
+  const openLaneletOsmFile = useViewerStore((s) => s.openLaneletOsmFile);
+  const clearLaneletOsmOverlay = useViewerStore((s) => s.clearLaneletOsmOverlay);
+  const laneletOsmOverlay = useViewerStore((s) => s.laneletOsmOverlay);
   const connectLiveAgent = useViewerStore((s) => s.connectLiveAgent);
   const disconnectLiveAgent = useViewerStore((s) => s.disconnectLiveAgent);
   const startLiveRecording = useViewerStore((s) => s.startLiveRecording);
@@ -85,6 +88,23 @@ export function CommandBar() {
     [openRosbag2Folder],
   );
 
+  const onOsmChange = useCallback(
+    async (event: React.ChangeEvent<HTMLInputElement>) => {
+      const file = event.target.files?.[0];
+      if (!file) {
+        return;
+      }
+      try {
+        await openLaneletOsmFile(file);
+      } catch (error) {
+        const message = error instanceof Error ? error.message : String(error);
+        window.alert(message);
+      }
+      event.target.value = "";
+    },
+    [openLaneletOsmFile],
+  );
+
   const onConnectLive = useCallback(async () => {
     await connectLiveAgent(liveUrl.trim());
   }, [connectLiveAgent, liveUrl]);
@@ -128,6 +148,17 @@ export function CommandBar() {
           Open bag folder
           <input type="file" multiple hidden onChange={onFolderChange} {...({ webkitdirectory: "" } as const)} />
         </label>
+
+        <label className={styles.button}>
+          Load map OSM
+          <input type="file" accept=".osm,.xml" hidden onChange={onOsmChange} />
+        </label>
+
+        {laneletOsmOverlay ? (
+          <button type="button" className={styles.buttonSecondary} onClick={clearLaneletOsmOverlay}>
+            Clear OSM
+          </button>
+        ) : null}
 
         <div className={styles.liveConnect}>
           <span

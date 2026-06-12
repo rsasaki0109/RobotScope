@@ -40,9 +40,17 @@ export interface AutowareOccupancyMapView {
   cells: number[];
 }
 
+export interface LaneletOsmSidecarView {
+  format: "autoware-osm";
+  node_count: number;
+  way_count: number;
+  ways: LaneletPolyline2D[];
+}
+
 export interface AutowareMapView {
   lanelet2?: AutowareLanelet2View;
   occupancy?: AutowareOccupancyMapView;
+  osm_sidecar?: LaneletOsmSidecarView;
 }
 
 export interface AutowareLocalizationView {

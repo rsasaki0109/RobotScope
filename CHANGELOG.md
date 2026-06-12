@@ -4,6 +4,24 @@ All notable changes to RobotScope are documented in this file.
 
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and versioning follows [SemVer](https://semver.org/).
 
+## [0.1.0-beta.0] - 2026-06-13
+
+First v0.1 beta — documentation and scope consolidation after alpha.8.
+
+### Summary
+
+Beta marks a stable **daily-debug demo** surface: MCAP + live agent + Autoware/Nav2/MoveIt plugins + unified failure recipe timeline (including live evaluation) + GitHub Pages deploy.
+
+### Added
+
+- [docs/known-limitations.md](RobotScope/docs/known-limitations.md) — beta scope boundaries
+- [docs/release/v0.1.0-beta.0.md](RobotScope/docs/release/v0.1.0-beta.0.md) — beta milestone notes
+
+### Changed
+
+- README updated for beta status, doc links, and consolidated feature table
+- Version series advances from `0.1.0-alpha.*` to `0.1.0-beta.0` (no breaking API guarantee until v1.0)
+
 ## [0.1.0-alpha.8] - 2026-06-13
 
 Live failure recipe evaluation on the unified timeline.

@@ -84,26 +84,32 @@ RobotScope/
 └── sample_data/             Sample MCAP fetch scripts
 ```
 
-## v0.1 alpha (0.1.0-alpha.0)
+## v0.1 beta (0.1.0-beta.0)
 
-See [CHANGELOG.md](RobotScope/CHANGELOG.md) and [release notes](RobotScope/docs/release/v0.1.0-alpha.0.md).
+First beta — alpha feature set complete. See [release notes](RobotScope/docs/release/v0.1.0-beta.0.md) and [CHANGELOG.md](RobotScope/CHANGELOG.md).
 
-**Shipped in this alpha**
+**Shipped**
 
-- MCAP playback + sidecar topic index (browser cache + `scripts/write-sidecar.mjs`)
-- Live WebSocket ingest, follow timeline, **Record Live** → MCAP + sidecar
-- TF tree, timeline, 3D scene, raw ROS2 message decode
-- Plugin packs: **Autoware**, **Nav2**, **MoveIt** (`?layout=…`)
-- Python ROS2 agent with topic profiles
-- Physical AI seed types: Observation, Action, VLAState
+| Layer | Features |
+|-------|----------|
+| Ingest | MCAP + sidecar index, live WebSocket, Record Live → MCAP |
+| Viewer | Timeline, TF tree, 3D scene, entity inspector |
+| Plugins | Autoware · Nav2 · MoveIt (`?layout=…`) |
+| Failure recipes | 7 cross-stack heuristics + unified timeline strip + live evaluation |
+| Deploy | [GitHub Pages demo](https://rsasaki0109.github.io/RobotScope/?layout=autoware&demo=1) |
 
-**Still out of scope (v0.1)**
+**Docs**
 
-- Cloud / fleet dashboard
-- Command gateway (read-only observability only)
-- Full 3DGS / NeRF renderers
-- Proprietary log format
-- rosbag2 SQLite reader (convert to MCAP first)
+- [Live agent guide](RobotScope/docs/live-agent.md)
+- [Known limitations](RobotScope/docs/known-limitations.md)
+- [Architecture](RobotScope/docs/architecture.md)
+
+**Out of scope (v0.1)**
+
+- Cloud / fleet dashboard · command gateway · rosbag2-native · proprietary logs
+- Full Lanelet2 mesh · RViz display parity · 3DGS / NeRF renderers
+
+See [known limitations](RobotScope/docs/known-limitations.md) for the full beta boundary list.
 
 ## Architecture
 

@@ -14,16 +14,22 @@ def encode_payload(data: bytes) -> str:
     return base64.b64encode(data).decode("ascii")
 
 
-def session_message(start_ns: int, topics: list[dict[str, str]]) -> str:
-    return json.dumps(
-        {
-            "type": "session",
-            "protocol": LIVE_PROTOCOL_VERSION,
-            "agent": AGENT_NAME,
-            "start_ns": start_ns,
-            "topics": topics,
-        }
-    )
+def session_message(
+    start_ns: int,
+    topics: list[dict[str, str]],
+    *,
+    publish_topics: list[str] | None = None,
+) -> str:
+    payload: dict[str, Any] = {
+        "type": "session",
+        "protocol": LIVE_PROTOCOL_VERSION,
+        "agent": AGENT_NAME,
+        "start_ns": start_ns,
+        "topics": topics,
+    }
+    if publish_topics:
+        payload["capabilities"] = {"command_publish": publish_topics}
+    return json.dumps(payload)
 
 
 def channel_message(channel: dict[str, Any]) -> str:
@@ -69,3 +75,19 @@ def status_message(
 
 def error_message(message: str) -> str:
     return json.dumps({"type": "error", "message": message})
+
+
+def command_publish_result_message(
+    ok: bool,
+    message: str,
+    *,
+    topic: str | None = None,
+) -> str:
+    payload: dict[str, Any] = {
+        "type": "command.publish_result",
+        "ok": ok,
+        "message": message,
+    }
+    if topic:
+        payload["topic"] = topic
+    return json.dumps(payload)

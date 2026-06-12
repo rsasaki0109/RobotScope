@@ -17,6 +17,9 @@ export interface LiveSessionMessage {
   agent: string;
   start_ns: number;
   topics: Array<{ name: string; schema: string }>;
+  capabilities?: {
+    command_publish?: string[];
+  };
 }
 
 export interface LiveChannelMessage {
@@ -47,18 +50,34 @@ export interface LiveErrorMessage {
   message: string;
 }
 
+export interface LiveCommandPublishResultMessage {
+  type: "command.publish_result";
+  ok: boolean;
+  topic?: string;
+  message: string;
+}
+
 export type LiveServerMessage =
   | LiveSessionMessage
   | LiveChannelMessage
   | LiveDataMessage
   | LiveStatusMessage
-  | LiveErrorMessage;
+  | LiveErrorMessage
+  | LiveCommandPublishResultMessage;
+
+export interface LiveCommandPublishClientMessage {
+  type: "command.publish";
+  topic: string;
+  schema: string;
+  zero_twist?: boolean;
+  data_b64?: string;
+}
 
 export interface LivePingMessage {
   type: "ping";
 }
 
-export type LiveClientMessage = LivePingMessage;
+export type LiveClientMessage = LivePingMessage | LiveCommandPublishClientMessage;
 
 export function parseLiveServerMessage(raw: string): LiveServerMessage | null {
   try {
@@ -70,6 +89,10 @@ export function parseLiveServerMessage(raw: string): LiveServerMessage | null {
   } catch {
     return null;
   }
+}
+
+export function encodeLiveClientMessage(message: LiveClientMessage): string {
+  return JSON.stringify(message);
 }
 
 export function decodeBase64Payload(data_b64: string): Uint8Array {

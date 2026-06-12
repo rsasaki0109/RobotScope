@@ -4,6 +4,23 @@ All notable changes to RobotScope are documented in this file.
 
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and versioning follows [SemVer](https://semver.org/).
 
+## [0.8.0-alpha.0] - 2026-06-13
+
+Permission-gated live command gateway (zero cmd_vel).
+
+### Added
+
+- **`command.publish`** live WebSocket messages with **`command.publish_result`** responses
+- ROS 2 agent **`--allow-publish TOPIC`** allowlist + lazy publishers
+- Demo live agent **`--allow-publish`** + default in `npm run demo:live-agent`
+- Viewer **Allow publish** opt-in + **Zero cmd_vel** when agent allowlists `/cmd_vel`
+- [docs/command-gateway.md](RobotScope/docs/command-gateway.md)
+- [docs/release/v0.8.0-alpha.0.md](RobotScope/docs/release/v0.8.0-alpha.0.md)
+
+### Changed
+
+- [known-limitations.md](RobotScope/docs/known-limitations.md) updated for v0.8 alpha gateway scope
+
 ## [0.7.0] - 2026-06-13
 
 Seventh GA release — OSM regulatory elements.

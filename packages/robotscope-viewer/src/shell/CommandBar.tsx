@@ -39,6 +39,10 @@ export function CommandBar() {
   const disconnectLiveAgent = useViewerStore((s) => s.disconnectLiveAgent);
   const startLiveRecording = useViewerStore((s) => s.startLiveRecording);
   const stopLiveRecording = useViewerStore((s) => s.stopLiveRecording);
+  const commandGatewayEnabled = useViewerStore((s) => s.commandGatewayEnabled);
+  const livePublishTopics = useViewerStore((s) => s.livePublishTopics);
+  const setCommandGatewayEnabled = useViewerStore((s) => s.setCommandGatewayEnabled);
+  const publishLiveZeroCmdVel = useViewerStore((s) => s.publishLiveZeroCmdVel);
   const [liveUrl, setLiveUrl] = useState(DEFAULT_LIVE_AGENT_URL);
   const [livePresetId, setLivePresetId] = useState(LIVE_AGENT_PRESETS[0]?.id ?? "custom");
 
@@ -122,6 +126,7 @@ export function CommandBar() {
   }, [liveRecording, startLiveRecording, stopLiveRecording]);
 
   const isLive = session?.source === "live";
+  const canPublishCmdVel = livePublishTopics.includes("/cmd_vel");
   const connectionPhase = isLive ? liveConnection.phase : "idle";
   const connectionLabel = CONNECTION_LABELS[connectionPhase];
 
@@ -221,6 +226,25 @@ export function CommandBar() {
             >
               {liveRecording ? "Stop & Save MCAP" : "Record Live"}
             </button>
+            {canPublishCmdVel ? (
+              <label className={styles.gatewayToggle}>
+                <input
+                  type="checkbox"
+                  checked={commandGatewayEnabled}
+                  onChange={(event) => setCommandGatewayEnabled(event.target.checked)}
+                />
+                Allow publish
+              </label>
+            ) : null}
+            {commandGatewayEnabled && canPublishCmdVel ? (
+              <button
+                type="button"
+                className={styles.buttonSecondary}
+                onClick={() => void publishLiveZeroCmdVel()}
+              >
+                Zero cmd_vel
+              </button>
+            ) : null}
             <span className={styles.liveBadge} data-phase={connectionPhase}>
               {liveRecording ? "REC" : connectionLabel.toUpperCase()}
             </span>

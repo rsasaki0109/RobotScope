@@ -33,6 +33,7 @@ function parseArgs(argv) {
     mcapPath: defaultMcapPath(),
     port: 8765,
     loop: true,
+    allowPublish: [],
   };
 
   for (let i = 2; i < argv.length; i += 1) {
@@ -41,6 +42,11 @@ function parseArgs(argv) {
       options.port = Number(argv[++i] ?? options.port);
     } else if (arg === "--no-loop") {
       options.loop = false;
+    } else if (arg === "--allow-publish") {
+      const topic = argv[++i];
+      if (topic) {
+        options.allowPublish.push(topic);
+      }
     } else if (!arg.startsWith("-")) {
       options.mcapPath = resolve(arg);
     }
@@ -96,7 +102,7 @@ async function loadRecording(mcapPath) {
   };
 }
 
-async function streamRecording(socket, recording, loop) {
+async function streamRecording(socket, recording, loop, allowPublish) {
   socket.send(
     JSON.stringify({
       type: "session",
@@ -104,6 +110,9 @@ async function streamRecording(socket, recording, loop) {
       agent: "robotscope-live-agent-demo",
       start_ns: recording.bounds.start_ns,
       topics: recording.topics,
+      ...(allowPublish.length > 0
+        ? { capabilities: { command_publish: allowPublish } }
+        : {}),
     }),
   );
 
@@ -165,12 +174,58 @@ const recording = await loadRecording(options.mcapPath);
 const server = new WebSocketServer({ port: options.port });
 console.log(`RobotScope live agent demo on ws://127.0.0.1:${options.port}`);
 console.log(`Source: ${options.mcapPath} (${recording.messages.length} messages)`);
+if (options.allowPublish.length > 0) {
+  console.log(`Publish allowlist: ${options.allowPublish.join(", ")}`);
+}
 
 server.on("connection", (socket) => {
   console.log("Viewer connected");
-  void streamRecording(socket, recording, options.loop).catch((error) => {
+  void streamRecording(socket, recording, options.loop, options.allowPublish).catch((error) => {
     socket.send(JSON.stringify({ type: "error", message: String(error) }));
     socket.close();
+  });
+
+  socket.on("message", (raw) => {
+    const text = typeof raw === "string" ? raw : raw.toString("utf8");
+    let payload;
+    try {
+      payload = JSON.parse(text);
+    } catch {
+      socket.send(
+        JSON.stringify({
+          type: "command.publish_result",
+          ok: false,
+          message: "Invalid JSON from viewer",
+        }),
+      );
+      return;
+    }
+
+    if (payload?.type !== "command.publish") {
+      return;
+    }
+
+    const topic = payload.topic;
+    if (typeof topic !== "string" || !options.allowPublish.includes(topic)) {
+      socket.send(
+        JSON.stringify({
+          type: "command.publish_result",
+          ok: false,
+          topic,
+          message: `Topic ${topic ?? "?"} is not allowlisted for publish`,
+        }),
+      );
+      return;
+    }
+
+    socket.send(
+      JSON.stringify({
+        type: "command.publish_result",
+        ok: true,
+        topic,
+        message: `Demo agent accepted zero cmd_vel on ${topic} (no ROS publish)`,
+      }),
+    );
   });
 
   socket.on("close", () => {

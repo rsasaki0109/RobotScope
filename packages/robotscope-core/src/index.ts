@@ -5,6 +5,15 @@ export { openMcap, McapQueryEngineImpl } from "./ingest/mcap.js";
 export { isRosbag2Filename, isRosbag2MetadataFilename, isMcapFilename } from "./ingest/recording-format.js";
 export type { McapOpenOptions } from "./ingest/mcap.js";
 export { openLive } from "./live/open-live.js";
+export {
+  buildZeroTwistPublishRequest,
+  DEFAULT_CMD_VEL_TOPIC,
+  GEOMETRY_TWIST_SCHEMA,
+} from "./live/command-gateway.js";
+export type {
+  LiveCommandPublishRequest,
+  LiveCommandPublishResult,
+} from "./live/command-gateway.js";
 export type { LiveRecordingResult } from "./query.js";
 export { LiveMcapRecorder, defaultLiveRecordingFilename } from "./live/recorder.js";
 export * from "./mapping/entity-mapper.js";

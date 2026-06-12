@@ -44,6 +44,13 @@ def parse_args() -> argparse.Namespace:
         default=2.0,
         help="Retry interval for topics that are not published yet",
     )
+    parser.add_argument(
+        "--allow-publish",
+        action="append",
+        default=[],
+        metavar="TOPIC",
+        help="Allow command.publish to this ROS topic (repeatable). Example: --allow-publish /cmd_vel",
+    )
     return parser.parse_args()
 
 
@@ -72,8 +79,14 @@ def main() -> None:
         discover=args.discover,
         max_topics=args.max_topics,
         topic_retry_sec=args.topic_retry_sec,
+        publish_allowlist=args.allow_publish,
     )
-    gateway = LiveGateway(args.host, args.port, bridge)
+    gateway = LiveGateway(
+        args.host,
+        args.port,
+        bridge,
+        publish_allowlist=args.allow_publish,
+    )
     gateway_holder["gateway"] = gateway
 
     executor = spin_bridge(bridge)

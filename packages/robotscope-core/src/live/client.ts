@@ -1,7 +1,11 @@
 import type { IngestProgress, LiveRecordingResult, TimeRange } from "../query.js";
 
+import type {
+  LiveCommandPublishRequest,
+  LiveCommandPublishResult,
+} from "./command-gateway.js";
 import type { LiveIngestBuffer, LiveIngestStats } from "./ingest-buffer.js";
-import { LIVE_PROTOCOL_VERSION, parseLiveServerMessage } from "./protocol.js";
+import { LIVE_PROTOCOL_VERSION, encodeLiveClientMessage, parseLiveServerMessage } from "./protocol.js";
 import type { LiveChannelDefinition, LiveDataMessage, LiveStatusMessage } from "./protocol.js";
 import type { LiveQueryEngineImpl } from "./live-query-engine.js";
 import { LiveMcapRecorder } from "./recorder.js";
@@ -45,6 +49,12 @@ export class LiveAgentClient {
   private updateTimer: ReturnType<typeof setTimeout> | undefined;
   private pendingUpdate = false;
   private recorder: LiveMcapRecorder | null = null;
+  private publishTopics: string[] = [];
+  private publishResolver:
+    | ((result: LiveCommandPublishResult) => void)
+    | null = null;
+  private publishReject: ((error: Error) => void) | null = null;
+  private publishTimeout: ReturnType<typeof setTimeout> | undefined;
 
   constructor(
     private readonly url: string,
@@ -87,6 +97,7 @@ export class LiveAgentClient {
               reject(new Error(`Unsupported live protocol: ${message.protocol}`));
               return;
             }
+            this.publishTopics = message.capabilities?.command_publish ?? [];
             this.buffer.resetSession(message.start_ns, message.topics);
             this.options.onProgress?.({
               phase: "indexing",
@@ -117,6 +128,13 @@ export class LiveAgentClient {
             } else {
               this.options.onProgress?.({ phase: "error", message: message.message });
             }
+            break;
+          case "command.publish_result":
+            this.resolvePublish({
+              ok: message.ok,
+              topic: message.topic,
+              message: message.message,
+            });
             break;
           default:
             break;
@@ -161,10 +179,48 @@ export class LiveAgentClient {
     if (this.updateTimer) {
       clearTimeout(this.updateTimer);
     }
+    this.clearPublishPending(new Error("Live agent disconnected"));
     this.unsubscribeBuffer?.();
     this.recorder = null;
     this.socket?.close();
     this.socket = null;
+    this.publishTopics = [];
+  }
+
+  getCommandPublishTopics(): string[] {
+    return [...this.publishTopics];
+  }
+
+  publishCommand(request: LiveCommandPublishRequest): Promise<LiveCommandPublishResult> {
+    if (!this.socket || this.socket.readyState !== WebSocket.OPEN) {
+      return Promise.reject(new Error("Live agent not connected"));
+    }
+    if (!this.publishTopics.includes(request.topic)) {
+      return Promise.reject(
+        new Error(`Topic ${request.topic} is not allowlisted by the live agent`),
+      );
+    }
+    if (this.publishResolver) {
+      return Promise.reject(new Error("Another publish is in progress"));
+    }
+
+    return new Promise((resolve, reject) => {
+      this.publishResolver = resolve;
+      this.publishReject = reject;
+      this.publishTimeout = setTimeout(() => {
+        this.clearPublishPending(new Error("Command publish timed out"));
+      }, 5000);
+
+      this.socket?.send(
+        encodeLiveClientMessage({
+          type: "command.publish",
+          topic: request.topic,
+          schema: request.schema,
+          zero_twist: request.zero_twist,
+          data_b64: request.data_b64,
+        }),
+      );
+    });
   }
 
   async startRecording(): Promise<void> {
@@ -228,5 +284,27 @@ export class LiveAgentClient {
       const bounds = this.buffer.getTimelineBounds();
       this.options.onSessionUpdate?.(bounds, this.buffer.getStats(), this.engine);
     }, 100);
+  }
+
+  private resolvePublish(result: LiveCommandPublishResult): void {
+    if (!this.publishResolver) {
+      return;
+    }
+    const resolve = this.publishResolver;
+    this.clearPublishPending();
+    resolve(result);
+  }
+
+  private clearPublishPending(error?: Error): void {
+    if (this.publishTimeout) {
+      clearTimeout(this.publishTimeout);
+      this.publishTimeout = undefined;
+    }
+    const reject = this.publishReject;
+    this.publishResolver = null;
+    this.publishReject = null;
+    if (error && reject) {
+      reject(error);
+    }
   }
 }

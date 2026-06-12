@@ -142,6 +142,8 @@ export interface ViewerState {
   liveFollowing: boolean;
   liveRecording: boolean;
   liveConnection: LiveConnectionState;
+  commandGatewayEnabled: boolean;
+  livePublishTopics: string[];
   statusMessage: string;
   recipeMarkers: RecipeTimelineMarker[];
   liveActiveRecipes: RecipeTimelineMarker[];
@@ -156,6 +158,8 @@ export interface ViewerState {
   disconnectLiveAgent: () => Promise<void>;
   startLiveRecording: () => Promise<void>;
   stopLiveRecording: (options?: { reload?: boolean }) => Promise<void>;
+  setCommandGatewayEnabled: (enabled: boolean) => void;
+  publishLiveZeroCmdVel: () => Promise<void>;
   refreshInspection: () => Promise<void>;
   setCurrentTimeNs: (timeNs: number) => void;
   setPlaying: (playing: boolean) => void;
@@ -186,6 +190,8 @@ const initialState = {
   liveFollowing: true,
   liveRecording: false,
   liveConnection: idleLiveConnection,
+  commandGatewayEnabled: false,
+  livePublishTopics: [] as string[],
   statusMessage: "Drop an MCAP file or connect a live agent",
   recipeMarkers: [] as RecipeTimelineMarker[],
   liveActiveRecipes: [] as RecipeTimelineMarker[],
@@ -568,6 +574,7 @@ export const useViewerStore = create<ViewerState>((set, get) => ({
       liveRecording: false,
       isPlaying: false,
       liveConnection: initialConnection,
+      livePublishTopics: handle.getCommandPublishTopics(),
       statusMessage: formatLiveStatusMessage(initialConnection),
     };
 
@@ -591,6 +598,7 @@ export const useViewerStore = create<ViewerState>((set, get) => ({
       rawMessage: null,
       liveRecording: false,
       liveFollowing: true,
+      livePublishTopics: [],
       liveConnection: {
         phase: "disconnected",
         url: null,
@@ -602,6 +610,43 @@ export const useViewerStore = create<ViewerState>((set, get) => ({
       inspectLoading: false,
       sceneLoading: false,
     });
+  },
+
+  setCommandGatewayEnabled(enabled) {
+    set({
+      commandGatewayEnabled: enabled,
+      statusMessage: enabled
+        ? "Command gateway enabled — publish requires agent allowlist"
+        : "Command gateway disabled",
+    });
+  },
+
+  async publishLiveZeroCmdVel() {
+    const state = get();
+    if (!state.commandGatewayEnabled) {
+      set({ statusMessage: "Enable command gateway before publishing" });
+      return;
+    }
+
+    const ingest = state.ingest;
+    if (!ingest || !isLiveIngestHandle(ingest)) {
+      set({ statusMessage: "Connect a live agent before publishing" });
+      return;
+    }
+
+    try {
+      const { buildZeroTwistPublishRequest } = await import("@robotscope/core");
+      const result = await ingest.publishCommand(buildZeroTwistPublishRequest());
+      set({
+        statusMessage: result.ok
+          ? result.message
+          : `Publish failed: ${result.message}`,
+      });
+    } catch (error) {
+      set({
+        statusMessage: error instanceof Error ? error.message : "Publish failed",
+      });
+    }
   },
 
   async startLiveRecording() {

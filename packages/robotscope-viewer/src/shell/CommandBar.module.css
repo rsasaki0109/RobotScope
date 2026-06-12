@@ -213,6 +213,15 @@
   color: inherit;
 }
 
+.gatewayToggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.78rem;
+  color: var(--rs-text-muted);
+  user-select: none;
+}
+
 .status {
   margin: 0;
   font-size: 0.78rem;

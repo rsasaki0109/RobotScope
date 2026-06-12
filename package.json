@@ -1,6 +1,6 @@
 {
   "name": "robotscope",
-  "version": "0.7.0",
+  "version": "0.8.0-alpha.0",
   "private": true,
   "description": "Open observability platform for ROS2 robots, Autoware, Nav2, MoveIt, and Physical AI",
   "license": "Apache-2.0",
@@ -17,7 +17,7 @@
     "demo:nav2": "npm run dev --workspace=@robotscope/viewer -- --open /?layout=nav2",
     "demo:moveit": "npm run dev --workspace=@robotscope/viewer -- --open /?layout=moveit",
     "demo:example": "npm run dev --workspace=@robotscope/viewer -- --open /?layout=example&demo=1",
-    "demo:live-agent": "node scripts/live-agent-demo.mjs",
+    "demo:live-agent": "node scripts/live-agent-demo.mjs --allow-publish /cmd_vel",
     "demo:ros2-agent": "bash scripts/run-ros2-agent.sh",
     "demo:ros2-agent:autoware": "bash scripts/run-ros2-agent.sh --profile autoware",
     "build:pages": "node scripts/create-tf-demo.mjs packages/robotscope-viewer/public/demo/demo-scene.mcap && npm run build:pages --workspace=@robotscope/viewer",

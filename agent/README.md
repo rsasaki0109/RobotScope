@@ -97,4 +97,4 @@ node scripts/write-sidecar.mjs recording.mcap
 
 ## Security
 
-Publish / service / action gateways are **disabled** in v0.1 (read-only observability).
+Publish / service / action gateways are **disabled** in v0.1 (read-only observability). v0.8 alpha adds opt-in **`--allow-publish`** for live agents — see [docs/command-gateway.md](RobotScope/docs/command-gateway.md).

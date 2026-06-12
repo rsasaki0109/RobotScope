@@ -122,12 +122,14 @@ export interface LiveRecordingResult {
   sidecar: import("./storage/sidecar.js").SidecarManifest;
 }
 
-/** Live ingest with optional MCAP recording (v0.1). */
+/** Live ingest with optional MCAP recording and permission-gated publish (v0.8 alpha). */
 export interface LiveIngestHandle extends IngestHandle {
   startRecording(): Promise<void>;
   stopRecording(): Promise<LiveRecordingResult>;
   isRecording(): boolean;
   getRecordedMessageCount(): number;
+  getCommandPublishTopics(): string[];
+  publishCommand(request: import("./live/command-gateway.js").LiveCommandPublishRequest): Promise<import("./live/command-gateway.js").LiveCommandPublishResult>;
 }
 
 export function isLiveIngestHandle(
@@ -138,6 +140,7 @@ export function isLiveIngestHandle(
   }
   return (
     typeof (handle as LiveIngestHandle).startRecording === "function" &&
-    typeof (handle as LiveIngestHandle).stopRecording === "function"
+    typeof (handle as LiveIngestHandle).stopRecording === "function" &&
+    typeof (handle as LiveIngestHandle).publishCommand === "function"
   );
 }

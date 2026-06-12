@@ -3,20 +3,35 @@
 from __future__ import annotations
 
 import asyncio
+import json
 import threading
 
 import websockets
 from websockets.server import WebSocketServerProtocol
 
 from .bridge import ChannelInfo, LiveBridge
-from .protocol import channel_message, data_message, session_message, status_message
+from .protocol import (
+    channel_message,
+    command_publish_result_message,
+    data_message,
+    session_message,
+    status_message,
+)
 
 
 class LiveGateway:
-    def __init__(self, host: str, port: int, bridge: LiveBridge) -> None:
+    def __init__(
+        self,
+        host: str,
+        port: int,
+        bridge: LiveBridge,
+        *,
+        publish_allowlist: list[str] | None = None,
+    ) -> None:
         self.host = host
         self.port = port
         self.bridge = bridge
+        self.publish_allowlist = list(publish_allowlist or [])
         self._clients: set[WebSocketServerProtocol] = set()
         self._loop: asyncio.AbstractEventLoop | None = None
         self._lock = threading.Lock()
@@ -112,7 +127,13 @@ class LiveGateway:
         )
 
         start_ns = self.bridge.get_clock().now().nanoseconds
-        await websocket.send(session_message(start_ns, self.bridge.session_topics))
+        await websocket.send(
+            session_message(
+                start_ns,
+                self.bridge.session_topics,
+                publish_topics=self.publish_allowlist or None,
+            )
+        )
         for channel in self.bridge.channels:
             await websocket.send(
                 channel_message(
@@ -141,15 +162,49 @@ class LiveGateway:
 
         self._clients.add(websocket)
         try:
-            async for _message in websocket:
-                # v0.1: read-only gateway (no command publish)
-                pass
+            async for raw_message in websocket:
+                await self._handle_client_message(websocket, raw_message)
         finally:
             self._clients.discard(websocket)
+
+    async def _handle_client_message(
+        self,
+        websocket: WebSocketServerProtocol,
+        raw_message: str | bytes,
+    ) -> None:
+        if isinstance(raw_message, bytes):
+            raw_message = raw_message.decode("utf-8", errors="ignore")
+
+        try:
+            payload = json.loads(raw_message)
+        except json.JSONDecodeError:
+            await websocket.send(
+                command_publish_result_message(False, "Invalid JSON from viewer")
+            )
+            return
+
+        if not isinstance(payload, dict) or payload.get("type") != "command.publish":
+            return
+
+        topic = payload.get("topic")
+        schema = payload.get("schema")
+        if not isinstance(topic, str) or not isinstance(schema, str):
+            await websocket.send(
+                command_publish_result_message(False, "command.publish requires topic and schema")
+            )
+            return
+
+        ok, message = self.bridge.publish_command(topic, schema, payload)
+        await websocket.send(command_publish_result_message(ok, message, topic=topic))
 
     async def run(self) -> None:
         self._loop = asyncio.get_running_loop()
         self.attach_bridge_callbacks()
         async with websockets.serve(self._handle_client, self.host, self.port):
-            print(f"RobotScope ROS2 agent on ws://{self.host}:{self.port}")
+            publish_note = (
+                f" · publish allowlist: {', '.join(self.publish_allowlist)}"
+                if self.publish_allowlist
+                else " · read-only"
+            )
+            print(f"RobotScope ROS2 agent on ws://{self.host}:{self.port}{publish_note}")
             await asyncio.Future()

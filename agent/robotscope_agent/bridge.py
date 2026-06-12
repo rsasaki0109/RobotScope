@@ -2,18 +2,24 @@
 
 from __future__ import annotations
 
+import base64
 import subprocess
 from dataclasses import dataclass
-from typing import Callable
+from typing import Any, Callable
 
 import rclpy
 from rclpy.executors import MultiThreadedExecutor
 from rclpy.node import Node
 from rclpy.qos import qos_profile_sensor_data
-from rclpy.serialization import serialize_message
+from rclpy.serialization import deserialize_message, serialize_message
 from rosidl_runtime_py.utilities import get_message
 
 from .profiles import IGNORED_TOPICS
+
+try:
+    from geometry_msgs.msg import Twist
+except ImportError:  # pragma: no cover - optional at import time
+    Twist = None  # type: ignore[misc, assignment]
 
 
 @dataclass
@@ -36,6 +42,7 @@ class LiveBridge(Node):
         discover: bool = False,
         max_topics: int = 48,
         topic_retry_sec: float = 2.0,
+        publish_allowlist: list[str] | None = None,
     ) -> None:
         super().__init__("robotscope_live_bridge")
         self._on_data = on_data
@@ -49,6 +56,8 @@ class LiveBridge(Node):
         self._sequences: dict[str, int] = {}
         self._next_channel_id = 1
         self._definition_cache: dict[str, str] = {}
+        self._publish_allowlist = set(publish_allowlist or [])
+        self._publishers: dict[str, tuple[object, object]] = {}
 
         self._scan_and_subscribe()
         self._emit_subscription_status()
@@ -153,6 +162,42 @@ class LiveBridge(Node):
 
         if self._on_channel_added is not None:
             self._on_channel_added(channel)
+
+    def publish_command(self, topic: str, schema: str, payload: dict[str, Any]) -> tuple[bool, str]:
+        if topic not in self._publish_allowlist:
+            return False, f"Topic {topic} is not allowlisted for publish"
+
+        publisher_entry = self._publishers.get(topic)
+        if publisher_entry is None:
+            available = dict(self.get_topic_names_and_types())
+            type_names = available.get(topic)
+            if not type_names:
+                return False, f"Topic {topic} is not on the ROS graph"
+            message_class = get_message(type_names[0])
+            publisher = self.create_publisher(message_class, topic, 10)
+            publisher_entry = (publisher, message_class)
+            self._publishers[topic] = publisher_entry
+            self.get_logger().info(f"Created publisher for {topic} ({schema})")
+
+        publisher, message_class = publisher_entry
+
+        try:
+            if payload.get("zero_twist"):
+                if schema != "geometry_msgs/msg/Twist":
+                    return False, "zero_twist is only supported for geometry_msgs/msg/Twist"
+                if Twist is None:
+                    return False, "geometry_msgs is not available in this ROS environment"
+                message = Twist()
+            else:
+                data_b64 = payload.get("data_b64")
+                if not data_b64:
+                    return False, "Missing data_b64 or zero_twist"
+                raw = base64.b64decode(str(data_b64))
+                message = deserialize_message(raw, message_class)
+            publisher.publish(message)  # type: ignore[attr-defined]
+            return True, f"Published to {topic}"
+        except Exception as exc:  # pragma: no cover - runtime ROS errors
+            return False, str(exc)
 
     def _handle_message(self, topic: str, msg: object) -> None:
         channel = self._channels.get(topic)

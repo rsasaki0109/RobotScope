@@ -440,7 +440,7 @@ export const useViewerStore = create<ViewerState>((set, get) => ({
     }
     set({
       laneletOsmOverlay: parsed,
-      statusMessage: `Loaded OSM map ${file.name} — ${parsed.lanelet_count} lanelets, ${parsed.way_count} ways, ${parsed.node_count} nodes`,
+      statusMessage: `Loaded OSM map ${file.name} — ${parsed.lanelet_count} lanelets, ${parsed.regulatory_element_count} regulatory, ${parsed.way_count} ways, ${parsed.node_count} nodes`,
     });
   },
 

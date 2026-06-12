@@ -99,6 +99,26 @@ RobotScope/
 └── sample_data/             Sample MCAP fetch scripts
 ```
 
+## v0.7.0-alpha.0
+
+OSM regulatory elements on v0.6 foundations. See [release notes](RobotScope/docs/release/v0.7.0-alpha.0.md) and [CHANGELOG.md](RobotScope/CHANGELOG.md).
+
+**Shipped**
+
+| Layer | Features |
+|-------|----------|
+| Map | **Load map OSM** — regulatory elements (`refers`/`ref_line`/…) + lanelet relations |
+| v0.6 carry-over | Lanelet relations · rosbag2 folder bags · cross-layout banner · MCAP · live · plugins |
+
+**Docs**
+
+- [Lanelet2 OSM guide](RobotScope/docs/lanelet2-osm.md)
+- [Known limitations](RobotScope/docs/known-limitations.md)
+
+**Out of scope (v0.7 alpha)**
+
+- Native Lanelet2 boost bin · regulatory yield refs · command gateway · cloud/fleet
+
 ## v0.6.0 (GA)
 
 OSM lanelet relations on v0.5 foundations. See [release notes](RobotScope/docs/release/v0.6.0.md) and [CHANGELOG.md](RobotScope/CHANGELOG.md).

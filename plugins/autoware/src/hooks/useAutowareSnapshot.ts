@@ -44,6 +44,8 @@ export function useAutowareSnapshot(slice: AutowareViewerSlice): AutowareDataSta
                     node_count: slice.laneletOsmOverlay.node_count,
                     way_count: slice.laneletOsmOverlay.way_count,
                     lanelet_count: slice.laneletOsmOverlay.lanelet_count,
+                    regulatory_element_count: slice.laneletOsmOverlay.regulatory_element_count,
+                    regulatory_subtypes: slice.laneletOsmOverlay.regulatory_subtypes,
                     ways: slice.laneletOsmOverlay.ways.map((way) => ({ points: way.points })),
                     lanelets: slice.laneletOsmOverlay.lanelets.map((lanelet) => ({
                       left_bound: lanelet.left_bound
@@ -56,6 +58,15 @@ export function useAutowareSnapshot(slice: AutowareViewerSlice): AutowareDataSta
                         ? { points: lanelet.centerline.points }
                         : undefined,
                     })),
+                    regulatory_elements: slice.laneletOsmOverlay.regulatory_elements.map(
+                      (element) => ({
+                        subtype: element.subtype,
+                        members: element.members.map((member) => ({
+                          role: member.role,
+                          points: member.way.points,
+                        })),
+                      }),
+                    ),
                   },
                 },
               }

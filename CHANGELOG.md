@@ -4,6 +4,22 @@ All notable changes to RobotScope are documented in this file.
 
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and versioning follows [SemVer](https://semver.org/).
 
+## [0.7.0-alpha.0] - 2026-06-13
+
+OSM regulatory elements (traffic rules geometry).
+
+### Added
+
+- **`parseLaneletOsm()`** — `<relation type=regulatory_element>` with `subtype` + geometry members
+- Map panel regulatory count + subtype breakdown + purple overlay in 2D preview
+- 3D trajectories for regulatory `ref_line` / `refers` / `crosswalk_polygon` / `light_bulbs`
+- [docs/release/v0.7.0-alpha.0.md](RobotScope/docs/release/v0.7.0-alpha.0.md)
+
+### Changed
+
+- [docs/lanelet2-osm.md](RobotScope/docs/lanelet2-osm.md) updated for v0.7 alpha regulatory elements
+- [known-limitations.md](RobotScope/docs/known-limitations.md) updated for v0.7 alpha
+
 ## [0.6.0] - 2026-06-13
 
 Sixth GA release — OSM lanelet relations.

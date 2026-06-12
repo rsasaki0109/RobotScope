@@ -46,13 +46,21 @@ export interface LaneletOsmLaneletView {
   centerline?: LaneletPolyline2D;
 }
 
+export interface LaneletOsmRegulatoryView {
+  subtype: string;
+  members: Array<{ role: string; points: Array<[number, number]> }>;
+}
+
 export interface LaneletOsmSidecarView {
   format: "autoware-osm";
   node_count: number;
   way_count: number;
   lanelet_count: number;
+  regulatory_element_count: number;
+  regulatory_subtypes?: Record<string, number>;
   ways: LaneletPolyline2D[];
   lanelets?: LaneletOsmLaneletView[];
+  regulatory_elements?: LaneletOsmRegulatoryView[];
 }
 
 export interface AutowareMapView {

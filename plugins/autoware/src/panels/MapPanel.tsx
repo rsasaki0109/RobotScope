@@ -5,6 +5,7 @@ import type {
   AutowareMapView,
   AutowareOccupancyMapView,
   LaneletOsmLaneletView,
+  LaneletOsmRegulatoryView,
 } from "../types.js";
 import styles from "./AutowarePanel.module.css";
 
@@ -246,18 +247,42 @@ function drawLaneletPreview(
   }
 }
 
+function formatRegulatorySubtypes(subtypes: Record<string, number> | undefined): string {
+  if (!subtypes || Object.keys(subtypes).length === 0) {
+    return "";
+  }
+  return Object.entries(subtypes)
+    .sort((left, right) => right[1] - left[1])
+    .slice(0, 4)
+    .map(([name, count]) => `${name}×${count}`)
+    .join(", ");
+}
+
+function isClosedOsmPolyline(points: Array<[number, number]>): boolean {
+  if (points.length < 4) {
+    return false;
+  }
+  const [fx, fy] = points[0]!;
+  const [lx, ly] = points[points.length - 1]!;
+  return fx === lx && fy === ly;
+}
+
 function OsmLaneletSidecarPreview({
   lanelets,
+  regulatoryElements,
   ego,
 }: {
   lanelets: LaneletOsmLaneletView[];
+  regulatoryElements?: LaneletOsmRegulatoryView[];
   ego?: EgoPose;
 }) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
   useEffect(() => {
     const canvas = canvasRef.current;
-    if (!canvas || lanelets.length === 0) {
+    const hasLanelets = lanelets.length > 0;
+    const hasRegulatory = (regulatoryElements?.length ?? 0) > 0;
+    if (!canvas || (!hasLanelets && !hasRegulatory)) {
       return;
     }
 
@@ -284,6 +309,12 @@ function OsmLaneletSidecarPreview({
       }
       if (lanelet.centerline) {
         includePoints(lanelet.centerline.points);
+      }
+    }
+
+    for (const element of regulatoryElements ?? []) {
+      for (const member of element.members) {
+        includePoints(member.points);
       }
     }
 
@@ -345,6 +376,15 @@ function OsmLaneletSidecarPreview({
       }
     }
 
+    for (const element of regulatoryElements ?? []) {
+      for (const member of element.members) {
+        const closed =
+          member.role === "crosswalk_polygon" ||
+          (member.role === "refers" && isClosedOsmPolyline(member.points));
+        drawPolyline(member.points, member.role === "ref_line" ? "#b87aff" : "#9b59d6", closed);
+      }
+    }
+
     if (ego) {
       const [cx, cy] = worldToCanvas(ego.position[0], ego.position[1], bounds);
       ctx.fillStyle = "#3dd68c";
@@ -352,7 +392,7 @@ function OsmLaneletSidecarPreview({
       ctx.arc(cx, cy, 3.2, 0, Math.PI * 2);
       ctx.fill();
     }
-  }, [lanelets, ego]);
+  }, [lanelets, regulatoryElements, ego]);
 
   return (
     <canvas
@@ -485,15 +525,28 @@ export function MapPanel({
       ) : (
         <>
           {osmSidecar ? (
-            <dl className={styles.grid}>
-              <dt>OSM sidecar</dt>
-              <dd>
-                {osmSidecar.lanelet_count > 0
-                  ? `${osmSidecar.lanelet_count} lanelets · `
-                  : ""}
-                {osmSidecar.way_count} ways · {osmSidecar.node_count} nodes
-              </dd>
-            </dl>
+            <>
+              <dl className={styles.grid}>
+                <dt>OSM sidecar</dt>
+                <dd>
+                  {osmSidecar.lanelet_count > 0
+                    ? `${osmSidecar.lanelet_count} lanelets · `
+                    : ""}
+                  {osmSidecar.way_count} ways · {osmSidecar.node_count} nodes
+                </dd>
+                {osmSidecar.regulatory_element_count > 0 ? (
+                  <>
+                    <dt>Regulatory</dt>
+                    <dd>
+                      {osmSidecar.regulatory_element_count} elements
+                      {formatRegulatorySubtypes(osmSidecar.regulatory_subtypes)
+                        ? ` · ${formatRegulatorySubtypes(osmSidecar.regulatory_subtypes)}`
+                        : ""}
+                    </dd>
+                  </>
+                ) : null}
+              </dl>
+            </>
           ) : null}
 
           {lanelet ? (
@@ -532,8 +585,12 @@ export function MapPanel({
             <Lanelet2Preview lanelet={lanelet} ego={ego} />
           ) : null}
 
-          {osmSidecar?.lanelets?.length ? (
-            <OsmLaneletSidecarPreview lanelets={osmSidecar.lanelets} ego={ego} />
+          {osmSidecar?.lanelets?.length || osmSidecar?.regulatory_elements?.length ? (
+            <OsmLaneletSidecarPreview
+              lanelets={osmSidecar.lanelets ?? []}
+              regulatoryElements={osmSidecar.regulatory_elements}
+              ego={ego}
+            />
           ) : osmSidecar?.ways.length ? (
             <OsmSidecarPreview ways={osmSidecar.ways} ego={ego} />
           ) : null}

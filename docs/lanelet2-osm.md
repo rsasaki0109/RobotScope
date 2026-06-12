@@ -1,4 +1,4 @@
-# Lanelet2 OSM sidecar (v0.6)
+# Lanelet2 OSM sidecar (v0.7 alpha)
 
 Load an **Autoware / Lanelet2 OSM map** alongside MCAP or rosbag2 playback when native `LaneletMapBin` is not parsed.
 
@@ -10,7 +10,7 @@ Autoware `LaneletMapBin.data` uses lanelet2 **Boost binary serialization** — n
 
 1. Open a recording (MCAP, `.db3`, or folder bag)
 2. **Load map OSM** in the command bar → select `.osm`
-3. Map panel shows lanelet/way counts + 2D preview; 3D viewport renders polylines
+3. Map panel shows lanelet/regulatory counts + 2D preview; 3D viewport renders polylines
 
 Use **Clear OSM** to remove the overlay.
 
@@ -20,11 +20,12 @@ Use **Clear OSM** to remove the overlay.
 |---------|--------|
 | Nodes with `local_x` / `local_y` tags | **Supported** |
 | `<way>` polylines via `<nd ref>` | **Supported** |
-| `<relation type=lanelet>` with `left` / `right` / `centerline` members | **Supported** (v0.6) |
-| Regulatory elements / traffic rules | Not parsed |
+| `<relation type=lanelet>` with `left` / `right` / `centerline` members | **Supported** (v0.6+) |
+| `<relation type=regulatory_element>` with `subtype` + geometry members | **Supported** (v0.7 alpha) |
+| Regulatory `yield` lanelet refs (relation members) | Counted only — no geometry overlay |
 | Native `LaneletMapBin` boost bin | Still **unknown** — use OSM sidecar or RL2D demo MCAP |
 
-When lanelet relations are present, the Map panel draws **closed left/right bounds** and **centerlines** (same palette as RL2D demo). Orphan ways not referenced by a lanelet relation still render as cyan polylines.
+Regulatory geometry roles parsed for preview: `refers`, `ref_line`, `crosswalk_polygon`, `light_bulbs`. Common subtypes include `traffic_light`, `speed_limit`, `crosswalk`, `detection_area`.
 
 ## Implementation
 

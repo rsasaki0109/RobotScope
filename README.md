@@ -88,6 +88,31 @@ RobotScope/
 └── sample_data/             Sample MCAP fetch scripts
 ```
 
+## v0.2.0 (GA)
+
+Cross-layout failure recipes + rosbag2 ingest on v0.1 foundations. See [release notes](RobotScope/docs/release/v0.2.0.md) and [CHANGELOG.md](RobotScope/CHANGELOG.md).
+
+**Shipped**
+
+| Layer | Features |
+|-------|----------|
+| UX | Cross-layout recipe banner · click chip → switch layout |
+| Ingest | Rosbag2 `.db3` (lazy sql.js) · MCAP · live agent |
+| Failure recipes | 7 cross-stack heuristics · timeline strip · live evaluation |
+| Plugins | Autoware · Nav2 · MoveIt · Example SDK |
+| Map | Lanelet2 RL2D 2D/3D · occupancy panel |
+| Deploy | [GitHub Pages demo](https://rsasaki0109.github.io/RobotScope/?layout=autoware&demo=1) |
+
+**Docs**
+
+- [Rosbag2 guide](RobotScope/docs/rosbag2.md)
+- [Migration v0.2 beta → GA](RobotScope/docs/migration/v0.2-beta-to-ga.md)
+- [API v0.1](RobotScope/docs/api-v0.1.md) · [Known limitations](RobotScope/docs/known-limitations.md)
+
+**Out of scope (v0.2)**
+
+- Native Lanelet2 `lanelet2_io` · rosbag2 folder bags · command gateway · cloud/fleet
+
 ## v0.2 beta (0.2.0-beta.0)
 
 Cross-layout failure recipes + rosbag2 SQLite ingest on top of v0.1 GA. See [release notes](RobotScope/docs/release/v0.2.0-beta.0.md) and [CHANGELOG.md](RobotScope/CHANGELOG.md).

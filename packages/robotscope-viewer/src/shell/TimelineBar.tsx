@@ -1,6 +1,7 @@
 import { useEffect, useRef } from "react";
 
 import { useViewerStore } from "../store/viewer-store";
+import { FailureRecipeStrip } from "./FailureRecipeStrip";
 import styles from "./TimelineBar.module.css";
 
 function formatTimeNs(ns: number): string {
@@ -13,6 +14,8 @@ export function TimelineBar() {
   const currentTimeNs = useViewerStore((s) => s.currentTimeNs);
   const isPlaying = useViewerStore((s) => s.isPlaying);
   const liveFollowing = useViewerStore((s) => s.liveFollowing);
+  const recipeMarkers = useViewerStore((s) => s.recipeMarkers);
+  const recipeIndexLoading = useViewerStore((s) => s.recipeIndexLoading);
   const setCurrentTimeNs = useViewerStore((s) => s.setCurrentTimeNs);
   const setPlaying = useViewerStore((s) => s.setPlaying);
   const setLiveFollowing = useViewerStore((s) => s.setLiveFollowing);
@@ -78,6 +81,20 @@ export function TimelineBar() {
 
   return (
     <footer className={styles.bar}>
+      {!isLive ? (
+        <FailureRecipeStrip
+          markers={recipeMarkers}
+          currentTimeNs={currentTimeNs}
+          startNs={start}
+          endNs={end}
+          onSeek={setCurrentTimeNs}
+        />
+      ) : null}
+
+      {recipeIndexLoading ? (
+        <p className={styles.indexing}>Indexing failure recipes across Autoware, Nav2, and MoveIt…</p>
+      ) : null}
+
       {isLive ? (
         <button
           type="button"

@@ -18,6 +18,7 @@ import {
   loadSidecarFromCache,
   saveSidecarToCache,
 } from "../storage/sidecar-cache";
+import type { RecipeTimelineMarker } from "../failure-recipes/types.js";
 
 export type LiveConnectionPhase =
   | "idle"
@@ -134,6 +135,8 @@ export interface ViewerState {
   liveRecording: boolean;
   liveConnection: LiveConnectionState;
   statusMessage: string;
+  recipeMarkers: RecipeTimelineMarker[];
+  recipeIndexLoading: boolean;
   openMcapFile: (file: File, options?: { sidecar?: SidecarManifest }) => Promise<void>;
   openMcapUrl: (url: string, options?: { sidecar?: SidecarManifest }) => Promise<void>;
   connectLiveAgent: (url: string) => Promise<void>;
@@ -171,10 +174,26 @@ const initialState = {
   liveRecording: false,
   liveConnection: idleLiveConnection,
   statusMessage: "Drop an MCAP file or connect a live agent",
+  recipeMarkers: [] as RecipeTimelineMarker[],
+  recipeIndexLoading: false,
 };
 
 let refreshTimer: ReturnType<typeof setTimeout> | undefined;
 let refreshRequestId = 0;
+
+async function loadFailureRecipeIndex(
+  ingest: IngestHandle,
+  session: SessionInfo,
+  onStatus: (message: string) => void,
+): Promise<RecipeTimelineMarker[]> {
+  const engine = ingest.engine;
+  if (!isMcapQueryEngine(engine) || session.source === "live") {
+    return [];
+  }
+
+  const { indexFailureRecipeMarkers } = await import("../failure-recipes/index-recipes.js");
+  return indexFailureRecipeMarkers(engine, session, onStatus);
+}
 
 async function loadViewerData(state: ViewerState): Promise<Partial<ViewerState>> {
   const engine = state.ingest?.engine;
@@ -257,6 +276,22 @@ export const useViewerStore = create<ViewerState>((set, get) => ({
 
     set(nextState);
     set(await loadViewerData({ ...get(), ...nextState }));
+
+    void (async () => {
+      set({ recipeMarkers: [], recipeIndexLoading: true });
+      try {
+        const markers = await loadFailureRecipeIndex(handle, session, (message) => {
+          set({ statusMessage: message });
+        });
+        set({
+          recipeMarkers: markers,
+          recipeIndexLoading: false,
+          statusMessage: `Loaded ${file.name} — ${session.topics.length} topics, ${markers.length} failure recipe markers${session.sidecar_message_count ? " · sidecar" : ""}`,
+        });
+      } catch {
+        set({ recipeIndexLoading: false });
+      }
+    })();
   },
 
   async openMcapUrl(url, options) {
@@ -290,6 +325,8 @@ export const useViewerStore = create<ViewerState>((set, get) => ({
     if (previous) {
       await previous.close();
     }
+
+    set({ recipeMarkers: [], recipeIndexLoading: false });
 
     const { openLive } = await import("@robotscope/core");
     const handle = await openLive(trimmedUrl, {

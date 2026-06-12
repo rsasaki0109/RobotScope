@@ -1,0 +1,90 @@
+.strip {
+  grid-column: 1 / -1;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.35rem 0.5rem;
+  min-height: 1.35rem;
+}
+
+.label {
+  font-size: 0.62rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--rs-text-muted);
+}
+
+.chipAutoware {
+  font-size: 0.68rem;
+  padding: 0.12rem 0.45rem;
+  border-radius: 999px;
+  white-space: nowrap;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  color: #f5c46b;
+  border: 1px solid rgba(245, 166, 35, 0.45);
+  background: rgba(245, 166, 35, 0.12);
+}
+
+.chipNav2 {
+  font-size: 0.68rem;
+  padding: 0.12rem 0.45rem;
+  border-radius: 999px;
+  white-space: nowrap;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  color: #8ec8ff;
+  border: 1px solid rgba(110, 181, 255, 0.45);
+  background: rgba(110, 181, 255, 0.12);
+}
+
+.chipMoveit {
+  font-size: 0.68rem;
+  padding: 0.12rem 0.45rem;
+  border-radius: 999px;
+  white-space: nowrap;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  color: #c9a8ff;
+  border: 1px solid rgba(180, 140, 255, 0.45);
+  background: rgba(180, 140, 255, 0.12);
+}
+
+.empty {
+  font-size: 0.68rem;
+  color: var(--rs-text-muted);
+}
+
+.markerTrack {
+  grid-column: 1 / -1;
+  position: relative;
+  height: 0.55rem;
+  margin-top: -0.15rem;
+}
+
+.marker {
+  position: absolute;
+  top: 0;
+  width: 3px;
+  height: 0.55rem;
+  border-radius: 2px;
+  transform: translateX(-50%);
+  cursor: pointer;
+  border: none;
+  padding: 0;
+}
+
+.markerAutoware {
+  background: #f5a623;
+}
+
+.markerNav2 {
+  background: #6eb5ff;
+}
+
+.markerMoveit {
+  background: #b48cff;
+}

@@ -4,6 +4,16 @@ All notable changes to RobotScope are documented in this file.
 
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and versioning follows [SemVer](https://semver.org/).
 
+## [0.1.0-alpha.6] - 2026-06-13
+
+Unified failure recipe timeline across Autoware, Nav2, and MoveIt.
+
+### Added
+
+- **Failure recipe timeline strip** — active recipes at playhead for all plugin stacks
+- **Seekable recipe markers** on the timeline (stack-colored ticks)
+- Background recipe index on MCAP load (`indexFailureRecipeMarkers`)
+
 ## [0.1.0-alpha.5] - 2026-06-13
 
 Nav2 and MoveIt failure recipe UI on the shared demo MCAP.

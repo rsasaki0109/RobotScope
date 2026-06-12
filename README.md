@@ -37,6 +37,8 @@ Open an MCAP file from the viewer (drag & drop) or click **Connect Live** for a 
 | `nav2` | ~0.5s / ~1.8s | Controller stuck / localization uncertainty |
 | `moveit` | ~0.7s / ~1.8s | Joint overspeed / scene collision |
 
+The timeline footer shows **all stack recipes** at the playhead (amber = Autoware, blue = Nav2, purple = MoveIt). Click colored ticks to jump.
+
 ```bash
 # Generate demo recording (TF + odometry + Autoware topics)
 node scripts/create-tf-demo.mjs

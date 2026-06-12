@@ -4,6 +4,20 @@ All notable changes to RobotScope are documented in this file.
 
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and versioning follows [SemVer](https://semver.org/).
 
+## [0.2.0-alpha.1] - 2026-06-13
+
+Rosbag2 SQLite browser ingest (first native step).
+
+### Added
+
+- **`openRosbag2()`** — browser playback of rosbag2 `.db3` via sql.js + `Rosbag2QueryEngineImpl`
+- Viewer **Open recording** accepts `.db3` / `.sqlite3`
+- [docs/rosbag2.md](RobotScope/docs/rosbag2.md) + `npm run convert:rosbag2` fallback script
+
+### Changed
+
+- [known-limitations.md](RobotScope/docs/known-limitations.md) — documents alpha rosbag2 support vs remaining gaps
+
 ## [0.2.0-alpha.0] - 2026-06-13
 
 First v0.2 alpha — cross-layout failure recipe banner.

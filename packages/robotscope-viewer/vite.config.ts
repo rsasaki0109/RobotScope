@@ -13,6 +13,9 @@ export default defineConfig(({ mode }) => ({
     port: 5173,
     open: true,
   },
+  optimizeDeps: {
+    include: ["sql.js/dist/sql-asm.js"],
+  },
   resolve: {
     preserveSymlinks: true,
     alias: {

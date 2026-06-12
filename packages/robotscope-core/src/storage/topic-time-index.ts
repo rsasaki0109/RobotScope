@@ -3,6 +3,8 @@ import type { SidecarTopicTimes } from "./sidecar.js";
 export interface MessageTimeEntry {
   log_time_ns: number;
   sequence?: number;
+  /** Rosbag2 SQLite `messages.id` for payload lookup. */
+  storage_id?: number;
 }
 
 export interface TopicTimeIndexExport {

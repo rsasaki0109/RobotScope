@@ -277,17 +277,26 @@ export const useViewerStore = create<ViewerState>((set, get) => ({
     const sidecar =
       cached && validateSidecarFingerprint(cached, fingerprint) ? cached : undefined;
 
-    const { openMcap } = await import("@robotscope/core");
-    const handle = await openMcap(buffer, {
-      sidecar,
-      fingerprint,
-      onProgress: (p: IngestProgress) =>
-        set({
-          statusMessage: p.message ?? `${p.phase}${p.percent != null ? ` (${p.percent}%)` : ""}`,
-        }),
-    });
+    const { isRosbag2Filename, openMcap, openRosbag2 } = await import("@robotscope/core");
+    const isRosbag2 = isRosbag2Filename(file.name);
+    const handle = isRosbag2
+      ? await openRosbag2(buffer, {
+          fingerprint,
+          onProgress: (p: IngestProgress) =>
+            set({
+              statusMessage: p.message ?? `${p.phase}${p.percent != null ? ` (${p.percent}%)` : ""}`,
+            }),
+        })
+      : await openMcap(buffer, {
+          sidecar,
+          fingerprint,
+          onProgress: (p: IngestProgress) =>
+            set({
+              statusMessage: p.message ?? `${p.phase}${p.percent != null ? ` (${p.percent}%)` : ""}`,
+            }),
+        });
 
-    if (isMcapQueryEngine(handle.engine)) {
+    if (!isRosbag2 && isMcapQueryEngine(handle.engine)) {
       await saveSidecarToCache(fingerprint, handle.engine.getSidecarManifest());
     }
 
@@ -304,7 +313,7 @@ export const useViewerStore = create<ViewerState>((set, get) => ({
       mappedTopics,
       currentTimeNs: bounds.start_ns,
       liveConnection: idleLiveConnection,
-      statusMessage: `Loaded ${file.name} — ${session.topics.length} topics, ${mappedTopics.length} mapped entities, ${session.tf_transform_count ?? 0} TF transforms${session.sidecar_message_count ? " · sidecar" : ""}`,
+      statusMessage: `Loaded ${file.name} (${session.source}) — ${session.topics.length} topics, ${mappedTopics.length} mapped entities, ${session.tf_transform_count ?? 0} TF transforms${session.sidecar_message_count ? " · sidecar" : ""}`,
     };
 
     set(nextState);

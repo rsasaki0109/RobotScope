@@ -1,6 +1,6 @@
 {
   "name": "@robotscope/core",
-  "version": "0.2.0-alpha.0",
+  "version": "0.2.0-alpha.1",
   "description": "RobotScope Data Model, query API, and ingest core",
   "license": "Apache-2.0",
   "type": "module",
@@ -21,9 +21,11 @@
     "@foxglove/rosmsg": "^5.0.5",
     "@foxglove/rosmsg-msgs-common": "^3.2.3",
     "@foxglove/rosmsg2-serialization": "^3.1.2",
-    "@mcap/core": "^2.1.7"
+    "@mcap/core": "^2.1.7",
+    "sql.js": "^1.12.0"
   },
   "devDependencies": {
+    "@types/sql.js": "^1.4.11",
     "typescript": "^5.7.3"
   }
 }

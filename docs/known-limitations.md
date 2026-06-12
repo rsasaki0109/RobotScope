@@ -8,7 +8,7 @@ Plugin manifest **`api: "0.1"`** is stable since GA — see [api-v0.1.md](RobotS
 
 | Limitation | Workaround |
 |------------|------------|
-| **rosbag2 SQLite** not read natively | Convert to MCAP first |
+| **rosbag2 SQLite** (`.db3`) | Browser-native playback (v0.2 alpha) — see [rosbag2.md](RobotScope/docs/rosbag2.md) | Multi-file bags; custom schemas without embedded defs |
 | **Proprietary log formats** unsupported | Export to MCAP |
 | Large MCAP files index in-browser | Use sidecar JSON (`scripts/write-sidecar.mjs`); re-index cached in `.robotscope/` |
 | Live agent requires local WebSocket | Run `npm run demo:live-agent` or ROS2 agent on your machine |

@@ -45,7 +45,9 @@ export function CommandBar() {
         return;
       }
 
-      const mcapFile = [...files].find((file) => file.name.endsWith(".mcap"));
+      const mcapFile = [...files].find(
+        (file) => file.name.endsWith(".mcap") || file.name.endsWith(".db3") || file.name.endsWith(".sqlite3"),
+      );
       if (!mcapFile) {
         event.target.value = "";
         return;
@@ -93,10 +95,10 @@ export function CommandBar() {
 
       <div className={styles.actions}>
         <label className={styles.button}>
-          Open MCAP
+          Open recording
           <input
             type="file"
-            accept=".mcap,.json,application/json"
+            accept=".mcap,.db3,.sqlite,.sqlite3,.json,application/json"
             multiple
             hidden
             onChange={onFileChange}

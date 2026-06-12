@@ -18,7 +18,7 @@ Supported storage layout: standard `topics` + `messages` tables (ROS 2 Humble/Ja
 | CDR decode | Common types via `@foxglove/rosmsg-msgs-common` (same as MCAP) |
 | Custom message definitions | Not embedded in sqlite — may fail decode |
 | Multi-file bags (`metadata.yaml` + folder) | Open the `.db3` file directly |
-| Sidecar cache | MCAP only for now |
+| Sidecar cache | MCAP: IndexedDB + companion JSON | **Rosbag2: IndexedDB** (`recording_source: rosbag2`) — skips topic timestamp re-scan |
 | Failure recipes on rosbag2 | Works when topics match plugin profiles |
 
 ## Fallback: convert to MCAP

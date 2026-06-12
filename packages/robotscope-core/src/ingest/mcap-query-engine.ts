@@ -84,7 +84,10 @@ export class McapQueryEngineImpl implements McapQueryEngine {
 
     if (useCachedSidecar && options.sidecar) {
       options.onIndexProgress?.("Loading sidecar index…", 40);
-      topicIndex = TopicTimeIndex.fromSidecarTopics(options.sidecar.topics);
+      topicIndex = TopicTimeIndex.fromSidecarTopics(
+        options.sidecar.topics,
+        options.sidecar.recording_source ?? "mcap",
+      );
       const tfResult = await indexTfFromMcap(reader, (progress) => {
         options.onIndexProgress?.(
           `TF ${progress.messages_read} msgs (${progress.transforms_added} transforms)`,
@@ -123,6 +126,7 @@ export class McapQueryEngineImpl implements McapQueryEngine {
       { start_ns: session.start_ns, end_ns: session.end_ns },
       { messages: tf_message_count, transforms: tf_transform_count },
       options.fingerprint,
+      "mcap",
     );
 
     const enrichedSession: SessionInfo = {

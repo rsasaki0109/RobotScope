@@ -197,3 +197,115 @@ export function rosbag2TimeBounds(db: Database): { start_ns: number; end_ns: num
     end_ns: Number(row[1] ?? 0),
   };
 }
+
+function payloadFromRow(data: unknown): Uint8Array | null {
+  if (!(data instanceof Uint8Array) && !Array.isArray(data)) {
+    return null;
+  }
+  return data instanceof Uint8Array
+    ? data
+    : Uint8Array.from(data.map((value) => Number(value) & 0xff));
+}
+
+/** Load all message blobs keyed by sqlite row id (required for playback). */
+export function loadRosbag2Payloads(db: Database): Map<number, Uint8Array> {
+  const messagePayloads = new Map<number, Uint8Array>();
+  const rows = db.exec("SELECT id, data FROM messages");
+  for (const row of rows[0]?.values ?? []) {
+    const messageId = Number(row[0]);
+    const payload = payloadFromRow(row[1]);
+    if (payload) {
+      messagePayloads.set(messageId, payload);
+    }
+  }
+  return messagePayloads;
+}
+
+/** Re-index TF from sqlite when topic timestamps come from sidecar cache. */
+export function indexRosbag2TfOnly(
+  db: Database,
+  onProgress?: (progress: Rosbag2IndexProgress) => void,
+): Pick<Rosbag2IndexResult, "tfBuffer" | "tf_message_count" | "tf_transform_count" | "tf_topics"> {
+  const topics = readTopics(db);
+  const topicById = new Map(topics.map((topic) => [topic.id, topic]));
+  const tfBuffer = new TfBuffer();
+  const tfTopics = new Set<string>();
+
+  for (const topic of topics) {
+    if (isTfTopic(topic.name)) {
+      tfTopics.add(topic.name);
+    }
+  }
+
+  const rows = db.exec(
+    "SELECT id, topic_id, timestamp, data FROM messages ORDER BY timestamp",
+  );
+  const values = rows[0]?.values ?? [];
+
+  let messages_read = 0;
+  let transforms_added = 0;
+
+  for (const row of values) {
+    messages_read += 1;
+    const topicId = Number(row[1]);
+    const log_time_ns = Number(row[2]);
+    const topic = topicById.get(topicId);
+    if (!topic) {
+      continue;
+    }
+
+    const schema = schemaFromTopicType(topic.type);
+    if (!isTfTopic(topic.name) || !isTfMessageSchema(schema.name)) {
+      continue;
+    }
+
+    const payload = payloadFromRow(row[3]);
+    if (!payload) {
+      continue;
+    }
+
+    const decoded = decodeRos2Message(schema, payload);
+    if (!decoded.value) {
+      continue;
+    }
+
+    const tfMessage = decoded.value as { transforms?: DecodedTransform[] };
+    const isStatic = topic.name.includes("static");
+
+    for (const transform of tfMessage.transforms ?? []) {
+      tfBuffer.addTransform({
+        parent_frame_id: transform.header.frame_id,
+        child_frame_id: transform.child_frame_id,
+        translation: [
+          transform.transform.translation.x,
+          transform.transform.translation.y,
+          transform.transform.translation.z,
+        ],
+        rotation: [
+          transform.transform.rotation.x,
+          transform.transform.rotation.y,
+          transform.transform.rotation.z,
+          transform.transform.rotation.w,
+        ],
+        time_ns: isStatic ? 0 : log_time_ns,
+        is_static: isStatic,
+      });
+      transforms_added += 1;
+    }
+
+    if (messages_read % 500 === 0) {
+      onProgress?.({
+        messages_read,
+        transforms_added,
+        topics_indexed: topics.length,
+      });
+    }
+  }
+
+  return {
+    tfBuffer,
+    tf_message_count: messages_read,
+    tf_transform_count: transforms_added,
+    tf_topics: [...tfTopics].sort(),
+  };
+}

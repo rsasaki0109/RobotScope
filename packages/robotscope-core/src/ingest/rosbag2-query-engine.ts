@@ -65,6 +65,7 @@ export class Rosbag2QueryEngineImpl implements McapQueryEngine {
         transforms: indexStatus.tf_transform_count,
       },
       fingerprint,
+      "rosbag2",
     );
 
     const enrichedSession: SessionInfo = {

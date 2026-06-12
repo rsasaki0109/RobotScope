@@ -88,6 +88,16 @@ RobotScope/
 └── sample_data/             Sample MCAP fetch scripts
 ```
 
+## v0.3 alpha (0.3.0-alpha.0)
+
+Rosbag2 sidecar cache on v0.2 foundations. See [release notes](RobotScope/docs/release/v0.3.0-alpha.0.md).
+
+**New in v0.3**
+
+| Layer | Features |
+|-------|----------|
+| Rosbag2 | **Sidecar cache** — re-open `.db3` skips topic re-scan (IndexedDB) |
+
 ## v0.2.0 (GA)
 
 Cross-layout failure recipes + rosbag2 ingest on v0.1 foundations. See [release notes](RobotScope/docs/release/v0.2.0.md) and [CHANGELOG.md](RobotScope/CHANGELOG.md).

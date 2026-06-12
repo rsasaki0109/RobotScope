@@ -17,6 +17,8 @@ export interface SidecarTopicTimes {
 export interface SidecarManifest {
   version: typeof SIDECAR_VERSION;
   fingerprint?: FileFingerprint;
+  /** Distinguishes rosbag2 `[time, storage_id]` tuples from MCAP `[time, sequence?]`. */
+  recording_source?: "mcap" | "rosbag2" | "live";
   start_ns: number;
   end_ns: number;
   built_at_ms: number;
@@ -30,10 +32,12 @@ export function sidecarFromTopicIndex(
   bounds: { start_ns: number; end_ns: number },
   tfStats: { messages: number; transforms: number },
   fingerprint?: FileFingerprint,
+  recording_source?: SidecarManifest["recording_source"],
 ): SidecarManifest {
   return {
     version: SIDECAR_VERSION,
     fingerprint,
+    recording_source,
     start_ns: bounds.start_ns,
     end_ns: bounds.end_ns,
     built_at_ms: Date.now(),
@@ -41,11 +45,12 @@ export function sidecarFromTopicIndex(
       topic: topic.topic,
       schema: topic.schema,
       channel_id: topic.channel_id,
-      times: topic.entries.map((entry) =>
-        entry.sequence != null
-          ? [entry.log_time_ns, entry.sequence]
-          : [entry.log_time_ns],
-      ),
+      times:
+        recording_source === "rosbag2"
+          ? topic.entries.map((entry) => [entry.log_time_ns, entry.storage_id ?? 0])
+          : topic.entries.map((entry) =>
+              entry.sequence != null ? [entry.log_time_ns, entry.sequence] : [entry.log_time_ns],
+            ),
     })),
     tf_message_count: tfStats.messages,
     tf_transform_count: tfStats.transforms,
@@ -99,4 +104,9 @@ export function sidecarDownloadFilenameForMcap(mcapFilename: string): string {
 /** Path convention for CLI/desktop: recording.mcap → recording.mcap.robotscope/index.json */
 export function sidecarPathForMcap(mcapPath: string): string {
   return `${mcapPath}.robotscope/index.json`;
+}
+
+/** Browser download name for a rosbag2 sidecar. */
+export function sidecarDownloadFilenameForRosbag2(db3Filename: string): string {
+  return `${db3Filename}.robotscope-index.json`;
 }

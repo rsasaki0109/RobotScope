@@ -283,6 +283,7 @@ export const useViewerStore = create<ViewerState>((set, get) => ({
       ? await (
           await import("@robotscope/core/ingest/rosbag2")
         ).openRosbag2(buffer, {
+          sidecar,
           fingerprint,
           onProgress: (p: IngestProgress) =>
             set({
@@ -298,7 +299,7 @@ export const useViewerStore = create<ViewerState>((set, get) => ({
             }),
         });
 
-    if (!isRosbag2 && isMcapQueryEngine(handle.engine)) {
+    if (isMcapQueryEngine(handle.engine)) {
       await saveSidecarToCache(fingerprint, handle.engine.getSidecarManifest());
     }
 

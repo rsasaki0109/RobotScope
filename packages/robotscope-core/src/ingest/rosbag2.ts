@@ -3,10 +3,14 @@ import initSqlJs, { type Database, type SqlJsStatic } from "sql.js/dist/sql-asm.
 import type { IngestHandle, SessionInfo, TopicInfo } from "../query.js";
 import {
   indexRosbag2Messages,
+  indexRosbag2TfOnly,
+  loadRosbag2Payloads,
   rosbag2TimeBounds,
 } from "./rosbag2-indexer.js";
 import { Rosbag2QueryEngineImpl } from "./rosbag2-query-engine.js";
 import type { McapOpenOptions } from "./mcap.js";
+import { TopicTimeIndex } from "../storage/topic-time-index.js";
+import { validateSidecarFingerprint } from "../storage/sidecar.js";
 
 let sqlModulePromise: Promise<SqlJsStatic> | null = null;
 
@@ -59,20 +63,55 @@ export async function openRosbag2(
       message: `Indexing ${topics.length} topics…`,
     });
 
-    const indexResult = indexRosbag2Messages(db, (progress) => {
+    const useCachedSidecar =
+      options.sidecar &&
+      options.fingerprint &&
+      validateSidecarFingerprint(options.sidecar, options.fingerprint) &&
+      options.sidecar.recording_source === "rosbag2";
+
+    let indexResult;
+    if (useCachedSidecar && options.sidecar) {
       options.onProgress?.({
         phase: "indexing",
-        percent: Math.min(90, 20 + Math.floor(progress.messages_read / 50)),
-        message: `Rosbag2 ${progress.messages_read} msgs · ${progress.topics_indexed} topics · ${progress.transforms_added} TF`,
+        percent: 35,
+        message: "Loading rosbag2 sidecar + TF…",
       });
-    });
+      const topicIndex = TopicTimeIndex.fromSidecarTopics(
+        options.sidecar.topics,
+        "rosbag2",
+      );
+      const messagePayloads = loadRosbag2Payloads(db);
+      const tfResult = indexRosbag2TfOnly(db, (progress) => {
+        options.onProgress?.({
+          phase: "indexing",
+          percent: Math.min(90, 35 + Math.floor(progress.messages_read / 50)),
+          message: `Rosbag2 sidecar · TF ${progress.transforms_added} transforms`,
+        });
+      });
+      indexResult = {
+        tfBuffer: tfResult.tfBuffer,
+        topicIndex,
+        tf_message_count: tfResult.tf_message_count,
+        tf_transform_count: tfResult.tf_transform_count,
+        tf_topics: tfResult.tf_topics,
+        messagePayloads,
+      };
+    } else {
+      indexResult = indexRosbag2Messages(db, (progress) => {
+        options.onProgress?.({
+          phase: "indexing",
+          percent: Math.min(90, 20 + Math.floor(progress.messages_read / 50)),
+          message: `Rosbag2 ${progress.messages_read} msgs · ${progress.topics_indexed} topics · ${progress.transforms_added} TF`,
+        });
+      });
+    }
 
     const indexStatus = {
       tf_indexed: indexResult.tf_topics.length > 0,
       tf_message_count: indexResult.tf_message_count,
       tf_transform_count: indexResult.tf_transform_count,
       tf_topics: indexResult.tf_topics,
-      sidecar_loaded: false,
+      sidecar_loaded: Boolean(useCachedSidecar),
       topic_index_messages: indexResult.topicIndex.messageCount,
     };
 
@@ -89,7 +128,9 @@ export async function openRosbag2(
     options.onProgress?.({
       phase: "ready",
       percent: 100,
-      message: `Ready (rosbag2 · ${indexStatus.topic_index_messages} msgs)`,
+      message: indexStatus.sidecar_loaded
+        ? `Ready (rosbag2 sidecar · ${indexStatus.topic_index_messages} msgs)`
+        : `Ready (rosbag2 · ${indexStatus.topic_index_messages} msgs)`,
     });
 
     return {

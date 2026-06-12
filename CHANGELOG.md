@@ -4,6 +4,21 @@ All notable changes to RobotScope are documented in this file.
 
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and versioning follows [SemVer](https://semver.org/).
 
+## [0.3.0-alpha.0] - 2026-06-13
+
+Rosbag2 sidecar cache for faster re-open.
+
+### Added
+
+- **Rosbag2 sidecar cache** — IndexedDB + `recording_source: "rosbag2"` tuple format `[time_ns, storage_id]`
+- `loadRosbag2Payloads()` + `indexRosbag2TfOnly()` — sidecar fast path skips topic timestamp re-scan
+
+### Changed
+
+- Sidecar manifest supports `recording_source` (`mcap` | `rosbag2`)
+- Rosbag2 re-open uses cached sidecar when fingerprint matches
+- [docs/rosbag2.md](RobotScope/docs/rosbag2.md) + [known-limitations.md](RobotScope/docs/known-limitations.md) updated
+
 ## [0.2.0] - 2026-06-13
 
 Second GA release — cross-layout failure recipes + rosbag2 ingest.

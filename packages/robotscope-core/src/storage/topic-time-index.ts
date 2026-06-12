@@ -1,4 +1,4 @@
-import type { SidecarTopicTimes } from "./sidecar.js";
+import type { SidecarManifest, SidecarTopicTimes } from "./sidecar.js";
 
 export interface MessageTimeEntry {
   log_time_ns: number;
@@ -22,7 +22,10 @@ export class TopicTimeIndex {
     return new TopicTimeIndex();
   }
 
-  static fromSidecarTopics(topics: SidecarTopicTimes[]): TopicTimeIndex {
+  static fromSidecarTopics(
+    topics: SidecarTopicTimes[],
+    recordingSource?: SidecarManifest["recording_source"],
+  ): TopicTimeIndex {
     const index = new TopicTimeIndex();
     for (const topic of topics) {
       index.channelByTopic.set(topic.topic, {
@@ -31,10 +34,15 @@ export class TopicTimeIndex {
       });
       index.byTopic.set(
         topic.topic,
-        topic.times.map(([log_time_ns, sequence]) => ({
-          log_time_ns,
-          sequence,
-        })),
+        recordingSource === "rosbag2"
+          ? topic.times.map(([log_time_ns, storage_id]) => ({
+              log_time_ns,
+              storage_id,
+            }))
+          : topic.times.map(([log_time_ns, sequence]) => ({
+              log_time_ns,
+              sequence,
+            })),
       );
     }
     return index;

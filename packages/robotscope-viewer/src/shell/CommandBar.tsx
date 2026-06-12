@@ -41,7 +41,11 @@ export function CommandBar() {
   const stopLiveRecording = useViewerStore((s) => s.stopLiveRecording);
   const commandGatewayEnabled = useViewerStore((s) => s.commandGatewayEnabled);
   const livePublishTopics = useViewerStore((s) => s.livePublishTopics);
+  const cmdVelLinearX = useViewerStore((s) => s.cmdVelLinearX);
+  const cmdVelAngularZ = useViewerStore((s) => s.cmdVelAngularZ);
   const setCommandGatewayEnabled = useViewerStore((s) => s.setCommandGatewayEnabled);
+  const setCmdVelVelocity = useViewerStore((s) => s.setCmdVelVelocity);
+  const publishLiveCmdVel = useViewerStore((s) => s.publishLiveCmdVel);
   const publishLiveZeroCmdVel = useViewerStore((s) => s.publishLiveZeroCmdVel);
   const [liveUrl, setLiveUrl] = useState(DEFAULT_LIVE_AGENT_URL);
   const [livePresetId, setLivePresetId] = useState(LIVE_AGENT_PRESETS[0]?.id ?? "custom");
@@ -237,13 +241,48 @@ export function CommandBar() {
               </label>
             ) : null}
             {commandGatewayEnabled && canPublishCmdVel ? (
-              <button
-                type="button"
-                className={styles.buttonSecondary}
-                onClick={() => void publishLiveZeroCmdVel()}
-              >
-                Zero cmd_vel
-              </button>
+              <>
+                <div className={styles.cmdVelEditor}>
+                  <label className={styles.cmdVelField}>
+                    vx
+                    <input
+                      type="number"
+                      step="0.05"
+                      value={Number.isFinite(cmdVelLinearX) ? cmdVelLinearX : 0}
+                      onChange={(event) =>
+                        setCmdVelVelocity(Number(event.target.value), cmdVelAngularZ)
+                      }
+                      aria-label="Linear velocity x in meters per second"
+                    />
+                  </label>
+                  <label className={styles.cmdVelField}>
+                    ωz
+                    <input
+                      type="number"
+                      step="0.05"
+                      value={Number.isFinite(cmdVelAngularZ) ? cmdVelAngularZ : 0}
+                      onChange={(event) =>
+                        setCmdVelVelocity(cmdVelLinearX, Number(event.target.value))
+                      }
+                      aria-label="Angular velocity z in radians per second"
+                    />
+                  </label>
+                </div>
+                <button
+                  type="button"
+                  className={styles.buttonSecondary}
+                  onClick={() => void publishLiveCmdVel()}
+                >
+                  Publish cmd_vel
+                </button>
+                <button
+                  type="button"
+                  className={styles.buttonSecondary}
+                  onClick={() => void publishLiveZeroCmdVel()}
+                >
+                  Zero cmd_vel
+                </button>
+              </>
             ) : null}
             <span className={styles.liveBadge} data-phase={connectionPhase}>
               {liveRecording ? "REC" : connectionLabel.toUpperCase()}

@@ -1,5 +1,7 @@
 /** RobotScope live agent WebSocket protocol v0.1 */
 
+import type { TwistVelocityCommand } from "./command-gateway.js";
+
 export const LIVE_PROTOCOL_VERSION = "robotscope.live.v0.1" as const;
 
 export interface LiveChannelDefinition {
@@ -69,6 +71,7 @@ export interface LiveCommandPublishClientMessage {
   type: "command.publish";
   topic: string;
   schema: string;
+  twist?: TwistVelocityCommand;
   zero_twist?: boolean;
   data_b64?: string;
 }

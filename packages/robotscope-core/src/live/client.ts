@@ -216,6 +216,7 @@ export class LiveAgentClient {
           type: "command.publish",
           topic: request.topic,
           schema: request.schema,
+          twist: request.twist,
           zero_twist: request.zero_twist,
           data_b64: request.data_b64,
         }),

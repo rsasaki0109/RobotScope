@@ -182,7 +182,16 @@ class LiveBridge(Node):
         publisher, message_class = publisher_entry
 
         try:
-            if payload.get("zero_twist"):
+            twist_payload = payload.get("twist")
+            if isinstance(twist_payload, dict):
+                if schema != "geometry_msgs/msg/Twist":
+                    return False, "twist is only supported for geometry_msgs/msg/Twist"
+                if Twist is None:
+                    return False, "geometry_msgs is not available in this ROS environment"
+                message = Twist()
+                message.linear.x = float(twist_payload.get("linear_x", 0.0))
+                message.angular.z = float(twist_payload.get("angular_z", 0.0))
+            elif payload.get("zero_twist"):
                 if schema != "geometry_msgs/msg/Twist":
                     return False, "zero_twist is only supported for geometry_msgs/msg/Twist"
                 if Twist is None:
@@ -191,7 +200,7 @@ class LiveBridge(Node):
             else:
                 data_b64 = payload.get("data_b64")
                 if not data_b64:
-                    return False, "Missing data_b64 or zero_twist"
+                    return False, "Missing twist, data_b64, or zero_twist"
                 raw = base64.b64decode(str(data_b64))
                 message = deserialize_message(raw, message_class)
             publisher.publish(message)  # type: ignore[attr-defined]

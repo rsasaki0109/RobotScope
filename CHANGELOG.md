@@ -4,6 +4,22 @@ All notable changes to RobotScope are documented in this file.
 
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and versioning follows [SemVer](https://semver.org/).
 
+## [0.9.0-alpha.0] - 2026-06-13
+
+Twist velocity editor for command gateway.
+
+### Added
+
+- **`twist`** field on `command.publish` — `linear_x` / `angular_z` for `geometry_msgs/msg/Twist`
+- Viewer **vx** / **ωz** inputs + **Publish cmd_vel** button
+- `buildTwistPublishRequest()` in core command gateway helpers
+- [docs/release/v0.9.0-alpha.0.md](RobotScope/docs/release/v0.9.0-alpha.0.md)
+
+### Changed
+
+- [docs/command-gateway.md](RobotScope/docs/command-gateway.md) updated for v0.9 alpha velocity editor
+- [known-limitations.md](RobotScope/docs/known-limitations.md) updated for v0.9 alpha
+
 ## [0.8.0] - 2026-06-13
 
 Eighth GA release — permission-gated command gateway.

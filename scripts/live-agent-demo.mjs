@@ -218,12 +218,25 @@ server.on("connection", (socket) => {
       return;
     }
 
+    const twist = payload.twist;
+    const linearX =
+      twist && typeof twist === "object" && typeof twist.linear_x === "number"
+        ? twist.linear_x
+        : 0;
+    const angularZ =
+      twist && typeof twist === "object" && typeof twist.angular_z === "number"
+        ? twist.angular_z
+        : 0;
+    const zeroTwist = payload.zero_twist === true;
+
     socket.send(
       JSON.stringify({
         type: "command.publish_result",
         ok: true,
         topic,
-        message: `Demo agent accepted zero cmd_vel on ${topic} (no ROS publish)`,
+        message: zeroTwist
+          ? `Demo agent accepted zero cmd_vel on ${topic} (no ROS publish)`
+          : `Demo agent accepted cmd_vel vx=${linearX.toFixed(2)} ωz=${angularZ.toFixed(2)} on ${topic} (no ROS publish)`,
       }),
     );
   });

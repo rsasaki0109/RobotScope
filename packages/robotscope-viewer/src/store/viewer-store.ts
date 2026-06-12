@@ -144,6 +144,8 @@ export interface ViewerState {
   liveConnection: LiveConnectionState;
   commandGatewayEnabled: boolean;
   livePublishTopics: string[];
+  cmdVelLinearX: number;
+  cmdVelAngularZ: number;
   statusMessage: string;
   recipeMarkers: RecipeTimelineMarker[];
   liveActiveRecipes: RecipeTimelineMarker[];
@@ -159,6 +161,8 @@ export interface ViewerState {
   startLiveRecording: () => Promise<void>;
   stopLiveRecording: (options?: { reload?: boolean }) => Promise<void>;
   setCommandGatewayEnabled: (enabled: boolean) => void;
+  setCmdVelVelocity: (linearX: number, angularZ: number) => void;
+  publishLiveCmdVel: () => Promise<void>;
   publishLiveZeroCmdVel: () => Promise<void>;
   refreshInspection: () => Promise<void>;
   setCurrentTimeNs: (timeNs: number) => void;
@@ -192,6 +196,8 @@ const initialState = {
   liveConnection: idleLiveConnection,
   commandGatewayEnabled: false,
   livePublishTopics: [] as string[],
+  cmdVelLinearX: 0,
+  cmdVelAngularZ: 0,
   statusMessage: "Drop an MCAP file or connect a live agent",
   recipeMarkers: [] as RecipeTimelineMarker[],
   liveActiveRecipes: [] as RecipeTimelineMarker[],
@@ -621,8 +627,49 @@ export const useViewerStore = create<ViewerState>((set, get) => ({
     });
   },
 
+  setCmdVelVelocity(linearX, angularZ) {
+    set({
+      cmdVelLinearX: linearX,
+      cmdVelAngularZ: angularZ,
+    });
+  },
+
+  async publishLiveCmdVel() {
+    const state = get();
+    if (!state.commandGatewayEnabled) {
+      set({ statusMessage: "Enable command gateway before publishing" });
+      return;
+    }
+
+    const ingest = state.ingest;
+    if (!ingest || !isLiveIngestHandle(ingest)) {
+      set({ statusMessage: "Connect a live agent before publishing" });
+      return;
+    }
+
+    try {
+      const { buildTwistPublishRequest } = await import("@robotscope/core");
+      const result = await ingest.publishCommand(
+        buildTwistPublishRequest({
+          linear_x: state.cmdVelLinearX,
+          angular_z: state.cmdVelAngularZ,
+        }),
+      );
+      set({
+        statusMessage: result.ok
+          ? `${result.message} · vx=${state.cmdVelLinearX.toFixed(2)} ωz=${state.cmdVelAngularZ.toFixed(2)}`
+          : `Publish failed: ${result.message}`,
+      });
+    } catch (error) {
+      set({
+        statusMessage: error instanceof Error ? error.message : "Publish failed",
+      });
+    }
+  },
+
   async publishLiveZeroCmdVel() {
     const state = get();
+    set({ cmdVelLinearX: 0, cmdVelAngularZ: 0 });
     if (!state.commandGatewayEnabled) {
       set({ statusMessage: "Enable command gateway before publishing" });
       return;

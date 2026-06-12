@@ -41,7 +41,24 @@ export const AUTOWARE_FAILURE_RECIPES: FailureRecipeDefinition[] = [
     symptoms: ["trajectory_velocity_zero", "brief_perception_object"],
     panels: ["autoware.planning", "perception_objects"],
   },
+  {
+    id: "control_tracking_failure",
+    label: "Control tracking failure suspected",
+    description:
+      "Lateral/longitudinal error spikes while commanded velocity drops — correlate planning output and control errors.",
+    symptoms: ["lateral_error_elevated", "longitudinal_error_elevated", "command_velocity_low"],
+    panels: ["autoware.control_error", "autoware.planning"],
+  },
 ];
+
+const RECIPE_MIN_MATCHES: Record<string, number> = {
+  phantom_obstacle_stop: 2,
+  control_tracking_failure: 2,
+};
+
+const LATERAL_ERROR_THRESHOLD_M = 0.15;
+const LONGITUDINAL_ERROR_THRESHOLD_M = 0.12;
+const LOW_COMMAND_VELOCITY_MPS = 0.08;
 
 type SymptomEvaluator = (snapshot: AutowareSnapshot) => boolean;
 
@@ -64,6 +81,18 @@ const SYMPTOM_CHECKS: Record<string, SymptomEvaluator> = {
     snapshot.perception?.brief_spike === true ||
     (snapshot.perception?.object_count ?? 0) > 0 &&
       (snapshot.perception?.low_confidence_count ?? 0) > 0,
+  lateral_error_elevated: (snapshot) =>
+    Math.abs(snapshot.control?.lateral_error_m ?? 0) > LATERAL_ERROR_THRESHOLD_M,
+  longitudinal_error_elevated: (snapshot) =>
+    Math.abs(snapshot.control?.longitudinal_error_m ?? 0) > LONGITUDINAL_ERROR_THRESHOLD_M,
+  command_velocity_low: (snapshot) => {
+    const linear_x = snapshot.control?.linear_x_mps;
+    if (linear_x == null) {
+      return false;
+    }
+    const hasPlan = (snapshot.planning?.length_m ?? 0) > 0.5;
+    return hasPlan && linear_x < LOW_COMMAND_VELOCITY_MPS;
+  },
 };
 
 export function evaluateFailureRecipes(
@@ -83,7 +112,7 @@ export function evaluateFailureRecipes(
     }
 
     const score = matched_symptoms.length / recipe.symptoms.length;
-    const minMatches = recipe.id === "phantom_obstacle_stop" ? 2 : 1;
+    const minMatches = RECIPE_MIN_MATCHES[recipe.id] ?? 1;
     if (matched_symptoms.length < minMatches) {
       continue;
     }

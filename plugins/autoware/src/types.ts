@@ -4,6 +4,7 @@ export interface ResolvedAutowareTopics {
   planning_trajectory?: string;
   control_lateral_error?: string;
   control_longitudinal_error?: string;
+  control_cmd_vel?: string;
   gnss_pose?: string;
   map_vector?: string;
   map_occupancy?: string;
@@ -63,8 +64,10 @@ export interface AutowarePlanningView {
 export interface AutowareControlView {
   lateral_error_topic?: string;
   longitudinal_error_topic?: string;
+  cmd_vel_topic?: string;
   lateral_error_m?: number;
   longitudinal_error_m?: number;
+  linear_x_mps?: number;
 }
 
 export interface AutowarePerceptionObjectView {

@@ -135,6 +135,7 @@ export interface ViewerState {
   liveConnection: LiveConnectionState;
   statusMessage: string;
   openMcapFile: (file: File, options?: { sidecar?: SidecarManifest }) => Promise<void>;
+  openMcapUrl: (url: string, options?: { sidecar?: SidecarManifest }) => Promise<void>;
   connectLiveAgent: (url: string) => Promise<void>;
   disconnectLiveAgent: () => Promise<void>;
   startLiveRecording: () => Promise<void>;
@@ -256,6 +257,18 @@ export const useViewerStore = create<ViewerState>((set, get) => ({
 
     set(nextState);
     set(await loadViewerData({ ...get(), ...nextState }));
+  },
+
+  async openMcapUrl(url, options) {
+    set({ statusMessage: `Fetching ${url}…` });
+    const response = await fetch(url);
+    if (!response.ok) {
+      throw new Error(`Failed to fetch MCAP (${response.status})`);
+    }
+    const buffer = await response.arrayBuffer();
+    const name = url.split("/").pop() ?? "recording.mcap";
+    const file = new File([buffer], name, { type: "application/octet-stream" });
+    await get().openMcapFile(file, options);
   },
 
   async connectLiveAgent(url: string) {

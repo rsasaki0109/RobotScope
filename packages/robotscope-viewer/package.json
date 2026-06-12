@@ -1,6 +1,6 @@
 {
   "name": "@robotscope/viewer",
-  "version": "0.1.0-alpha.3",
+  "version": "0.1.0-alpha.4",
   "private": true,
   "description": "RobotScope web viewer — React + Three.js",
   "license": "Apache-2.0",
@@ -8,7 +8,9 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc -p tsconfig.json --noEmit && vite build",
+    "build:pages": "tsc -p tsconfig.json --noEmit && vite build --mode pages && cp dist/index.html dist/404.html",
     "preview": "vite preview",
+    "preview:pages": "vite preview --mode pages",
     "typecheck": "tsc -p tsconfig.json --noEmit"
   },
   "dependencies": {

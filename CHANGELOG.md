@@ -4,6 +4,23 @@ All notable changes to RobotScope are documented in this file.
 
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and versioning follows [SemVer](https://semver.org/).
 
+## [0.1.0-alpha.4] - 2026-06-12
+
+GitHub Pages demo deploy and control tracking failure recipe.
+
+### Added
+
+- **GitHub Pages workflow** — builds static viewer + demo MCAP on push to `main`
+- **`?demo=1` auto-load** — fetches bundled `demo-scene.mcap` from viewer `public/demo/`
+- **Control tracking failure recipe** — lateral/longitudinal error + low cmd_vel; highlights Control + Planning panels
+- **`/cmd_vel` in Autoware profile** — cmd velocity surfaced in Control Error panel
+- Demo MCAP control-tracking window at frames 8–12 (~0.8–1.2s)
+
+### Changed
+
+- Vite `pages` mode uses `/RobotScope/` base path for GitHub Pages
+- README links to live Autoware demo URL
+
 ## [0.1.0-alpha.3] - 2026-06-12
 
 Autoware perception observability and phantom obstacle failure recipe demo.

@@ -144,20 +144,36 @@ export function extractControlView(
   lateralDecoded: unknown,
   longitudinalTopic: string | undefined,
   longitudinalDecoded: unknown,
+  cmdVelTopic?: string,
+  cmdVelDecoded?: unknown,
 ): AutowareControlView | undefined {
   const lateral = lateralTopic ? readControlError(lateralDecoded) : undefined;
   const longitudinal = longitudinalTopic ? readControlError(longitudinalDecoded) : undefined;
+  const linear_x_mps = cmdVelTopic ? readCmdVelLinearX(cmdVelDecoded) : undefined;
 
-  if (lateral == null && longitudinal == null) {
+  if (lateral == null && longitudinal == null && linear_x_mps == null) {
     return undefined;
   }
 
   return {
     lateral_error_topic: lateralTopic,
     longitudinal_error_topic: longitudinalTopic,
+    cmd_vel_topic: cmdVelTopic,
     lateral_error_m: lateral,
     longitudinal_error_m: longitudinal,
+    linear_x_mps,
   };
+}
+
+function readCmdVelLinearX(decoded: unknown): number | undefined {
+  if (!decoded || typeof decoded !== "object") {
+    return undefined;
+  }
+  const msg = decoded as {
+    linear?: { x?: number };
+    twist?: { linear?: { x?: number } };
+  };
+  return readNumber(msg.linear?.x) ?? readNumber(msg.twist?.linear?.x);
 }
 
 function readControlError(decoded: unknown): number | undefined {

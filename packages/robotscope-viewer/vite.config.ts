@@ -6,7 +6,8 @@ import { defineConfig } from "vite";
 
 const rootDir = fileURLToPath(new URL(".", import.meta.url));
 
-export default defineConfig({
+export default defineConfig(({ mode }) => ({
+  base: mode === "pages" ? "/RobotScope/" : "/",
   plugins: [react()],
   server: {
     port: 5173,
@@ -36,4 +37,4 @@ export default defineConfig({
       "@robotscope/plugin-moveit": path.resolve(rootDir, "../../plugins/moveit/src/index.ts"),
     },
   },
-});
+}));

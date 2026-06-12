@@ -39,6 +39,9 @@ sample_data/*.mcap
 sample_data/*.bag
 sample_data/**/*.mcap
 
+# Generated demo bundle for GitHub Pages builds
+packages/robotscope-viewer/public/demo/*.mcap
+
 # Test coverage
 coverage/
 

@@ -59,3 +59,12 @@ failure_recipes:
     panels:
       - autoware.planning
       - perception_objects
+
+  control_tracking_failure:
+    symptoms:
+      - lateral_error_elevated
+      - longitudinal_error_elevated
+      - command_velocity_low
+    panels:
+      - autoware.control_error
+      - autoware.planning

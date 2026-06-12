@@ -402,9 +402,10 @@ function encodeGoalPose() {
 }
 
 function encodeCmdVel(i) {
+  const trackingFailure = i >= 8 && i <= 12;
   return twist.writer.writeMessage({
-    linear: { x: 0.35, y: 0, z: 0 },
-    angular: { x: 0, y: 0, z: Math.sin(i * 0.25) * 0.15 },
+    linear: { x: trackingFailure ? 0.03 : 0.35, y: 0, z: 0 },
+    angular: { x: 0, y: 0, z: trackingFailure ? 0.02 : Math.sin(i * 0.25) * 0.15 },
   });
 }
 
@@ -592,8 +593,9 @@ for (let i = 0; i < 20; i += 1) {
   const t = BigInt(i * 100_000_000);
   const timeNs = Number(t);
   const ndtScore = Math.max(0.4, 2.5 - i * 0.12);
-  const lateralError = Math.sin(i * 0.4) * 0.08;
-  const longitudinalError = Math.cos(i * 0.3) * 0.05;
+  const trackingFailure = i >= 8 && i <= 12;
+  const lateralError = trackingFailure ? 0.22 : Math.sin(i * 0.4) * 0.08;
+  const longitudinalError = trackingFailure ? 0.15 : Math.cos(i * 0.3) * 0.05;
   await writer.addMessage({
     channelId: tfChannelId,
     sequence: i,

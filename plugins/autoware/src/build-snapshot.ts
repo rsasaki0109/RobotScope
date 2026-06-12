@@ -27,6 +27,7 @@ export async function buildAutowareSnapshot(
     planningRaw,
     lateralRaw,
     longitudinalRaw,
+    cmdVelRaw,
     mapVectorRaw,
     mapOccupancyRaw,
     perceptionRaw,
@@ -46,6 +47,9 @@ export async function buildAutowareSnapshot(
       : Promise.resolve(null),
     topics.control_longitudinal_error
       ? engine.getRawMessageNearTime(topics.control_longitudinal_error, time_ns)
+      : Promise.resolve(null),
+    topics.control_cmd_vel
+      ? engine.getRawMessageNearTime(topics.control_cmd_vel, time_ns)
       : Promise.resolve(null),
     topics.map_vector
       ? engine.getRawMessageNearTime(topics.map_vector, time_ns)
@@ -89,6 +93,8 @@ export async function buildAutowareSnapshot(
     lateralRaw?.decoded,
     topics.control_longitudinal_error,
     longitudinalRaw?.decoded,
+    topics.control_cmd_vel,
+    cmdVelRaw?.decoded,
   );
 
   const priorPerception =

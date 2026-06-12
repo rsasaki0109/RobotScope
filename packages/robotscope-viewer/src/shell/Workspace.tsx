@@ -13,13 +13,32 @@ function resolveLayoutFromUrl(): string {
   return params.get("layout") ?? "default";
 }
 
+function shouldAutoLoadDemo(): boolean {
+  const params = new URLSearchParams(window.location.search);
+  const demo = params.get("demo");
+  return demo === "1" || demo === "true";
+}
+
 export function Workspace() {
   const setLayoutId = useViewerStore((s) => s.setLayoutId);
+  const openMcapUrl = useViewerStore((s) => s.openMcapUrl);
+  const session = useViewerStore((s) => s.session);
   const layoutId = useViewerStore((s) => s.layoutId);
 
   useEffect(() => {
     setLayoutId(resolveLayoutFromUrl());
   }, [setLayoutId]);
+
+  useEffect(() => {
+    if (!shouldAutoLoadDemo() || session) {
+      return;
+    }
+    const demoUrl = `${import.meta.env.BASE_URL}demo/demo-scene.mcap`;
+    void openMcapUrl(demoUrl).catch((error: unknown) => {
+      const message = error instanceof Error ? error.message : String(error);
+      useViewerStore.setState({ statusMessage: `Demo load failed: ${message}` });
+    });
+  }, [openMcapUrl, session]);
 
   return (
     <div className={styles.workspace} data-layout={layoutId}>

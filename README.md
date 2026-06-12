@@ -29,6 +29,8 @@ npm run dev
 
 Open an MCAP file from the viewer (drag & drop) or click **Connect Live** for a WebSocket agent.
 
+**Live demo (GitHub Pages):** [Autoware layout + bundled MCAP](https://rsasaki0109.github.io/RobotScope/?layout=autoware&demo=1) — scrub ~0.9s (control tracking), ~1.4s (phantom stop), end (localization drift).
+
 ```bash
 # Generate demo recording (TF + odometry + Autoware topics)
 node scripts/create-tf-demo.mjs
@@ -47,6 +49,11 @@ npm run demo:moveit
 
 # Native ROS2 agent (requires sourced ROS distro)
 npm run demo:ros2-agent -- --profile autoware
+
+# Static GitHub Pages bundle (local preview)
+npm run build:pages
+npm run preview:pages
+# → http://127.0.0.1:4173/RobotScope/?layout=autoware&demo=1
 ```
 
 ## Repository layout

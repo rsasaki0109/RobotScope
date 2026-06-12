@@ -1,6 +1,6 @@
-# Known limitations (v0.9 beta)
+# Known limitations (v0.9 GA)
 
-Concrete scope boundaries for **v0.9.0-beta.0**. Product choices or not-yet-built — not necessarily bugs.
+Concrete scope boundaries for **v0.9.0**. Product choices or not-yet-built — not necessarily bugs.
 
 Plugin manifest **`api: "0.1"`** remains stable (from v0.1 GA) — see [api-v0.1.md](RobotScope/docs/api-v0.1.md).
 
@@ -36,7 +36,7 @@ Plugin manifest **`api: "0.1"`** remains stable (from v0.1 GA) — see [api-v0.1
 | Limitation | Notes |
 |------------|-------|
 | **Read-only playback** | MCAP / rosbag2 / GitHub Pages demo cannot publish |
-| **Live command gateway** | Opt-in **Allow publish** + agent **`--allow-publish`** allowlist — see [command-gateway.md](RobotScope/docs/command-gateway.md). **vx / ωz** Twist editor (v0.9 alpha); no service/action gateway |
+| **Live command gateway** | Opt-in **Allow publish** + agent **`--allow-publish`** allowlist — see [command-gateway.md](RobotScope/docs/command-gateway.md). **vx / ωz** Twist editor (v0.9); no service/action gateway |
 | **No cloud / fleet dashboard** | Single-session web viewer |
 | **No multi-user auth** | Local or static deploy only |
 | GitHub Pages is **static demo** | Live connect targets `localhost` agent |

@@ -99,6 +99,27 @@ RobotScope/
 └── sample_data/             Sample MCAP fetch scripts
 ```
 
+## v0.9.0 (GA)
+
+Twist velocity editor on v0.8 command gateway. See [release notes](RobotScope/docs/release/v0.9.0.md) and [CHANGELOG.md](RobotScope/CHANGELOG.md).
+
+**Shipped**
+
+| Layer | Features |
+|-------|----------|
+| Live | **Twist editor** — vx / ωz publish to allowlisted `/cmd_vel` |
+| v0.8 carry-over | Command gateway opt-in · OSM maps · rosbag2 · failure recipes |
+
+**Docs**
+
+- [Command gateway guide](RobotScope/docs/command-gateway.md)
+- [Migration v0.9 beta → GA](RobotScope/docs/migration/v0.9-beta-to-ga.md)
+- [Known limitations](RobotScope/docs/known-limitations.md)
+
+**Out of scope (v0.9)**
+
+- Full 6-DOF Twist · service/action gateway · native Lanelet2 boost bin · cloud/fleet
+
 ## v0.9.0-beta.0
 
 Twist velocity editor on v0.8 command gateway. See [release notes](RobotScope/docs/release/v0.9.0-beta.0.md) and [CHANGELOG.md](RobotScope/CHANGELOG.md).

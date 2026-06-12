@@ -1,4 +1,4 @@
-# Rosbag2 ingest (v0.4 alpha)
+# Rosbag2 ingest (v0.4 beta)
 
 Browser-native **rosbag2 SQLite** playback — single `.db3` or **folder bags** (`metadata.yaml` + multiple storage files) with **IndexedDB sidecar** on re-open.
 
@@ -17,7 +17,7 @@ Browser-native **rosbag2 SQLite** playback — single `.db3` or **folder bags** 
 
 Supported storage layout: standard `topics` + `messages` tables (ROS 2 Humble/Jazzy sqlite3 plugin).
 
-## Limitations (v0.4 alpha)
+## Limitations (v0.4 beta)
 
 | Topic | Status |
 |-------|--------|

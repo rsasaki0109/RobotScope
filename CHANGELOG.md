@@ -4,6 +4,24 @@ All notable changes to RobotScope are documented in this file.
 
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and versioning follows [SemVer](https://semver.org/).
 
+## [0.4.0-beta.0] - 2026-06-12
+
+First v0.4 beta — scope consolidation after alpha.0.
+
+### Summary
+
+Beta consolidates rosbag2 folder bag ingest. Documentation and known-limitations boundaries updated for daily multi-file bag workflows.
+
+### Added
+
+- [docs/release/v0.4.0-beta.0.md](RobotScope/docs/release/v0.4.0-beta.0.md)
+- [docs/migration/v0.4-alpha-to-beta.md](RobotScope/docs/migration/v0.4-alpha-to-beta.md)
+
+### Changed
+
+- README + [known-limitations.md](RobotScope/docs/known-limitations.md) updated for v0.4 beta boundaries
+- [docs/rosbag2.md](RobotScope/docs/rosbag2.md) — beta scope header
+
 ## [0.4.0-alpha.0] - 2026-06-12
 
 Rosbag2 folder bag ingest (`metadata.yaml` + multiple `.db3`).

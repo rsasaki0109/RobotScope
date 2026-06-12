@@ -14,6 +14,16 @@
   color: var(--rs-text-muted);
 }
 
+.liveBadge {
+  font-size: 0.58rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  color: #34d399;
+  border: 1px solid rgba(52, 211, 153, 0.45);
+  border-radius: 999px;
+  padding: 0.05rem 0.35rem;
+}
+
 .chipAutoware {
   font-size: 0.68rem;
   padding: 0.12rem 0.45rem;

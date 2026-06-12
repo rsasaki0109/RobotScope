@@ -15,6 +15,7 @@ export function TimelineBar() {
   const isPlaying = useViewerStore((s) => s.isPlaying);
   const liveFollowing = useViewerStore((s) => s.liveFollowing);
   const recipeMarkers = useViewerStore((s) => s.recipeMarkers);
+  const liveActiveRecipes = useViewerStore((s) => s.liveActiveRecipes);
   const recipeIndexLoading = useViewerStore((s) => s.recipeIndexLoading);
   const setCurrentTimeNs = useViewerStore((s) => s.setCurrentTimeNs);
   const setPlaying = useViewerStore((s) => s.setPlaying);
@@ -81,17 +82,17 @@ export function TimelineBar() {
 
   return (
     <footer className={styles.bar}>
-      {!isLive ? (
-        <FailureRecipeStrip
-          markers={recipeMarkers}
-          currentTimeNs={currentTimeNs}
-          startNs={start}
-          endNs={end}
-          onSeek={setCurrentTimeNs}
-        />
-      ) : null}
+      <FailureRecipeStrip
+        markers={recipeMarkers}
+        currentTimeNs={currentTimeNs}
+        startNs={start}
+        endNs={end}
+        isLive={isLive}
+        liveActive={isLive ? liveActiveRecipes : undefined}
+        onSeek={setCurrentTimeNs}
+      />
 
-      {recipeIndexLoading ? (
+      {!isLive && recipeIndexLoading ? (
         <p className={styles.indexing}>Indexing failure recipes across Autoware, Nav2, and MoveIt…</p>
       ) : null}
 

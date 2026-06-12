@@ -27,6 +27,8 @@ export interface FailureRecipeStripProps {
   currentTimeNs: number;
   startNs: number;
   endNs: number;
+  isLive?: boolean;
+  liveActive?: RecipeTimelineMarker[];
   onSeek?: (timeNs: number) => void;
 }
 
@@ -35,17 +37,20 @@ export function FailureRecipeStrip({
   currentTimeNs,
   startNs,
   endNs,
+  isLive = false,
+  liveActive,
   onSeek,
 }: FailureRecipeStripProps) {
   const span = Math.max(endNs - startNs, 1);
-  const active = activeRecipeMarkersAt(markers, currentTimeNs);
+  const active = liveActive ?? activeRecipeMarkersAt(markers, currentTimeNs);
 
   return (
     <>
       <div className={styles.strip} aria-live="polite">
         <span className={styles.label}>Failure recipes</span>
+        {isLive ? <span className={styles.liveBadge}>live</span> : null}
         {active.length === 0 ? (
-          <span className={styles.empty}>none at this time</span>
+          <span className={styles.empty}>{isLive ? "none right now" : "none at this time"}</span>
         ) : (
           active.map((marker) => (
             <span key={`${marker.stack}-${marker.recipe_id}-${marker.time_ns}`} className={STACK_CHIP[marker.stack]}>
@@ -55,7 +60,7 @@ export function FailureRecipeStrip({
         )}
       </div>
 
-      {markers.length > 0 ? (
+      {markers.length > 0 || isLive ? (
         <>
           <div className={styles.legend}>
             {LEGEND_STACKS.map((stack) => (
@@ -64,7 +69,9 @@ export function FailureRecipeStrip({
                 {STACK_PREFIX[stack]}
               </span>
             ))}
-            <span className={styles.legendHint}>click ticks to seek</span>
+            <span className={styles.legendHint}>
+              {isLive ? "recipes update as data streams" : "click ticks to seek"}
+            </span>
           </div>
           <div className={styles.markerTrack}>
             {markers.map((marker) => {

@@ -50,6 +50,12 @@ The [hosted demo](https://rsasaki0109.github.io/RobotScope/?layout=autoware&demo
 
 Browsers cannot reach localhost from a remote origin unless the agent runs on your machine.
 
+## Failure recipes during live
+
+While connected live, the timeline footer evaluates **Autoware, Nav2, and MoveIt** failure recipes at the playhead (green **live** badge). Markers accumulate on the scrub bar as patterns appear — same panel highlighting as MCAP playback in the right dock.
+
+Works with `npm run demo:live-agent` replaying the demo MCAP over WebSocket.
+
 ## URL parameters
 
 | Param | Example | Effect |

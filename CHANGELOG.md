@@ -4,6 +4,21 @@ All notable changes to RobotScope are documented in this file.
 
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and versioning follows [SemVer](https://semver.org/).
 
+## [0.1.0-alpha.8] - 2026-06-13
+
+Live failure recipe evaluation on the unified timeline.
+
+### Added
+
+- **Live failure recipe evaluation** — timeline strip updates during WebSocket streaming
+- `evaluateFailureRecipesAtTime()` and live marker accumulation on the scrub bar
+- Green **live** badge on failure recipe strip
+
+### Changed
+
+- Failure recipe strip visible during live sessions (was MCAP-only)
+- [docs/live-agent.md](RobotScope/docs/live-agent.md) documents live recipe behavior
+
 ## [0.1.0-alpha.7] - 2026-06-13
 
 Live agent connection UX and failure recipe timeline legend.

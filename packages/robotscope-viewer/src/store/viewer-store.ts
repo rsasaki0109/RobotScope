@@ -19,7 +19,12 @@ import {
   saveSidecarToCache,
 } from "../storage/sidecar-cache";
 import type { RecipeTimelineMarker } from "../failure-recipes/types.js";
-import { indexFailureRecipeMarkers } from "../failure-recipes/index-recipes.js";
+import {
+  evaluateFailureRecipesAtTime,
+  indexFailureRecipeMarkers,
+  mergeRecipeMarkers,
+} from "../failure-recipes/index-recipes.js";
+import { RECIPE_SAMPLE_STEP_NS } from "../failure-recipes/types.js";
 
 export type LiveConnectionPhase =
   | "idle"
@@ -137,6 +142,7 @@ export interface ViewerState {
   liveConnection: LiveConnectionState;
   statusMessage: string;
   recipeMarkers: RecipeTimelineMarker[];
+  liveActiveRecipes: RecipeTimelineMarker[];
   recipeIndexLoading: boolean;
   openMcapFile: (file: File, options?: { sidecar?: SidecarManifest }) => Promise<void>;
   openMcapUrl: (url: string, options?: { sidecar?: SidecarManifest }) => Promise<void>;
@@ -176,6 +182,7 @@ const initialState = {
   liveConnection: idleLiveConnection,
   statusMessage: "Drop an MCAP file or connect a live agent",
   recipeMarkers: [] as RecipeTimelineMarker[],
+  liveActiveRecipes: [] as RecipeTimelineMarker[],
   recipeIndexLoading: false,
 };
 
@@ -193,6 +200,24 @@ async function loadFailureRecipeIndex(
   }
 
   return indexFailureRecipeMarkers(engine, session, onStatus);
+}
+
+async function updateLiveFailureRecipes(
+  state: ViewerState,
+): Promise<Pick<ViewerState, "recipeMarkers" | "liveActiveRecipes">> {
+  const engine = state.ingest?.engine;
+  if (!engine || !isMcapQueryEngine(engine) || state.session?.source !== "live") {
+    return { recipeMarkers: state.recipeMarkers, liveActiveRecipes: [] };
+  }
+
+  const active = await evaluateFailureRecipesAtTime(engine, state.session, state.currentTimeNs);
+  const bucket = Math.round(state.currentTimeNs / RECIPE_SAMPLE_STEP_NS) * RECIPE_SAMPLE_STEP_NS;
+  const bucketed = active.map((marker) => ({ ...marker, time_ns: bucket }));
+
+  return {
+    liveActiveRecipes: active,
+    recipeMarkers: mergeRecipeMarkers(state.recipeMarkers, bucketed),
+  };
 }
 
 async function loadViewerData(state: ViewerState): Promise<Partial<ViewerState>> {
@@ -224,6 +249,14 @@ async function loadViewerData(state: ViewerState): Promise<Partial<ViewerState>>
     sceneSnapshot,
     inspectLoading: false,
     sceneLoading: false,
+    ...(state.session?.source === "live"
+      ? await updateLiveFailureRecipes({
+          ...state,
+          tfTree,
+          rawMessage,
+          sceneSnapshot,
+        })
+      : {}),
   };
 }
 
@@ -278,7 +311,7 @@ export const useViewerStore = create<ViewerState>((set, get) => ({
     set(await loadViewerData({ ...get(), ...nextState }));
 
     void (async () => {
-      set({ recipeMarkers: [], recipeIndexLoading: true });
+      set({ recipeMarkers: [], liveActiveRecipes: [], recipeIndexLoading: true });
       try {
         const markers = await loadFailureRecipeIndex(handle, session, (message) => {
           set({ statusMessage: message });
@@ -326,7 +359,7 @@ export const useViewerStore = create<ViewerState>((set, get) => ({
       await previous.close();
     }
 
-    set({ recipeMarkers: [], recipeIndexLoading: false });
+    set({ recipeMarkers: [], liveActiveRecipes: [], recipeIndexLoading: false });
 
     const { openLive } = await import("@robotscope/core");
     const handle = await openLive(trimmedUrl, {

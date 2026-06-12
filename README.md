@@ -99,26 +99,26 @@ RobotScope/
 └── sample_data/             Sample MCAP fetch scripts
 ```
 
-## v0.5 beta (0.5.0-beta.0)
+## v0.5.0 (GA)
 
-Lanelet2 OSM sidecar on v0.4 foundations. See [release notes](RobotScope/docs/release/v0.5.0-beta.0.md) and [CHANGELOG.md](RobotScope/CHANGELOG.md).
+Lanelet2 OSM sidecar on v0.4 foundations. See [release notes](RobotScope/docs/release/v0.5.0.md) and [CHANGELOG.md](RobotScope/CHANGELOG.md).
 
-**New in v0.5**
+**Shipped**
 
 | Layer | Features |
 |-------|----------|
-| Map | **Load map OSM** — Autoware `.osm` sidecar overlay (2D panel + 3D) |
+| Map | **Load map OSM** — Autoware `.osm` sidecar (2D panel + 3D) |
+| v0.4 carry-over | Rosbag2 folder bags · sidecar · cross-layout banner · MCAP · live · plugins |
 
 **Docs**
 
 - [Lanelet2 OSM guide](RobotScope/docs/lanelet2-osm.md)
-- [Migration v0.5 alpha → beta](RobotScope/docs/migration/v0.5-alpha-to-beta.md)
+- [Migration v0.5 beta → GA](RobotScope/docs/migration/v0.5-beta-to-ga.md)
+- [Known limitations](RobotScope/docs/known-limitations.md)
 
-**Still out of scope (v0.5)**
+**Out of scope (v0.5)**
 
 - Native Lanelet2 boost bin · command gateway · cloud/fleet
-
-See [known limitations](RobotScope/docs/known-limitations.md).
 
 ## v0.4.0 (GA)
 

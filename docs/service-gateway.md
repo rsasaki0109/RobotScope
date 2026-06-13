@@ -1,4 +1,4 @@
-# Service gateway (v1.1 beta)
+# Service gateway (v1.1 GA)
 
 Permission-gated **live service calls** from the viewer to a local ROS 2 agent.
 
@@ -25,7 +25,7 @@ npm run dev
 
 Demo agent **accepts** service calls but does not write to ROS (replay-only).
 
-## Trigger shortcut (v1.1 beta)
+## Trigger shortcut (v1.1)
 
 When **Allow service calls** is enabled and `/robotscope/demo/trigger` is allowlisted:
 
@@ -53,7 +53,7 @@ Session advertises allowlist:
 }
 ```
 
-Client Trigger call (v1.1 beta):
+Client Trigger call (v1.1):
 
 ```json
 {
@@ -83,7 +83,7 @@ Server response:
 - Python agent — `RobotScope/agent/robotscope_agent/bridge.py`
 - Viewer — command bar **Allow service calls** + **Call trigger**
 
-## Out of scope (v1.1 beta)
+## Out of scope (v1.1)
 
 - Arbitrary service request editor UI
 - Action gateway

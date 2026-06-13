@@ -9,7 +9,9 @@ export {
   buildZeroTwistPublishRequest,
   buildTwistPublishRequest,
   DEFAULT_CMD_VEL_TOPIC,
+  formatTwistVelocitySummary,
   GEOMETRY_TWIST_SCHEMA,
+  normalizeTwistVelocityCommand,
 } from "./live/command-gateway.js";
 export type {
   LiveCommandPublishRequest,

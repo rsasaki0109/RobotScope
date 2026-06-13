@@ -42,9 +42,13 @@ export function CommandBar() {
   const commandGatewayEnabled = useViewerStore((s) => s.commandGatewayEnabled);
   const livePublishTopics = useViewerStore((s) => s.livePublishTopics);
   const cmdVelLinearX = useViewerStore((s) => s.cmdVelLinearX);
+  const cmdVelLinearY = useViewerStore((s) => s.cmdVelLinearY);
+  const cmdVelLinearZ = useViewerStore((s) => s.cmdVelLinearZ);
+  const cmdVelAngularX = useViewerStore((s) => s.cmdVelAngularX);
+  const cmdVelAngularY = useViewerStore((s) => s.cmdVelAngularY);
   const cmdVelAngularZ = useViewerStore((s) => s.cmdVelAngularZ);
   const setCommandGatewayEnabled = useViewerStore((s) => s.setCommandGatewayEnabled);
-  const setCmdVelVelocity = useViewerStore((s) => s.setCmdVelVelocity);
+  const setCmdVelTwist = useViewerStore((s) => s.setCmdVelTwist);
   const publishLiveCmdVel = useViewerStore((s) => s.publishLiveCmdVel);
   const publishLiveZeroCmdVel = useViewerStore((s) => s.publishLiveZeroCmdVel);
   const [liveUrl, setLiveUrl] = useState(DEFAULT_LIVE_AGENT_URL);
@@ -250,9 +254,57 @@ export function CommandBar() {
                       step="0.05"
                       value={Number.isFinite(cmdVelLinearX) ? cmdVelLinearX : 0}
                       onChange={(event) =>
-                        setCmdVelVelocity(Number(event.target.value), cmdVelAngularZ)
+                        setCmdVelTwist({ linearX: Number(event.target.value) })
                       }
                       aria-label="Linear velocity x in meters per second"
+                    />
+                  </label>
+                  <label className={styles.cmdVelField}>
+                    vy
+                    <input
+                      type="number"
+                      step="0.05"
+                      value={Number.isFinite(cmdVelLinearY) ? cmdVelLinearY : 0}
+                      onChange={(event) =>
+                        setCmdVelTwist({ linearY: Number(event.target.value) })
+                      }
+                      aria-label="Linear velocity y in meters per second"
+                    />
+                  </label>
+                  <label className={styles.cmdVelField}>
+                    vz
+                    <input
+                      type="number"
+                      step="0.05"
+                      value={Number.isFinite(cmdVelLinearZ) ? cmdVelLinearZ : 0}
+                      onChange={(event) =>
+                        setCmdVelTwist({ linearZ: Number(event.target.value) })
+                      }
+                      aria-label="Linear velocity z in meters per second"
+                    />
+                  </label>
+                  <label className={styles.cmdVelField}>
+                    ωx
+                    <input
+                      type="number"
+                      step="0.05"
+                      value={Number.isFinite(cmdVelAngularX) ? cmdVelAngularX : 0}
+                      onChange={(event) =>
+                        setCmdVelTwist({ angularX: Number(event.target.value) })
+                      }
+                      aria-label="Angular velocity x in radians per second"
+                    />
+                  </label>
+                  <label className={styles.cmdVelField}>
+                    ωy
+                    <input
+                      type="number"
+                      step="0.05"
+                      value={Number.isFinite(cmdVelAngularY) ? cmdVelAngularY : 0}
+                      onChange={(event) =>
+                        setCmdVelTwist({ angularY: Number(event.target.value) })
+                      }
+                      aria-label="Angular velocity y in radians per second"
                     />
                   </label>
                   <label className={styles.cmdVelField}>
@@ -262,7 +314,7 @@ export function CommandBar() {
                       step="0.05"
                       value={Number.isFinite(cmdVelAngularZ) ? cmdVelAngularZ : 0}
                       onChange={(event) =>
-                        setCmdVelVelocity(cmdVelLinearX, Number(event.target.value))
+                        setCmdVelTwist({ angularZ: Number(event.target.value) })
                       }
                       aria-label="Angular velocity z in radians per second"
                     />

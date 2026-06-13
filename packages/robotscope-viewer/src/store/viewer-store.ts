@@ -145,6 +145,10 @@ export interface ViewerState {
   commandGatewayEnabled: boolean;
   livePublishTopics: string[];
   cmdVelLinearX: number;
+  cmdVelLinearY: number;
+  cmdVelLinearZ: number;
+  cmdVelAngularX: number;
+  cmdVelAngularY: number;
   cmdVelAngularZ: number;
   statusMessage: string;
   recipeMarkers: RecipeTimelineMarker[];
@@ -161,7 +165,14 @@ export interface ViewerState {
   startLiveRecording: () => Promise<void>;
   stopLiveRecording: (options?: { reload?: boolean }) => Promise<void>;
   setCommandGatewayEnabled: (enabled: boolean) => void;
-  setCmdVelVelocity: (linearX: number, angularZ: number) => void;
+  setCmdVelTwist: (twist: {
+    linearX?: number;
+    linearY?: number;
+    linearZ?: number;
+    angularX?: number;
+    angularY?: number;
+    angularZ?: number;
+  }) => void;
   publishLiveCmdVel: () => Promise<void>;
   publishLiveZeroCmdVel: () => Promise<void>;
   refreshInspection: () => Promise<void>;
@@ -197,6 +208,10 @@ const initialState = {
   commandGatewayEnabled: false,
   livePublishTopics: [] as string[],
   cmdVelLinearX: 0,
+  cmdVelLinearY: 0,
+  cmdVelLinearZ: 0,
+  cmdVelAngularX: 0,
+  cmdVelAngularY: 0,
   cmdVelAngularZ: 0,
   statusMessage: "Drop an MCAP file or connect a live agent",
   recipeMarkers: [] as RecipeTimelineMarker[],
@@ -627,11 +642,15 @@ export const useViewerStore = create<ViewerState>((set, get) => ({
     });
   },
 
-  setCmdVelVelocity(linearX, angularZ) {
-    set({
-      cmdVelLinearX: linearX,
-      cmdVelAngularZ: angularZ,
-    });
+  setCmdVelTwist(twist) {
+    set((state) => ({
+      cmdVelLinearX: twist.linearX ?? state.cmdVelLinearX,
+      cmdVelLinearY: twist.linearY ?? state.cmdVelLinearY,
+      cmdVelLinearZ: twist.linearZ ?? state.cmdVelLinearZ,
+      cmdVelAngularX: twist.angularX ?? state.cmdVelAngularX,
+      cmdVelAngularY: twist.angularY ?? state.cmdVelAngularY,
+      cmdVelAngularZ: twist.angularZ ?? state.cmdVelAngularZ,
+    }));
   },
 
   async publishLiveCmdVel() {
@@ -648,16 +667,21 @@ export const useViewerStore = create<ViewerState>((set, get) => ({
     }
 
     try {
-      const { buildTwistPublishRequest } = await import("@robotscope/core");
-      const result = await ingest.publishCommand(
-        buildTwistPublishRequest({
-          linear_x: state.cmdVelLinearX,
-          angular_z: state.cmdVelAngularZ,
-        }),
+      const { buildTwistPublishRequest, formatTwistVelocitySummary } = await import(
+        "@robotscope/core"
       );
+      const twist = {
+        linear_x: state.cmdVelLinearX,
+        linear_y: state.cmdVelLinearY,
+        linear_z: state.cmdVelLinearZ,
+        angular_x: state.cmdVelAngularX,
+        angular_y: state.cmdVelAngularY,
+        angular_z: state.cmdVelAngularZ,
+      };
+      const result = await ingest.publishCommand(buildTwistPublishRequest(twist));
       set({
         statusMessage: result.ok
-          ? `${result.message} · vx=${state.cmdVelLinearX.toFixed(2)} ωz=${state.cmdVelAngularZ.toFixed(2)}`
+          ? `${result.message} · ${formatTwistVelocitySummary(twist)}`
           : `Publish failed: ${result.message}`,
       });
     } catch (error) {
@@ -669,7 +693,14 @@ export const useViewerStore = create<ViewerState>((set, get) => ({
 
   async publishLiveZeroCmdVel() {
     const state = get();
-    set({ cmdVelLinearX: 0, cmdVelAngularZ: 0 });
+    set({
+      cmdVelLinearX: 0,
+      cmdVelLinearY: 0,
+      cmdVelLinearZ: 0,
+      cmdVelAngularX: 0,
+      cmdVelAngularY: 0,
+      cmdVelAngularZ: 0,
+    });
     if (!state.commandGatewayEnabled) {
       set({ statusMessage: "Enable command gateway before publishing" });
       return;

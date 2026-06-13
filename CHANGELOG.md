@@ -4,6 +4,23 @@ All notable changes to RobotScope are documented in this file.
 
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and versioning follows [SemVer](https://semver.org/).
 
+## [1.0.0-alpha.0] - 2026-06-13
+
+Full 6-DOF Twist editor for command gateway.
+
+### Added
+
+- **`twist`** payload fields — `linear_y`, `linear_z`, `angular_x`, `angular_y` in addition to v0.9 `linear_x` / `angular_z`
+- Viewer **vx / vy / vz / ωx / ωy / ωz** inputs + updated publish status summary
+- `normalizeTwistVelocityCommand()` and `formatTwistVelocitySummary()` in core command gateway helpers
+- [docs/release/v1.0.0-alpha.0.md](RobotScope/docs/release/v1.0.0-alpha.0.md)
+
+### Changed
+
+- Python ROS agent builds full `geometry_msgs/msg/Twist` from six-axis `twist` payload
+- [docs/command-gateway.md](RobotScope/docs/command-gateway.md) updated for v1.0 alpha 6-DOF editor
+- [known-limitations.md](RobotScope/docs/known-limitations.md) updated for v1.0 alpha
+
 ## [0.9.0] - 2026-06-13
 
 Ninth GA release — Twist velocity editor on command gateway.

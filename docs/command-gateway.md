@@ -1,4 +1,4 @@
-# Command gateway (v0.9 GA)
+# Command gateway (v1.0 alpha)
 
 Permission-gated **live publish** from the viewer to a local ROS 2 agent.
 
@@ -20,19 +20,21 @@ npm run demo:live-agent
 
 # Terminal 2 — viewer
 npm run dev
-# Connect Live → Allow publish → set vx / ωz → Publish cmd_vel
+# Connect Live → Allow publish → set vx/vy/vz/ωx/ωy/ωz → Publish cmd_vel
 ```
 
 Demo agent **accepts** publish requests but does not write to ROS (replay-only).
 
-## Twist velocity editor (v0.9)
+## Twist velocity editor (v1.0 alpha)
 
 When **Allow publish** is enabled and `/cmd_vel` is allowlisted:
 
-- **vx** — linear.x (m/s)
-- **ωz** — angular.z (rad/s)
-- **Publish cmd_vel** — sends configured Twist
-- **Zero cmd_vel** — shortcut for vx=0, ωz=0
+- **vx / vy / vz** — linear.x / linear.y / linear.z (m/s)
+- **ωx / ωy / ωz** — angular.x / angular.y / angular.z (rad/s)
+- **Publish cmd_vel** — sends configured full Twist
+- **Zero cmd_vel** — shortcut for all six components at zero
+
+v0.9 clients may still send only `linear_x` / `angular_z`; agents default missing fields to zero.
 
 ## Native ROS 2 agent
 
@@ -53,14 +55,21 @@ Session advertises allowlist:
 }
 ```
 
-Client publish with velocity (v0.9):
+Client publish with full velocity (v1.0 alpha):
 
 ```json
 {
   "type": "command.publish",
   "topic": "/cmd_vel",
   "schema": "geometry_msgs/msg/Twist",
-  "twist": { "linear_x": 0.2, "angular_z": -0.1 }
+  "twist": {
+    "linear_x": 0.2,
+    "linear_y": 0.0,
+    "linear_z": 0.0,
+    "angular_x": 0.0,
+    "angular_y": 0.0,
+    "angular_z": -0.1
+  }
 }
 ```
 
@@ -91,11 +100,10 @@ Server response:
 - Core — `RobotScope/packages/robotscope-core/src/live/command-gateway.ts`
 - Live client — `LiveAgentClient.publishCommand()`
 - Python agent — `RobotScope/agent/robotscope_agent/gateway.py`
-- Viewer — command bar **Allow publish** + velocity inputs + **Publish cmd_vel**
+- Viewer — command bar **Allow publish** + six-axis velocity inputs + **Publish cmd_vel**
 
-## Out of scope (v0.9)
+## Out of scope (v1.0 alpha)
 
-- Full 6-DOF Twist editor (linear.y/z, angular.x/y)
 - Service / action gateway
 - Arbitrary message editor UI
 - Plugin runtime permission enforcement

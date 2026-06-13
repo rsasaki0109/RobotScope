@@ -219,15 +219,28 @@ server.on("connection", (socket) => {
     }
 
     const twist = payload.twist;
-    const linearX =
-      twist && typeof twist === "object" && typeof twist.linear_x === "number"
-        ? twist.linear_x
+    const readTwist = (field) =>
+      twist && typeof twist === "object" && typeof twist[field] === "number"
+        ? twist[field]
         : 0;
-    const angularZ =
-      twist && typeof twist === "object" && typeof twist.angular_z === "number"
-        ? twist.angular_z
-        : 0;
+    const linearX = readTwist("linear_x");
+    const linearY = readTwist("linear_y");
+    const linearZ = readTwist("linear_z");
+    const angularX = readTwist("angular_x");
+    const angularY = readTwist("angular_y");
+    const angularZ = readTwist("angular_z");
     const zeroTwist = payload.zero_twist === true;
+    const twistSummary = [
+      ["vx", linearX],
+      ["vy", linearY],
+      ["vz", linearZ],
+      ["ωx", angularX],
+      ["ωy", angularY],
+      ["ωz", angularZ],
+    ]
+      .filter(([, value]) => Math.abs(value) > 1e-9)
+      .map(([label, value]) => `${label}=${value.toFixed(2)}`)
+      .join(" ");
 
     socket.send(
       JSON.stringify({
@@ -236,7 +249,7 @@ server.on("connection", (socket) => {
         topic,
         message: zeroTwist
           ? `Demo agent accepted zero cmd_vel on ${topic} (no ROS publish)`
-          : `Demo agent accepted cmd_vel vx=${linearX.toFixed(2)} ωz=${angularZ.toFixed(2)} on ${topic} (no ROS publish)`,
+          : `Demo agent accepted cmd_vel ${twistSummary || "vx=0 ωz=0"} on ${topic} (no ROS publish)`,
       }),
     );
   });

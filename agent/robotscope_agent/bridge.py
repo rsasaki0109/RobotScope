@@ -190,6 +190,10 @@ class LiveBridge(Node):
                     return False, "geometry_msgs is not available in this ROS environment"
                 message = Twist()
                 message.linear.x = float(twist_payload.get("linear_x", 0.0))
+                message.linear.y = float(twist_payload.get("linear_y", 0.0))
+                message.linear.z = float(twist_payload.get("linear_z", 0.0))
+                message.angular.x = float(twist_payload.get("angular_x", 0.0))
+                message.angular.y = float(twist_payload.get("angular_y", 0.0))
                 message.angular.z = float(twist_payload.get("angular_z", 0.0))
             elif payload.get("zero_twist"):
                 if schema != "geometry_msgs/msg/Twist":

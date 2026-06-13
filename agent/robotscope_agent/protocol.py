@@ -19,6 +19,7 @@ def session_message(
     topics: list[dict[str, str]],
     *,
     publish_topics: list[str] | None = None,
+    service_call_services: list[str] | None = None,
 ) -> str:
     payload: dict[str, Any] = {
         "type": "session",
@@ -27,8 +28,13 @@ def session_message(
         "start_ns": start_ns,
         "topics": topics,
     }
+    capabilities: dict[str, Any] = {}
     if publish_topics:
-        payload["capabilities"] = {"command_publish": publish_topics}
+        capabilities["command_publish"] = publish_topics
+    if service_call_services:
+        capabilities["command_service_call"] = service_call_services
+    if capabilities:
+        payload["capabilities"] = capabilities
     return json.dumps(payload)
 
 
@@ -90,4 +96,23 @@ def command_publish_result_message(
     }
     if topic:
         payload["topic"] = topic
+    return json.dumps(payload)
+
+
+def command_service_result_message(
+    ok: bool,
+    message: str,
+    *,
+    service: str | None = None,
+    success: bool | None = None,
+) -> str:
+    payload: dict[str, Any] = {
+        "type": "command.service_result",
+        "ok": ok,
+        "message": message,
+    }
+    if service:
+        payload["service"] = service
+    if success is not None:
+        payload["success"] = success
     return json.dumps(payload)

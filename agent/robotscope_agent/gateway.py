@@ -13,6 +13,7 @@ from .bridge import ChannelInfo, LiveBridge
 from .protocol import (
     channel_message,
     command_publish_result_message,
+    command_service_result_message,
     data_message,
     session_message,
     status_message,
@@ -27,11 +28,13 @@ class LiveGateway:
         bridge: LiveBridge,
         *,
         publish_allowlist: list[str] | None = None,
+        service_allowlist: list[str] | None = None,
     ) -> None:
         self.host = host
         self.port = port
         self.bridge = bridge
         self.publish_allowlist = list(publish_allowlist or [])
+        self.service_allowlist = list(service_allowlist or [])
         self._clients: set[WebSocketServerProtocol] = set()
         self._loop: asyncio.AbstractEventLoop | None = None
         self._lock = threading.Lock()
@@ -132,6 +135,7 @@ class LiveGateway:
                 start_ns,
                 self.bridge.session_topics,
                 publish_topics=self.publish_allowlist or None,
+                service_call_services=self.service_allowlist or None,
             )
         )
         for channel in self.bridge.channels:
@@ -183,19 +187,37 @@ class LiveGateway:
             )
             return
 
-        if not isinstance(payload, dict) or payload.get("type") != "command.publish":
+        if not isinstance(payload, dict):
             return
 
-        topic = payload.get("topic")
-        schema = payload.get("schema")
-        if not isinstance(topic, str) or not isinstance(schema, str):
+        message_type = payload.get("type")
+        if message_type == "command.publish":
+            topic = payload.get("topic")
+            schema = payload.get("schema")
+            if not isinstance(topic, str) or not isinstance(schema, str):
+                await websocket.send(
+                    command_publish_result_message(False, "command.publish requires topic and schema")
+                )
+                return
+
+            ok, message = self.bridge.publish_command(topic, schema, payload)
+            await websocket.send(command_publish_result_message(ok, message, topic=topic))
+            return
+
+        if message_type == "command.service_call":
+            service = payload.get("service")
+            schema = payload.get("schema")
+            if not isinstance(service, str) or not isinstance(schema, str):
+                await websocket.send(
+                    command_service_result_message(False, "command.service_call requires service and schema")
+                )
+                return
+
+            ok, message, success = self.bridge.call_service(service, schema, payload)
             await websocket.send(
-                command_publish_result_message(False, "command.publish requires topic and schema")
+                command_service_result_message(ok, message, service=service, success=success)
             )
             return
-
-        ok, message = self.bridge.publish_command(topic, schema, payload)
-        await websocket.send(command_publish_result_message(ok, message, topic=topic))
 
     async def run(self) -> None:
         self._loop = asyncio.get_running_loop()
@@ -204,7 +226,17 @@ class LiveGateway:
             publish_note = (
                 f" · publish allowlist: {', '.join(self.publish_allowlist)}"
                 if self.publish_allowlist
-                else " · read-only"
+                else ""
             )
-            print(f"RobotScope ROS2 agent on ws://{self.host}:{self.port}{publish_note}")
+            service_note = (
+                f" · service allowlist: {', '.join(self.service_allowlist)}"
+                if self.service_allowlist
+                else ""
+            )
+            readonly_note = (
+                " · read-only"
+                if not self.publish_allowlist and not self.service_allowlist
+                else ""
+            )
+            print(f"RobotScope ROS2 agent on ws://{self.host}:{self.port}{publish_note}{service_note}{readonly_note}")
             await asyncio.Future()

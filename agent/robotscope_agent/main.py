@@ -51,6 +51,13 @@ def parse_args() -> argparse.Namespace:
         metavar="TOPIC",
         help="Allow command.publish to this ROS topic (repeatable). Example: --allow-publish /cmd_vel",
     )
+    parser.add_argument(
+        "--allow-service",
+        action="append",
+        default=[],
+        metavar="SERVICE",
+        help="Allow command.service_call to this ROS service (repeatable). Example: --allow-service /robotscope/demo/trigger",
+    )
     return parser.parse_args()
 
 
@@ -80,12 +87,14 @@ def main() -> None:
         max_topics=args.max_topics,
         topic_retry_sec=args.topic_retry_sec,
         publish_allowlist=args.allow_publish,
+        service_allowlist=args.allow_service,
     )
     gateway = LiveGateway(
         args.host,
         args.port,
         bridge,
         publish_allowlist=args.allow_publish,
+        service_allowlist=args.allow_service,
     )
     gateway_holder["gateway"] = gateway
 

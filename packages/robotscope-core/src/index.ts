@@ -18,6 +18,15 @@ export type {
   LiveCommandPublishResult,
   TwistVelocityCommand,
 } from "./live/command-gateway.js";
+export {
+  buildTriggerServiceCallRequest,
+  DEFAULT_TRIGGER_SERVICE,
+  STD_SRVS_TRIGGER_SCHEMA,
+} from "./live/service-gateway.js";
+export type {
+  LiveServiceCallRequest,
+  LiveServiceCallResult,
+} from "./live/service-gateway.js";
 export type { LiveRecordingResult } from "./query.js";
 export { LiveMcapRecorder, defaultLiveRecordingFilename } from "./live/recorder.js";
 export * from "./mapping/entity-mapper.js";

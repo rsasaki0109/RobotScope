@@ -21,6 +21,7 @@ export interface LiveSessionMessage {
   topics: Array<{ name: string; schema: string }>;
   capabilities?: {
     command_publish?: string[];
+    command_service_call?: string[];
   };
 }
 
@@ -59,13 +60,22 @@ export interface LiveCommandPublishResultMessage {
   message: string;
 }
 
+export interface LiveCommandServiceResultMessage {
+  type: "command.service_result";
+  ok: boolean;
+  service?: string;
+  message: string;
+  success?: boolean;
+}
+
 export type LiveServerMessage =
   | LiveSessionMessage
   | LiveChannelMessage
   | LiveDataMessage
   | LiveStatusMessage
   | LiveErrorMessage
-  | LiveCommandPublishResultMessage;
+  | LiveCommandPublishResultMessage
+  | LiveCommandServiceResultMessage;
 
 export interface LiveCommandPublishClientMessage {
   type: "command.publish";
@@ -80,7 +90,17 @@ export interface LivePingMessage {
   type: "ping";
 }
 
-export type LiveClientMessage = LivePingMessage | LiveCommandPublishClientMessage;
+export interface LiveCommandServiceCallClientMessage {
+  type: "command.service_call";
+  service: string;
+  schema: string;
+  trigger?: boolean;
+}
+
+export type LiveClientMessage =
+  | LivePingMessage
+  | LiveCommandPublishClientMessage
+  | LiveCommandServiceCallClientMessage;
 
 export function parseLiveServerMessage(raw: string): LiveServerMessage | null {
   try {

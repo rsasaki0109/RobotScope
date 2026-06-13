@@ -4,6 +4,24 @@ All notable changes to RobotScope are documented in this file.
 
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and versioning follows [SemVer](https://semver.org/).
 
+## [1.1.0-alpha.0] - 2026-06-13
+
+Permission-gated service call gateway for live agents.
+
+### Added
+
+- **`command.service_call`** / **`command.service_result`** on live WebSocket protocol v0.1
+- Agent **`--allow-service SERVICE`** allowlist + session **`capabilities.command_service_call`**
+- Viewer **Allow service calls** opt-in + **Call trigger** button
+- `buildTriggerServiceCallRequest()` for `std_srvs/srv/Trigger` shortcut
+- [docs/service-gateway.md](RobotScope/docs/service-gateway.md)
+- [docs/release/v1.1.0-alpha.0.md](RobotScope/docs/release/v1.1.0-alpha.0.md)
+
+### Changed
+
+- Demo live agent defaults include **`--allow-service /robotscope/demo/trigger`**
+- [known-limitations.md](RobotScope/docs/known-limitations.md) updated for v1.1 alpha service gateway
+
 ## [1.0.0] - 2026-06-13
 
 Tenth GA release — full 6-DOF Twist editor on command gateway.

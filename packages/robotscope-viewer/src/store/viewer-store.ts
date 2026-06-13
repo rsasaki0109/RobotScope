@@ -143,7 +143,9 @@ export interface ViewerState {
   liveRecording: boolean;
   liveConnection: LiveConnectionState;
   commandGatewayEnabled: boolean;
+  serviceGatewayEnabled: boolean;
   livePublishTopics: string[];
+  liveServiceCallServices: string[];
   cmdVelLinearX: number;
   cmdVelLinearY: number;
   cmdVelLinearZ: number;
@@ -165,6 +167,7 @@ export interface ViewerState {
   startLiveRecording: () => Promise<void>;
   stopLiveRecording: (options?: { reload?: boolean }) => Promise<void>;
   setCommandGatewayEnabled: (enabled: boolean) => void;
+  setServiceGatewayEnabled: (enabled: boolean) => void;
   setCmdVelTwist: (twist: {
     linearX?: number;
     linearY?: number;
@@ -175,6 +178,7 @@ export interface ViewerState {
   }) => void;
   publishLiveCmdVel: () => Promise<void>;
   publishLiveZeroCmdVel: () => Promise<void>;
+  callLiveTriggerService: (service?: string) => Promise<void>;
   refreshInspection: () => Promise<void>;
   setCurrentTimeNs: (timeNs: number) => void;
   setPlaying: (playing: boolean) => void;
@@ -206,7 +210,9 @@ const initialState = {
   liveRecording: false,
   liveConnection: idleLiveConnection,
   commandGatewayEnabled: false,
+  serviceGatewayEnabled: false,
   livePublishTopics: [] as string[],
+  liveServiceCallServices: [] as string[],
   cmdVelLinearX: 0,
   cmdVelLinearY: 0,
   cmdVelLinearZ: 0,
@@ -596,6 +602,7 @@ export const useViewerStore = create<ViewerState>((set, get) => ({
       isPlaying: false,
       liveConnection: initialConnection,
       livePublishTopics: handle.getCommandPublishTopics(),
+      liveServiceCallServices: handle.getCommandServiceCallServices(),
       statusMessage: formatLiveStatusMessage(initialConnection),
     };
 
@@ -620,6 +627,7 @@ export const useViewerStore = create<ViewerState>((set, get) => ({
       liveRecording: false,
       liveFollowing: true,
       livePublishTopics: [],
+      liveServiceCallServices: [],
       liveConnection: {
         phase: "disconnected",
         url: null,
@@ -639,6 +647,15 @@ export const useViewerStore = create<ViewerState>((set, get) => ({
       statusMessage: enabled
         ? "Command gateway enabled — publish requires agent allowlist"
         : "Command gateway disabled",
+    });
+  },
+
+  setServiceGatewayEnabled(enabled) {
+    set({
+      serviceGatewayEnabled: enabled,
+      statusMessage: enabled
+        ? "Service gateway enabled — calls require agent allowlist"
+        : "Service gateway disabled",
     });
   },
 
@@ -723,6 +740,37 @@ export const useViewerStore = create<ViewerState>((set, get) => ({
     } catch (error) {
       set({
         statusMessage: error instanceof Error ? error.message : "Publish failed",
+      });
+    }
+  },
+
+  async callLiveTriggerService(serviceName) {
+    const state = get();
+    if (!state.serviceGatewayEnabled) {
+      set({ statusMessage: "Enable service gateway before calling" });
+      return;
+    }
+
+    const ingest = state.ingest;
+    if (!ingest || !isLiveIngestHandle(ingest)) {
+      set({ statusMessage: "Connect a live agent before calling a service" });
+      return;
+    }
+
+    try {
+      const { buildTriggerServiceCallRequest, DEFAULT_TRIGGER_SERVICE } = await import(
+        "@robotscope/core"
+      );
+      const service = serviceName ?? DEFAULT_TRIGGER_SERVICE;
+      const result = await ingest.callService(buildTriggerServiceCallRequest(service));
+      set({
+        statusMessage: result.ok
+          ? `${result.message}${result.success === false ? " · success=false" : ""}`
+          : `Service call failed: ${result.message}`,
+      });
+    } catch (error) {
+      set({
+        statusMessage: error instanceof Error ? error.message : "Service call failed",
       });
     }
   },

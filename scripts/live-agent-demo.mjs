@@ -34,6 +34,7 @@ function parseArgs(argv) {
     port: 8765,
     loop: true,
     allowPublish: [],
+    allowService: [],
   };
 
   for (let i = 2; i < argv.length; i += 1) {
@@ -46,6 +47,11 @@ function parseArgs(argv) {
       const topic = argv[++i];
       if (topic) {
         options.allowPublish.push(topic);
+      }
+    } else if (arg === "--allow-service") {
+      const service = argv[++i];
+      if (service) {
+        options.allowService.push(service);
       }
     } else if (!arg.startsWith("-")) {
       options.mcapPath = resolve(arg);
@@ -102,7 +108,15 @@ async function loadRecording(mcapPath) {
   };
 }
 
-async function streamRecording(socket, recording, loop, allowPublish) {
+async function streamRecording(socket, recording, loop, allowPublish, allowService) {
+  const capabilities = {};
+  if (allowPublish.length > 0) {
+    capabilities.command_publish = allowPublish;
+  }
+  if (allowService.length > 0) {
+    capabilities.command_service_call = allowService;
+  }
+
   socket.send(
     JSON.stringify({
       type: "session",
@@ -110,9 +124,7 @@ async function streamRecording(socket, recording, loop, allowPublish) {
       agent: "robotscope-live-agent-demo",
       start_ns: recording.bounds.start_ns,
       topics: recording.topics,
-      ...(allowPublish.length > 0
-        ? { capabilities: { command_publish: allowPublish } }
-        : {}),
+      ...(Object.keys(capabilities).length > 0 ? { capabilities } : {}),
     }),
   );
 
@@ -177,10 +189,19 @@ console.log(`Source: ${options.mcapPath} (${recording.messages.length} messages)
 if (options.allowPublish.length > 0) {
   console.log(`Publish allowlist: ${options.allowPublish.join(", ")}`);
 }
+if (options.allowService.length > 0) {
+  console.log(`Service allowlist: ${options.allowService.join(", ")}`);
+}
 
 server.on("connection", (socket) => {
   console.log("Viewer connected");
-  void streamRecording(socket, recording, options.loop, options.allowPublish).catch((error) => {
+  void streamRecording(
+    socket,
+    recording,
+    options.loop,
+    options.allowPublish,
+    options.allowService,
+  ).catch((error) => {
     socket.send(JSON.stringify({ type: "error", message: String(error) }));
     socket.close();
   });
@@ -196,6 +217,32 @@ server.on("connection", (socket) => {
           type: "command.publish_result",
           ok: false,
           message: "Invalid JSON from viewer",
+        }),
+      );
+      return;
+    }
+
+    if (payload?.type === "command.service_call") {
+      const service = payload.service;
+      if (typeof service !== "string" || !options.allowService.includes(service)) {
+        socket.send(
+          JSON.stringify({
+            type: "command.service_result",
+            ok: false,
+            service,
+            message: `Service ${service ?? "?"} is not allowlisted for call`,
+          }),
+        );
+        return;
+      }
+
+      socket.send(
+        JSON.stringify({
+          type: "command.service_result",
+          ok: true,
+          service,
+          success: true,
+          message: `Demo agent accepted Trigger call on ${service} (no ROS service call)`,
         }),
       );
       return;

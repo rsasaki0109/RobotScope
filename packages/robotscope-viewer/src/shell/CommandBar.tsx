@@ -1,6 +1,6 @@
 import { useCallback, useState } from "react";
 
-import { parseSidecarManifest } from "@robotscope/core";
+import { parseSidecarManifest, DEFAULT_TRIGGER_SERVICE } from "@robotscope/core";
 
 import { listLayoutOptions } from "../plugins/registry";
 import {
@@ -40,7 +40,9 @@ export function CommandBar() {
   const startLiveRecording = useViewerStore((s) => s.startLiveRecording);
   const stopLiveRecording = useViewerStore((s) => s.stopLiveRecording);
   const commandGatewayEnabled = useViewerStore((s) => s.commandGatewayEnabled);
+  const serviceGatewayEnabled = useViewerStore((s) => s.serviceGatewayEnabled);
   const livePublishTopics = useViewerStore((s) => s.livePublishTopics);
+  const liveServiceCallServices = useViewerStore((s) => s.liveServiceCallServices);
   const cmdVelLinearX = useViewerStore((s) => s.cmdVelLinearX);
   const cmdVelLinearY = useViewerStore((s) => s.cmdVelLinearY);
   const cmdVelLinearZ = useViewerStore((s) => s.cmdVelLinearZ);
@@ -48,9 +50,11 @@ export function CommandBar() {
   const cmdVelAngularY = useViewerStore((s) => s.cmdVelAngularY);
   const cmdVelAngularZ = useViewerStore((s) => s.cmdVelAngularZ);
   const setCommandGatewayEnabled = useViewerStore((s) => s.setCommandGatewayEnabled);
+  const setServiceGatewayEnabled = useViewerStore((s) => s.setServiceGatewayEnabled);
   const setCmdVelTwist = useViewerStore((s) => s.setCmdVelTwist);
   const publishLiveCmdVel = useViewerStore((s) => s.publishLiveCmdVel);
   const publishLiveZeroCmdVel = useViewerStore((s) => s.publishLiveZeroCmdVel);
+  const callLiveTriggerService = useViewerStore((s) => s.callLiveTriggerService);
   const [liveUrl, setLiveUrl] = useState(DEFAULT_LIVE_AGENT_URL);
   const [livePresetId, setLivePresetId] = useState(LIVE_AGENT_PRESETS[0]?.id ?? "custom");
 
@@ -135,6 +139,7 @@ export function CommandBar() {
 
   const isLive = session?.source === "live";
   const canPublishCmdVel = livePublishTopics.includes("/cmd_vel");
+  const canCallTrigger = liveServiceCallServices.includes(DEFAULT_TRIGGER_SERVICE);
   const connectionPhase = isLive ? liveConnection.phase : "idle";
   const connectionLabel = CONNECTION_LABELS[connectionPhase];
 
@@ -335,6 +340,25 @@ export function CommandBar() {
                   Zero cmd_vel
                 </button>
               </>
+            ) : null}
+            {canCallTrigger ? (
+              <label className={styles.gatewayToggle}>
+                <input
+                  type="checkbox"
+                  checked={serviceGatewayEnabled}
+                  onChange={(event) => setServiceGatewayEnabled(event.target.checked)}
+                />
+                Allow service calls
+              </label>
+            ) : null}
+            {serviceGatewayEnabled && canCallTrigger ? (
+              <button
+                type="button"
+                className={styles.buttonSecondary}
+                onClick={() => void callLiveTriggerService()}
+              >
+                Call trigger
+              </button>
             ) : null}
             <span className={styles.liveBadge} data-phase={connectionPhase}>
               {liveRecording ? "REC" : connectionLabel.toUpperCase()}

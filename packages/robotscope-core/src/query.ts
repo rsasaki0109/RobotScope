@@ -130,8 +130,10 @@ export interface LiveIngestHandle extends IngestHandle {
   getRecordedMessageCount(): number;
   getCommandPublishTopics(): string[];
   getCommandServiceCallServices(): string[];
+  getCommandActionSendGoalActions(): string[];
   publishCommand(request: import("./live/command-gateway.js").LiveCommandPublishRequest): Promise<import("./live/command-gateway.js").LiveCommandPublishResult>;
   callService(request: import("./live/service-gateway.js").LiveServiceCallRequest): Promise<import("./live/service-gateway.js").LiveServiceCallResult>;
+  sendActionGoal(request: import("./live/action-gateway.js").LiveActionSendGoalRequest): Promise<import("./live/action-gateway.js").LiveActionSendGoalResult>;
 }
 
 export function isLiveIngestHandle(

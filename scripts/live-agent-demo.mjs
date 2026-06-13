@@ -35,6 +35,7 @@ function parseArgs(argv) {
     loop: true,
     allowPublish: [],
     allowService: [],
+    allowAction: [],
   };
 
   for (let i = 2; i < argv.length; i += 1) {
@@ -52,6 +53,11 @@ function parseArgs(argv) {
       const service = argv[++i];
       if (service) {
         options.allowService.push(service);
+      }
+    } else if (arg === "--allow-action") {
+      const action = argv[++i];
+      if (action) {
+        options.allowAction.push(action);
       }
     } else if (!arg.startsWith("-")) {
       options.mcapPath = resolve(arg);
@@ -108,13 +114,16 @@ async function loadRecording(mcapPath) {
   };
 }
 
-async function streamRecording(socket, recording, loop, allowPublish, allowService) {
+async function streamRecording(socket, recording, loop, allowPublish, allowService, allowAction) {
   const capabilities = {};
   if (allowPublish.length > 0) {
     capabilities.command_publish = allowPublish;
   }
   if (allowService.length > 0) {
     capabilities.command_service_call = allowService;
+  }
+  if (allowAction.length > 0) {
+    capabilities.command_action_send_goal = allowAction;
   }
 
   socket.send(
@@ -192,6 +201,9 @@ if (options.allowPublish.length > 0) {
 if (options.allowService.length > 0) {
   console.log(`Service allowlist: ${options.allowService.join(", ")}`);
 }
+if (options.allowAction.length > 0) {
+  console.log(`Action allowlist: ${options.allowAction.join(", ")}`);
+}
 
 server.on("connection", (socket) => {
   console.log("Viewer connected");
@@ -201,6 +213,7 @@ server.on("connection", (socket) => {
     options.loop,
     options.allowPublish,
     options.allowService,
+    options.allowAction,
   ).catch((error) => {
     socket.send(JSON.stringify({ type: "error", message: String(error) }));
     socket.close();
@@ -243,6 +256,37 @@ server.on("connection", (socket) => {
           service,
           success: true,
           message: `Demo agent accepted Trigger call on ${service} (no ROS service call)`,
+        }),
+      );
+      return;
+    }
+
+    if (payload?.type === "command.action_send_goal") {
+      const action = payload.action;
+      if (typeof action !== "string" || !options.allowAction.includes(action)) {
+        socket.send(
+          JSON.stringify({
+            type: "command.action_result",
+            ok: false,
+            action,
+            message: `Action ${action ?? "?"} is not allowlisted for goal send`,
+          }),
+        );
+        return;
+      }
+
+      const order =
+        payload.fibonacci && typeof payload.fibonacci === "object"
+          ? payload.fibonacci.order
+          : 3;
+
+      socket.send(
+        JSON.stringify({
+          type: "command.action_result",
+          ok: true,
+          action,
+          goal_accepted: true,
+          message: `Demo agent accepted Fibonacci goal order=${order} on ${action} (no ROS action)`,
         }),
       );
       return;

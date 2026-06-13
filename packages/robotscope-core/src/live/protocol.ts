@@ -1,5 +1,6 @@
 /** RobotScope live agent WebSocket protocol v0.1 */
 
+import type { FibonacciActionGoal } from "./action-gateway.js";
 import type { TwistVelocityCommand } from "./command-gateway.js";
 
 export const LIVE_PROTOCOL_VERSION = "robotscope.live.v0.1" as const;
@@ -22,6 +23,7 @@ export interface LiveSessionMessage {
   capabilities?: {
     command_publish?: string[];
     command_service_call?: string[];
+    command_action_send_goal?: string[];
   };
 }
 
@@ -68,6 +70,14 @@ export interface LiveCommandServiceResultMessage {
   success?: boolean;
 }
 
+export interface LiveCommandActionResultMessage {
+  type: "command.action_result";
+  ok: boolean;
+  action?: string;
+  message: string;
+  goal_accepted?: boolean;
+}
+
 export type LiveServerMessage =
   | LiveSessionMessage
   | LiveChannelMessage
@@ -75,7 +85,8 @@ export type LiveServerMessage =
   | LiveStatusMessage
   | LiveErrorMessage
   | LiveCommandPublishResultMessage
-  | LiveCommandServiceResultMessage;
+  | LiveCommandServiceResultMessage
+  | LiveCommandActionResultMessage;
 
 export interface LiveCommandPublishClientMessage {
   type: "command.publish";
@@ -97,10 +108,18 @@ export interface LiveCommandServiceCallClientMessage {
   trigger?: boolean;
 }
 
+export interface LiveCommandActionSendGoalClientMessage {
+  type: "command.action_send_goal";
+  action: string;
+  schema: string;
+  fibonacci?: FibonacciActionGoal;
+}
+
 export type LiveClientMessage =
   | LivePingMessage
   | LiveCommandPublishClientMessage
-  | LiveCommandServiceCallClientMessage;
+  | LiveCommandServiceCallClientMessage
+  | LiveCommandActionSendGoalClientMessage;
 
 export function parseLiveServerMessage(raw: string): LiveServerMessage | null {
   try {

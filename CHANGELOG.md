@@ -4,6 +4,24 @@ All notable changes to RobotScope are documented in this file.
 
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and versioning follows [SemVer](https://semver.org/).
 
+## [1.2.0-alpha.0] - 2026-06-13
+
+Permission-gated action goal gateway for live agents.
+
+### Added
+
+- **`command.action_send_goal`** / **`command.action_result`** on live WebSocket protocol v0.1
+- Agent **`--allow-action ACTION`** allowlist + session **`capabilities.command_action_send_goal`**
+- Viewer **Allow action goals** opt-in + **Send Fibonacci** button with order input
+- `buildFibonacciActionGoalRequest()` for `example_interfaces/action/Fibonacci` shortcut
+- [docs/action-gateway.md](RobotScope/docs/action-gateway.md)
+- [docs/release/v1.2.0-alpha.0.md](RobotScope/docs/release/v1.2.0-alpha.0.md)
+
+### Changed
+
+- Demo live agent defaults include **`--allow-action /robotscope/demo/fibonacci`**
+- [known-limitations.md](RobotScope/docs/known-limitations.md) updated for v1.2 alpha action gateway
+
 ## [1.1.0] - 2026-06-13
 
 Eleventh GA release — service call gateway on command gateway.

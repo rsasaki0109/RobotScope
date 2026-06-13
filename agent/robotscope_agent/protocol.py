@@ -20,6 +20,7 @@ def session_message(
     *,
     publish_topics: list[str] | None = None,
     service_call_services: list[str] | None = None,
+    action_send_goal_actions: list[str] | None = None,
 ) -> str:
     payload: dict[str, Any] = {
         "type": "session",
@@ -33,6 +34,8 @@ def session_message(
         capabilities["command_publish"] = publish_topics
     if service_call_services:
         capabilities["command_service_call"] = service_call_services
+    if action_send_goal_actions:
+        capabilities["command_action_send_goal"] = action_send_goal_actions
     if capabilities:
         payload["capabilities"] = capabilities
     return json.dumps(payload)
@@ -115,4 +118,23 @@ def command_service_result_message(
         payload["service"] = service
     if success is not None:
         payload["success"] = success
+    return json.dumps(payload)
+
+
+def command_action_result_message(
+    ok: bool,
+    message: str,
+    *,
+    action: str | None = None,
+    goal_accepted: bool | None = None,
+) -> str:
+    payload: dict[str, Any] = {
+        "type": "command.action_result",
+        "ok": ok,
+        "message": message,
+    }
+    if action:
+        payload["action"] = action
+    if goal_accepted is not None:
+        payload["goal_accepted"] = goal_accepted
     return json.dumps(payload)

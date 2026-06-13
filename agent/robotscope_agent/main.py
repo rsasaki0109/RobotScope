@@ -58,6 +58,13 @@ def parse_args() -> argparse.Namespace:
         metavar="SERVICE",
         help="Allow command.service_call to this ROS service (repeatable). Example: --allow-service /robotscope/demo/trigger",
     )
+    parser.add_argument(
+        "--allow-action",
+        action="append",
+        default=[],
+        metavar="ACTION",
+        help="Allow command.action_send_goal to this ROS action (repeatable). Example: --allow-action /robotscope/demo/fibonacci",
+    )
     return parser.parse_args()
 
 
@@ -88,6 +95,7 @@ def main() -> None:
         topic_retry_sec=args.topic_retry_sec,
         publish_allowlist=args.allow_publish,
         service_allowlist=args.allow_service,
+        action_allowlist=args.allow_action,
     )
     gateway = LiveGateway(
         args.host,
@@ -95,6 +103,7 @@ def main() -> None:
         bridge,
         publish_allowlist=args.allow_publish,
         service_allowlist=args.allow_service,
+        action_allowlist=args.allow_action,
     )
     gateway_holder["gateway"] = gateway
 

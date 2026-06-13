@@ -1,6 +1,10 @@
 import type { IngestProgress, LiveRecordingResult, TimeRange } from "../query.js";
 
 import type {
+  LiveActionSendGoalRequest,
+  LiveActionSendGoalResult,
+} from "./action-gateway.js";
+import type {
   LiveCommandPublishRequest,
   LiveCommandPublishResult,
 } from "./command-gateway.js";
@@ -55,6 +59,7 @@ export class LiveAgentClient {
   private recorder: LiveMcapRecorder | null = null;
   private publishTopics: string[] = [];
   private serviceCallServices: string[] = [];
+  private actionSendGoalActions: string[] = [];
   private publishResolver:
     | ((result: LiveCommandPublishResult) => void)
     | null = null;
@@ -63,6 +68,9 @@ export class LiveAgentClient {
   private serviceResolver: ((result: LiveServiceCallResult) => void) | null = null;
   private serviceReject: ((error: Error) => void) | null = null;
   private serviceTimeout: ReturnType<typeof setTimeout> | undefined;
+  private actionResolver: ((result: LiveActionSendGoalResult) => void) | null = null;
+  private actionReject: ((error: Error) => void) | null = null;
+  private actionTimeout: ReturnType<typeof setTimeout> | undefined;
 
   constructor(
     private readonly url: string,
@@ -107,6 +115,7 @@ export class LiveAgentClient {
             }
             this.publishTopics = message.capabilities?.command_publish ?? [];
             this.serviceCallServices = message.capabilities?.command_service_call ?? [];
+            this.actionSendGoalActions = message.capabilities?.command_action_send_goal ?? [];
             this.buffer.resetSession(message.start_ns, message.topics);
             this.options.onProgress?.({
               phase: "indexing",
@@ -151,6 +160,14 @@ export class LiveAgentClient {
               service: message.service,
               message: message.message,
               success: message.success,
+            });
+            break;
+          case "command.action_result":
+            this.resolveActionGoal({
+              ok: message.ok,
+              action: message.action,
+              message: message.message,
+              goal_accepted: message.goal_accepted,
             });
             break;
           default:
@@ -198,12 +215,14 @@ export class LiveAgentClient {
     }
     this.clearPublishPending(new Error("Live agent disconnected"));
     this.clearServicePending(new Error("Live agent disconnected"));
+    this.clearActionPending(new Error("Live agent disconnected"));
     this.unsubscribeBuffer?.();
     this.recorder = null;
     this.socket?.close();
     this.socket = null;
     this.publishTopics = [];
     this.serviceCallServices = [];
+    this.actionSendGoalActions = [];
   }
 
   getCommandPublishTopics(): string[] {
@@ -212,6 +231,10 @@ export class LiveAgentClient {
 
   getCommandServiceCallServices(): string[] {
     return [...this.serviceCallServices];
+  }
+
+  getCommandActionSendGoalActions(): string[] {
+    return [...this.actionSendGoalActions];
   }
 
   publishCommand(request: LiveCommandPublishRequest): Promise<LiveCommandPublishResult> {
@@ -273,6 +296,37 @@ export class LiveAgentClient {
           service: request.service,
           schema: request.schema,
           trigger: request.trigger,
+        }),
+      );
+    });
+  }
+
+  sendActionGoal(request: LiveActionSendGoalRequest): Promise<LiveActionSendGoalResult> {
+    if (!this.socket || this.socket.readyState !== WebSocket.OPEN) {
+      return Promise.reject(new Error("Live agent not connected"));
+    }
+    if (!this.actionSendGoalActions.includes(request.action)) {
+      return Promise.reject(
+        new Error(`Action ${request.action} is not allowlisted by the live agent`),
+      );
+    }
+    if (this.actionResolver) {
+      return Promise.reject(new Error("Another action goal is in progress"));
+    }
+
+    return new Promise((resolve, reject) => {
+      this.actionResolver = resolve;
+      this.actionReject = reject;
+      this.actionTimeout = setTimeout(() => {
+        this.clearActionPending(new Error("Action goal send timed out"));
+      }, 5000);
+
+      this.socket?.send(
+        encodeLiveClientMessage({
+          type: "command.action_send_goal",
+          action: request.action,
+          schema: request.schema,
+          fibonacci: request.fibonacci,
         }),
       );
     });
@@ -380,6 +434,28 @@ export class LiveAgentClient {
     const reject = this.serviceReject;
     this.serviceResolver = null;
     this.serviceReject = null;
+    if (error && reject) {
+      reject(error);
+    }
+  }
+
+  private resolveActionGoal(result: LiveActionSendGoalResult): void {
+    if (!this.actionResolver) {
+      return;
+    }
+    const resolve = this.actionResolver;
+    this.clearActionPending();
+    resolve(result);
+  }
+
+  private clearActionPending(error?: Error): void {
+    if (this.actionTimeout) {
+      clearTimeout(this.actionTimeout);
+      this.actionTimeout = undefined;
+    }
+    const reject = this.actionReject;
+    this.actionResolver = null;
+    this.actionReject = null;
     if (error && reject) {
       reject(error);
     }

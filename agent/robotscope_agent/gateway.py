@@ -12,6 +12,7 @@ from websockets.server import WebSocketServerProtocol
 from .bridge import ChannelInfo, LiveBridge
 from .protocol import (
     channel_message,
+    command_action_result_message,
     command_publish_result_message,
     command_service_result_message,
     data_message,
@@ -29,12 +30,14 @@ class LiveGateway:
         *,
         publish_allowlist: list[str] | None = None,
         service_allowlist: list[str] | None = None,
+        action_allowlist: list[str] | None = None,
     ) -> None:
         self.host = host
         self.port = port
         self.bridge = bridge
         self.publish_allowlist = list(publish_allowlist or [])
         self.service_allowlist = list(service_allowlist or [])
+        self.action_allowlist = list(action_allowlist or [])
         self._clients: set[WebSocketServerProtocol] = set()
         self._loop: asyncio.AbstractEventLoop | None = None
         self._lock = threading.Lock()
@@ -136,6 +139,7 @@ class LiveGateway:
                 self.bridge.session_topics,
                 publish_topics=self.publish_allowlist or None,
                 service_call_services=self.service_allowlist or None,
+                action_send_goal_actions=self.action_allowlist or None,
             )
         )
         for channel in self.bridge.channels:
@@ -219,6 +223,24 @@ class LiveGateway:
             )
             return
 
+        if message_type == "command.action_send_goal":
+            action = payload.get("action")
+            schema = payload.get("schema")
+            if not isinstance(action, str) or not isinstance(schema, str):
+                await websocket.send(
+                    command_action_result_message(
+                        False,
+                        "command.action_send_goal requires action and schema",
+                    )
+                )
+                return
+
+            ok, message, goal_accepted = self.bridge.send_action_goal(action, schema, payload)
+            await websocket.send(
+                command_action_result_message(ok, message, action=action, goal_accepted=goal_accepted)
+            )
+            return
+
     async def run(self) -> None:
         self._loop = asyncio.get_running_loop()
         self.attach_bridge_callbacks()
@@ -233,10 +255,18 @@ class LiveGateway:
                 if self.service_allowlist
                 else ""
             )
-            readonly_note = (
-                " · read-only"
-                if not self.publish_allowlist and not self.service_allowlist
+            action_note = (
+                f" · action allowlist: {', '.join(self.action_allowlist)}"
+                if self.action_allowlist
                 else ""
             )
-            print(f"RobotScope ROS2 agent on ws://{self.host}:{self.port}{publish_note}{service_note}{readonly_note}")
+            readonly_note = (
+                " · read-only"
+                if not self.publish_allowlist and not self.service_allowlist and not self.action_allowlist
+                else ""
+            )
+            print(
+                f"RobotScope ROS2 agent on ws://{self.host}:{self.port}"
+                f"{publish_note}{service_note}{action_note}{readonly_note}"
+            )
             await asyncio.Future()

@@ -36,8 +36,10 @@ export async function openLive(url: string, options: LiveOpenOptions = {}): Prom
     getRecordedMessageCount: () => client.getRecordedMessageCount(),
     getCommandPublishTopics: () => client.getCommandPublishTopics(),
     getCommandServiceCallServices: () => client.getCommandServiceCallServices(),
+    getCommandActionSendGoalActions: () => client.getCommandActionSendGoalActions(),
     publishCommand: (request) => client.publishCommand(request),
     callService: (request) => client.callService(request),
+    sendActionGoal: (request) => client.sendActionGoal(request),
   };
 }
 

@@ -99,6 +99,27 @@ RobotScope/
 └── sample_data/             Sample MCAP fetch scripts
 ```
 
+## v1.2.0-alpha.0
+
+Action goal gateway on v1.1 live gateways. See [release notes](RobotScope/docs/release/v1.2.0-alpha.0.md) and [CHANGELOG.md](RobotScope/CHANGELOG.md).
+
+**Shipped**
+
+| Layer | Features |
+|-------|----------|
+| Live | **Action gateway** — opt-in Fibonacci goals to allowlisted actions |
+| v1.1 carry-over | Service gateway · 6-DOF Twist · command gateway · OSM maps |
+
+**Docs**
+
+- [Action gateway guide](RobotScope/docs/action-gateway.md)
+- [Service gateway guide](RobotScope/docs/service-gateway.md)
+- [Known limitations](RobotScope/docs/known-limitations.md)
+
+**Out of scope (v1.2 alpha)**
+
+- Action feedback/result UI · arbitrary action editor · native Lanelet2 boost bin · cloud/fleet
+
 ## v1.1.0 (GA)
 
 Service call gateway on v1.0 command gateway. See [release notes](RobotScope/docs/release/v1.1.0.md) and [CHANGELOG.md](RobotScope/CHANGELOG.md).

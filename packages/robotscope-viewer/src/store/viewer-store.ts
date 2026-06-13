@@ -144,8 +144,11 @@ export interface ViewerState {
   liveConnection: LiveConnectionState;
   commandGatewayEnabled: boolean;
   serviceGatewayEnabled: boolean;
+  actionGatewayEnabled: boolean;
   livePublishTopics: string[];
   liveServiceCallServices: string[];
+  liveActionSendGoalActions: string[];
+  fibonacciActionOrder: number;
   cmdVelLinearX: number;
   cmdVelLinearY: number;
   cmdVelLinearZ: number;
@@ -168,6 +171,8 @@ export interface ViewerState {
   stopLiveRecording: (options?: { reload?: boolean }) => Promise<void>;
   setCommandGatewayEnabled: (enabled: boolean) => void;
   setServiceGatewayEnabled: (enabled: boolean) => void;
+  setActionGatewayEnabled: (enabled: boolean) => void;
+  setFibonacciActionOrder: (order: number) => void;
   setCmdVelTwist: (twist: {
     linearX?: number;
     linearY?: number;
@@ -179,6 +184,7 @@ export interface ViewerState {
   publishLiveCmdVel: () => Promise<void>;
   publishLiveZeroCmdVel: () => Promise<void>;
   callLiveTriggerService: (service?: string) => Promise<void>;
+  sendLiveFibonacciGoal: (action?: string) => Promise<void>;
   refreshInspection: () => Promise<void>;
   setCurrentTimeNs: (timeNs: number) => void;
   setPlaying: (playing: boolean) => void;
@@ -211,8 +217,11 @@ const initialState = {
   liveConnection: idleLiveConnection,
   commandGatewayEnabled: false,
   serviceGatewayEnabled: false,
+  actionGatewayEnabled: false,
   livePublishTopics: [] as string[],
   liveServiceCallServices: [] as string[],
+  liveActionSendGoalActions: [] as string[],
+  fibonacciActionOrder: 3,
   cmdVelLinearX: 0,
   cmdVelLinearY: 0,
   cmdVelLinearZ: 0,
@@ -603,6 +612,7 @@ export const useViewerStore = create<ViewerState>((set, get) => ({
       liveConnection: initialConnection,
       livePublishTopics: handle.getCommandPublishTopics(),
       liveServiceCallServices: handle.getCommandServiceCallServices(),
+      liveActionSendGoalActions: handle.getCommandActionSendGoalActions(),
       statusMessage: formatLiveStatusMessage(initialConnection),
     };
 
@@ -628,6 +638,7 @@ export const useViewerStore = create<ViewerState>((set, get) => ({
       liveFollowing: true,
       livePublishTopics: [],
       liveServiceCallServices: [],
+      liveActionSendGoalActions: [],
       liveConnection: {
         phase: "disconnected",
         url: null,
@@ -657,6 +668,19 @@ export const useViewerStore = create<ViewerState>((set, get) => ({
         ? "Service gateway enabled — calls require agent allowlist"
         : "Service gateway disabled",
     });
+  },
+
+  setActionGatewayEnabled(enabled) {
+    set({
+      actionGatewayEnabled: enabled,
+      statusMessage: enabled
+        ? "Action gateway enabled — goal send requires agent allowlist"
+        : "Action gateway disabled",
+    });
+  },
+
+  setFibonacciActionOrder(order) {
+    set({ fibonacciActionOrder: order });
   },
 
   setCmdVelTwist(twist) {
@@ -771,6 +795,39 @@ export const useViewerStore = create<ViewerState>((set, get) => ({
     } catch (error) {
       set({
         statusMessage: error instanceof Error ? error.message : "Service call failed",
+      });
+    }
+  },
+
+  async sendLiveFibonacciGoal(actionName) {
+    const state = get();
+    if (!state.actionGatewayEnabled) {
+      set({ statusMessage: "Enable action gateway before sending a goal" });
+      return;
+    }
+
+    const ingest = state.ingest;
+    if (!ingest || !isLiveIngestHandle(ingest)) {
+      set({ statusMessage: "Connect a live agent before sending an action goal" });
+      return;
+    }
+
+    try {
+      const { buildFibonacciActionGoalRequest, DEFAULT_FIBONACCI_ACTION } = await import(
+        "@robotscope/core"
+      );
+      const action = actionName ?? DEFAULT_FIBONACCI_ACTION;
+      const result = await ingest.sendActionGoal(
+        buildFibonacciActionGoalRequest(state.fibonacciActionOrder, action),
+      );
+      set({
+        statusMessage: result.ok
+          ? `${result.message}${result.goal_accepted === false ? " · goal rejected" : ""}`
+          : `Action goal failed: ${result.message}`,
+      });
+    } catch (error) {
+      set({
+        statusMessage: error instanceof Error ? error.message : "Action goal failed",
       });
     }
   },

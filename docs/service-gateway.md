@@ -86,7 +86,7 @@ Server response:
 ## Out of scope (v1.1)
 
 - Arbitrary service request editor UI
-- Action gateway
+- Action gateway (see [action-gateway.md](RobotScope/docs/action-gateway.md) from v1.2 alpha)
 - Plugin runtime permission enforcement
 
 See [known-limitations.md](RobotScope/docs/known-limitations.md).

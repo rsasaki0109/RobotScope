@@ -1,6 +1,6 @@
 import { useCallback, useState } from "react";
 
-import { parseSidecarManifest, DEFAULT_TRIGGER_SERVICE } from "@robotscope/core";
+import { parseSidecarManifest, DEFAULT_FIBONACCI_ACTION, DEFAULT_TRIGGER_SERVICE } from "@robotscope/core";
 
 import { listLayoutOptions } from "../plugins/registry";
 import {
@@ -41,8 +41,11 @@ export function CommandBar() {
   const stopLiveRecording = useViewerStore((s) => s.stopLiveRecording);
   const commandGatewayEnabled = useViewerStore((s) => s.commandGatewayEnabled);
   const serviceGatewayEnabled = useViewerStore((s) => s.serviceGatewayEnabled);
+  const actionGatewayEnabled = useViewerStore((s) => s.actionGatewayEnabled);
   const livePublishTopics = useViewerStore((s) => s.livePublishTopics);
   const liveServiceCallServices = useViewerStore((s) => s.liveServiceCallServices);
+  const liveActionSendGoalActions = useViewerStore((s) => s.liveActionSendGoalActions);
+  const fibonacciActionOrder = useViewerStore((s) => s.fibonacciActionOrder);
   const cmdVelLinearX = useViewerStore((s) => s.cmdVelLinearX);
   const cmdVelLinearY = useViewerStore((s) => s.cmdVelLinearY);
   const cmdVelLinearZ = useViewerStore((s) => s.cmdVelLinearZ);
@@ -51,10 +54,13 @@ export function CommandBar() {
   const cmdVelAngularZ = useViewerStore((s) => s.cmdVelAngularZ);
   const setCommandGatewayEnabled = useViewerStore((s) => s.setCommandGatewayEnabled);
   const setServiceGatewayEnabled = useViewerStore((s) => s.setServiceGatewayEnabled);
+  const setActionGatewayEnabled = useViewerStore((s) => s.setActionGatewayEnabled);
+  const setFibonacciActionOrder = useViewerStore((s) => s.setFibonacciActionOrder);
   const setCmdVelTwist = useViewerStore((s) => s.setCmdVelTwist);
   const publishLiveCmdVel = useViewerStore((s) => s.publishLiveCmdVel);
   const publishLiveZeroCmdVel = useViewerStore((s) => s.publishLiveZeroCmdVel);
   const callLiveTriggerService = useViewerStore((s) => s.callLiveTriggerService);
+  const sendLiveFibonacciGoal = useViewerStore((s) => s.sendLiveFibonacciGoal);
   const [liveUrl, setLiveUrl] = useState(DEFAULT_LIVE_AGENT_URL);
   const [livePresetId, setLivePresetId] = useState(LIVE_AGENT_PRESETS[0]?.id ?? "custom");
 
@@ -140,6 +146,7 @@ export function CommandBar() {
   const isLive = session?.source === "live";
   const canPublishCmdVel = livePublishTopics.includes("/cmd_vel");
   const canCallTrigger = liveServiceCallServices.includes(DEFAULT_TRIGGER_SERVICE);
+  const canSendFibonacciGoal = liveActionSendGoalActions.includes(DEFAULT_FIBONACCI_ACTION);
   const connectionPhase = isLive ? liveConnection.phase : "idle";
   const connectionLabel = CONNECTION_LABELS[connectionPhase];
 
@@ -359,6 +366,38 @@ export function CommandBar() {
               >
                 Call trigger
               </button>
+            ) : null}
+            {canSendFibonacciGoal ? (
+              <label className={styles.gatewayToggle}>
+                <input
+                  type="checkbox"
+                  checked={actionGatewayEnabled}
+                  onChange={(event) => setActionGatewayEnabled(event.target.checked)}
+                />
+                Allow action goals
+              </label>
+            ) : null}
+            {actionGatewayEnabled && canSendFibonacciGoal ? (
+              <>
+                <label className={styles.cmdVelField}>
+                  n
+                  <input
+                    type="number"
+                    step="1"
+                    min="0"
+                    value={Number.isFinite(fibonacciActionOrder) ? fibonacciActionOrder : 3}
+                    onChange={(event) => setFibonacciActionOrder(Number(event.target.value))}
+                    aria-label="Fibonacci action order"
+                  />
+                </label>
+                <button
+                  type="button"
+                  className={styles.buttonSecondary}
+                  onClick={() => void sendLiveFibonacciGoal()}
+                >
+                  Send Fibonacci
+                </button>
+              </>
             ) : null}
             <span className={styles.liveBadge} data-phase={connectionPhase}>
               {liveRecording ? "REC" : connectionLabel.toUpperCase()}

@@ -27,6 +27,16 @@ export type {
   LiveServiceCallRequest,
   LiveServiceCallResult,
 } from "./live/service-gateway.js";
+export {
+  buildFibonacciActionGoalRequest,
+  DEFAULT_FIBONACCI_ACTION,
+  EXAMPLE_FIBONACCI_ACTION_SCHEMA,
+} from "./live/action-gateway.js";
+export type {
+  FibonacciActionGoal,
+  LiveActionSendGoalRequest,
+  LiveActionSendGoalResult,
+} from "./live/action-gateway.js";
 export type { LiveRecordingResult } from "./query.js";
 export { LiveMcapRecorder, defaultLiveRecordingFilename } from "./live/recorder.js";
 export * from "./mapping/entity-mapper.js";

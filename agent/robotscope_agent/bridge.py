@@ -26,6 +26,16 @@ try:
 except ImportError:  # pragma: no cover - optional at import time
     Trigger = None  # type: ignore[misc, assignment]
 
+try:
+    from example_interfaces.action import Fibonacci
+except ImportError:  # pragma: no cover - optional at import time
+    Fibonacci = None  # type: ignore[misc, assignment]
+
+try:
+    from rclpy.action import ActionClient
+except ImportError:  # pragma: no cover - optional at import time
+    ActionClient = None  # type: ignore[misc, assignment]
+
 
 @dataclass
 class ChannelInfo:
@@ -49,6 +59,7 @@ class LiveBridge(Node):
         topic_retry_sec: float = 2.0,
         publish_allowlist: list[str] | None = None,
         service_allowlist: list[str] | None = None,
+        action_allowlist: list[str] | None = None,
     ) -> None:
         super().__init__("robotscope_live_bridge")
         self._on_data = on_data
@@ -66,6 +77,8 @@ class LiveBridge(Node):
         self._publishers: dict[str, tuple[object, object]] = {}
         self._service_allowlist = set(service_allowlist or [])
         self._service_clients: dict[str, object] = {}
+        self._action_allowlist = set(action_allowlist or [])
+        self._action_clients: dict[str, object] = {}
 
         self._scan_and_subscribe()
         self._emit_subscription_status()
@@ -254,6 +267,45 @@ class LiveBridge(Node):
             return True, result.message or f"Called {service}", bool(result.success)
 
         return False, "Missing trigger shortcut or unsupported payload", None
+
+    def send_action_goal(
+        self,
+        action: str,
+        schema: str,
+        payload: dict[str, Any],
+    ) -> tuple[bool, str, bool | None]:
+        if action not in self._action_allowlist:
+            return False, f"Action {action} is not allowlisted for goal send", None
+
+        fibonacci_payload = payload.get("fibonacci")
+        if isinstance(fibonacci_payload, dict):
+            if schema != "example_interfaces/action/Fibonacci":
+                return False, "fibonacci shortcut is only supported for example_interfaces/action/Fibonacci", None
+            if Fibonacci is None or ActionClient is None:
+                return False, "example_interfaces actions are not available in this ROS environment", None
+
+            client = self._action_clients.get(action)
+            if client is None:
+                client = ActionClient(self, Fibonacci, action)
+                if not client.wait_for_server(timeout_sec=2.0):
+                    return False, f"Action {action} is not available", None
+                self._action_clients[action] = client
+                self.get_logger().info(f"Created action client for {action} ({schema})")
+
+            goal = Fibonacci.Goal()
+            goal.order = int(fibonacci_payload.get("order", 3))
+            future = client.send_goal_async(goal)
+            rclpy.spin_until_future_complete(self, future, timeout_sec=5.0)
+            if not future.done():
+                return False, f"Action goal send to {action} timed out", None
+            goal_handle = future.result()
+            if goal_handle is None:
+                return False, f"Action goal send to {action} failed", None
+            if not goal_handle.accepted:
+                return False, f"Action goal rejected on {action}", False
+            return True, f"Fibonacci goal accepted on {action} (order={goal.order})", True
+
+        return False, "Missing fibonacci shortcut or unsupported payload", None
 
     def _handle_message(self, topic: str, msg: object) -> None:
         channel = self._channels.get(topic)

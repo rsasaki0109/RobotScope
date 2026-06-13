@@ -1,4 +1,4 @@
-# Command gateway (v1.0 alpha)
+# Command gateway (v1.0 beta)
 
 Permission-gated **live publish** from the viewer to a local ROS 2 agent.
 
@@ -25,7 +25,7 @@ npm run dev
 
 Demo agent **accepts** publish requests but does not write to ROS (replay-only).
 
-## Twist velocity editor (v1.0 alpha)
+## Twist velocity editor (v1.0 beta)
 
 When **Allow publish** is enabled and `/cmd_vel` is allowlisted:
 
@@ -55,7 +55,7 @@ Session advertises allowlist:
 }
 ```
 
-Client publish with full velocity (v1.0 alpha):
+Client publish with full velocity (v1.0 beta):
 
 ```json
 {
@@ -102,7 +102,7 @@ Server response:
 - Python agent — `RobotScope/agent/robotscope_agent/gateway.py`
 - Viewer — command bar **Allow publish** + six-axis velocity inputs + **Publish cmd_vel**
 
-## Out of scope (v1.0 alpha)
+## Out of scope (v1.0 beta)
 
 - Service / action gateway
 - Arbitrary message editor UI

@@ -99,6 +99,28 @@ RobotScope/
 └── sample_data/             Sample MCAP fetch scripts
 ```
 
+## v1.1.0-beta.0
+
+Service call gateway on v1.0 command gateway. See [release notes](RobotScope/docs/release/v1.1.0-beta.0.md) and [CHANGELOG.md](RobotScope/CHANGELOG.md).
+
+**Shipped**
+
+| Layer | Features |
+|-------|----------|
+| Live | **Service gateway** — opt-in Trigger calls to allowlisted services |
+| v1.0 carry-over | 6-DOF Twist editor · command gateway · OSM maps · rosbag2 |
+
+**Docs**
+
+- [Service gateway guide](RobotScope/docs/service-gateway.md)
+- [Migration v1.1 alpha → beta](RobotScope/docs/migration/v1.1-alpha-to-beta.md)
+- [Command gateway guide](RobotScope/docs/command-gateway.md)
+- [Known limitations](RobotScope/docs/known-limitations.md)
+
+**Out of scope (v1.1 beta)**
+
+- Arbitrary service editor · action gateway · native Lanelet2 boost bin · cloud/fleet
+
 ## v1.1.0-alpha.0
 
 Service call gateway on v1.0 command gateway. See [release notes](RobotScope/docs/release/v1.1.0-alpha.0.md) and [CHANGELOG.md](RobotScope/CHANGELOG.md).

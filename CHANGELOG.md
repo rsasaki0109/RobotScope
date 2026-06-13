@@ -4,6 +4,24 @@ All notable changes to RobotScope are documented in this file.
 
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and versioning follows [SemVer](https://semver.org/).
 
+## [1.1.0-beta.0] - 2026-06-13
+
+First v1.1 beta — scope consolidation after alpha.0.
+
+### Summary
+
+Beta consolidates service call gateway on v1.0 command gateway. Documentation and known-limitations boundaries updated for local live Trigger workflows.
+
+### Added
+
+- [docs/release/v1.1.0-beta.0.md](RobotScope/docs/release/v1.1.0-beta.0.md)
+- [docs/migration/v1.1-alpha-to-beta.md](RobotScope/docs/migration/v1.1-alpha-to-beta.md)
+
+### Changed
+
+- README + [known-limitations.md](RobotScope/docs/known-limitations.md) updated for v1.1 beta boundaries
+- [docs/service-gateway.md](RobotScope/docs/service-gateway.md) — beta scope header
+
 ## [1.1.0-alpha.0] - 2026-06-13
 
 Permission-gated service call gateway for live agents.

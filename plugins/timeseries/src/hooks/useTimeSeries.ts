@@ -5,7 +5,16 @@ import {
   listNumericFieldCandidates,
   pickDefaultNumericField,
 } from "../field-catalog.js";
+import {
+  buildDerivedTimeSeries,
+  derivedSeriesIdFromKey,
+  isDerivedSeriesKey,
+} from "../derived-series.js";
 import type {
+  AddDerivedSeriesInput,
+  BinaryOp,
+  DerivedSeriesDef,
+  DerivedSeriesKind,
   NumericFieldCandidate,
   TimeSeriesPlotSeries,
   TimeSeriesSnapshot,
@@ -75,10 +84,10 @@ function hasNumericSeriesQueryEngine(engine: QueryEngine): engine is NumericSeri
   return typeof (engine as Partial<NumericSeriesQueryEngine>).getNumericSeries === "function";
 }
 
-function nextSeriesColor(selections: SeriesSelection[]): string {
-  const used = new Set(selections.map((selection) => selection.color));
+function nextColor(usedColors: string[]): string {
+  const used = new Set(usedColors);
   return SERIES_COLORS.find((color) => !used.has(color)) ??
-    SERIES_COLORS[selections.length % SERIES_COLORS.length]!;
+    SERIES_COLORS[usedColors.length % SERIES_COLORS.length]!;
 }
 
 function clampTimeNs(timeNs: number, session: SessionInfo): number {
@@ -143,11 +152,41 @@ function emptySeriesState(): SeriesState {
   };
 }
 
+function sanitizeDerivedId(id: string): string {
+  const sanitized = id.trim().replace(/[^a-zA-Z0-9_-]+/g, "-").replace(/^-+|-+$/g, "");
+  return sanitized || "series";
+}
+
+function uniqueDerivedId(baseId: string, defs: DerivedSeriesDef[]): string {
+  const used = new Set(defs.map((def) => def.id));
+  if (!used.has(baseId)) {
+    return baseId;
+  }
+
+  let index = 2;
+  let candidate = `${baseId}-${index}`;
+  while (used.has(candidate)) {
+    index += 1;
+    candidate = `${baseId}-${index}`;
+  }
+  return candidate;
+}
+
+function requiredSourceCount(kind: DerivedSeriesKind): number {
+  return kind === "binary-op" ? 2 : 1;
+}
+
+function normalizeBinaryOp(op: BinaryOp | undefined): BinaryOp {
+  return op ?? "add";
+}
+
 export function useTimeSeries(slice: TimeSeriesViewerSlice): TimeSeriesDataState {
   const [seriesSelections, setSeriesSelections] = useState<SeriesSelection[]>([]);
+  const [derivedDefs, setDerivedDefs] = useState<DerivedSeriesDef[]>([]);
   const [seriesState, setSeriesState] = useState<SeriesState>(emptySeriesState);
   const [fetchWindow, setFetchWindow] = useState<TimeSeriesFetchWindow | null>(null);
   const fetchWindowRef = useRef<TimeSeriesFetchWindow | null>(null);
+  const nextDerivedIdRef = useRef(1);
   const [loading, setLoading] = useState(false);
 
   const candidates = useMemo(
@@ -211,15 +250,76 @@ export function useTimeSeries(slice: TimeSeriesViewerSlice): TimeSeriesDataState
       if (current.some((selection) => selection.key === key)) {
         return current;
       }
-      return [...current, { key, color: nextSeriesColor(current), visible: true }];
+      const usedColors = [
+        ...current.map((selection) => selection.color),
+        ...derivedDefs.map((def) => def.color),
+      ];
+      return [...current, { key, color: nextColor(usedColors), visible: true }];
     });
-  }, [candidateByKey]);
+  }, [candidateByKey, derivedDefs]);
+
+  const addDerivedSeries = useCallback((input: AddDerivedSeriesInput) => {
+    if (isDerivedSeriesKey(input.id ?? "")) {
+      return;
+    }
+
+    const sourceCount = requiredSourceCount(input.kind);
+    const sourceKeys = input.sourceKeys.slice(0, sourceCount);
+    if (
+      sourceKeys.length !== sourceCount ||
+      sourceKeys.some((key) => isDerivedSeriesKey(key)) ||
+      sourceKeys.some((key) => !seriesSelections.some((selection) => selection.key === key))
+    ) {
+      return;
+    }
+
+    setDerivedDefs((current) => {
+      const fallbackId = `analysis-${nextDerivedIdRef.current}`;
+      nextDerivedIdRef.current += 1;
+      const baseId = sanitizeDerivedId(input.id ?? fallbackId);
+      const usedColors = [
+        ...seriesSelections.map((selection) => selection.color),
+        ...current.map((def) => def.color),
+      ];
+      const def: DerivedSeriesDef = {
+        id: uniqueDerivedId(baseId, current),
+        kind: input.kind,
+        sourceKeys,
+        color: input.color ?? nextColor(usedColors),
+        visible: input.visible ?? true,
+      };
+      if (input.kind === "moving-average") {
+        def.window = Math.max(1, Math.floor(input.window ?? 5));
+      }
+      if (input.kind === "binary-op") {
+        def.op = normalizeBinaryOp(input.op);
+      }
+      return [...current, def];
+    });
+  }, [seriesSelections]);
 
   const removeSeriesKey = useCallback((key: string) => {
+    const derivedId = derivedSeriesIdFromKey(key);
+    if (derivedId != null) {
+      setDerivedDefs((current) => current.filter((def) => def.id !== derivedId));
+      return;
+    }
     setSeriesSelections((current) => current.filter((selection) => selection.key !== key));
   }, []);
 
   const toggleSeriesVisible = useCallback((key: string) => {
+    const derivedId = derivedSeriesIdFromKey(key);
+    if (derivedId != null) {
+      setDerivedDefs((current) =>
+        current.map((def) =>
+          def.id === derivedId
+            ? { ...def, visible: !def.visible }
+            : def,
+        ),
+      );
+      return;
+    }
+
     setSeriesSelections((current) =>
       current.map((selection) =>
         selection.key === key
@@ -402,7 +502,7 @@ export function useTimeSeries(slice: TimeSeriesViewerSlice): TimeSeriesDataState
     slice.session,
   ]);
 
-  const selectedSeries = useMemo<TimeSeriesPlotSeries[]>(() => {
+  const realSelectedSeries = useMemo<TimeSeriesPlotSeries[]>(() => {
     return selectedCandidates.map((selection) => ({
       key: selection.key,
       candidate: selection.candidate,
@@ -411,6 +511,18 @@ export function useTimeSeries(slice: TimeSeriesViewerSlice): TimeSeriesDataState
       series: seriesState.seriesByKey.get(selection.key) ?? null,
     }));
   }, [selectedCandidates, seriesState.seriesByKey]);
+
+  const derivedResult = useMemo(() => {
+    return buildDerivedTimeSeries(realSelectedSeries, derivedDefs);
+  }, [derivedDefs, realSelectedSeries]);
+
+  const selectedSeries = useMemo<TimeSeriesPlotSeries[]>(() => {
+    return [...realSelectedSeries, ...derivedResult.series];
+  }, [derivedResult.series, realSelectedSeries]);
+
+  const warnings = useMemo(() => {
+    return [...seriesState.warnings, ...derivedResult.warnings];
+  }, [derivedResult.warnings, seriesState.warnings]);
 
   const snapshot = useMemo<TimeSeriesSnapshot | null>(() => {
     if (!slice.session) {
@@ -423,22 +535,24 @@ export function useTimeSeries(slice: TimeSeriesViewerSlice): TimeSeriesDataState
       currentTimeNs: slice.currentTimeNs,
       startNs: slice.session.start_ns,
       endNs: slice.session.end_ns,
-      warnings: seriesState.warnings,
+      warnings,
       addSeriesKey,
+      addDerivedSeries,
       removeSeriesKey,
       toggleSeriesVisible,
       seekToTimeNs,
     };
   }, [
+    addDerivedSeries,
     addSeriesKey,
     candidates,
     removeSeriesKey,
     seekToTimeNs,
     selectedSeries,
-    seriesState.warnings,
     slice.currentTimeNs,
     slice.session,
     toggleSeriesVisible,
+    warnings,
   ]);
 
   return { snapshot, loading };

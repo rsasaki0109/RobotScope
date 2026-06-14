@@ -1,8 +1,11 @@
 import { useCallback, useMemo, useState, type DragEvent, type ReactNode } from "react";
 
 import { countExportableRows, downloadTimeSeriesCsv } from "./csv-export.js";
+import { isDerivedSeriesKey } from "./derived-series.js";
 import { PlotCanvas } from "./panels/PlotCanvas.js";
 import type {
+  BinaryOp,
+  DerivedSeriesKind,
   NumericFieldCandidate,
   TimeSeriesPlotSeries,
   TimeSeriesSnapshot,
@@ -29,6 +32,12 @@ function sampleCount(series: TimeSeriesPlotSeries[]): number {
 const MAX_VISIBLE_Y_AXES = 3;
 const EMPTY_PLOT_SERIES: TimeSeriesPlotSeries[] = [];
 type PlotDisplayMode = "overlay" | "stacked";
+const BINARY_OP_OPTIONS: Array<{ value: BinaryOp; label: string }> = [
+  { value: "add", label: "+" },
+  { value: "subtract", label: "-" },
+  { value: "multiply", label: "*" },
+  { value: "divide", label: "/" },
+];
 
 function xRangeEquals(
   left: TimeSeriesXRange | null,
@@ -98,6 +107,145 @@ function onFieldDragStart(event: DragEvent<HTMLButtonElement>, candidate: Numeri
   event.dataTransfer.setData("text/plain", candidate.key);
 }
 
+function selectedSourceKey(
+  sourceSeries: TimeSeriesPlotSeries[],
+  requestedKey: string,
+  fallbackIndex: number,
+): string {
+  if (sourceSeries.some((series) => series.key === requestedKey)) {
+    return requestedKey;
+  }
+  return sourceSeries[Math.min(fallbackIndex, sourceSeries.length - 1)]?.key ?? "";
+}
+
+interface DerivedSeriesFormProps {
+  snapshot: TimeSeriesSnapshot;
+  sourceSeries: TimeSeriesPlotSeries[];
+}
+
+function DerivedSeriesForm({ snapshot, sourceSeries }: DerivedSeriesFormProps) {
+  const [kind, setKind] = useState<DerivedSeriesKind>("moving-average");
+  const [sourceAKey, setSourceAKey] = useState("");
+  const [sourceBKey, setSourceBKey] = useState("");
+  const [binaryOp, setBinaryOp] = useState<BinaryOp>("add");
+  const [windowInput, setWindowInput] = useState("5");
+  const hasSources = sourceSeries.length > 0;
+  const sourceA = selectedSourceKey(sourceSeries, sourceAKey, 0);
+  const sourceB = selectedSourceKey(sourceSeries, sourceBKey, sourceSeries.length > 1 ? 1 : 0);
+  const addDisabled = !hasSources || !sourceA || (kind === "binary-op" && !sourceB);
+
+  const handleAddDerived = useCallback(() => {
+    if (addDisabled) {
+      return;
+    }
+
+    const windowSize = Math.max(1, Math.floor(Number.parseInt(windowInput, 10) || 5));
+    snapshot.addDerivedSeries({
+      kind,
+      sourceKeys: kind === "binary-op" ? [sourceA, sourceB] : [sourceA],
+      window: kind === "moving-average" ? windowSize : undefined,
+      op: kind === "binary-op" ? binaryOp : undefined,
+    });
+  }, [addDisabled, binaryOp, kind, snapshot, sourceA, sourceB, windowInput]);
+
+  return (
+    <div className={styles.derivedForm} aria-label="Add derived channel">
+      <div className={styles.derivedControls}>
+        <label className={styles.controlLabel}>
+          <span>Type</span>
+          <select
+            className={styles.controlSelect}
+            value={kind}
+            onChange={(event) => setKind(event.target.value as DerivedSeriesKind)}
+          >
+            <option value="moving-average">Moving average</option>
+            <option value="derivative">Derivative</option>
+            <option value="binary-op">A op B</option>
+          </select>
+        </label>
+
+        <label className={styles.controlLabel}>
+          <span>A</span>
+          <select
+            className={styles.controlSelect}
+            value={sourceA}
+            onChange={(event) => setSourceAKey(event.target.value)}
+            disabled={!hasSources}
+          >
+            {sourceSeries.map((series) => (
+              <option key={series.key} value={series.key}>
+                {series.candidate.label}
+              </option>
+            ))}
+          </select>
+        </label>
+
+        {kind === "moving-average" ? (
+          <label className={styles.controlLabel}>
+            <span>Window</span>
+            <input
+              className={styles.controlInput}
+              type="number"
+              min={1}
+              step={1}
+              value={windowInput}
+              onChange={(event) => setWindowInput(event.target.value)}
+            />
+          </label>
+        ) : null}
+
+        {kind === "binary-op" ? (
+          <>
+            <label className={styles.controlLabel}>
+              <span>Op</span>
+              <select
+                className={styles.controlSelect}
+                value={binaryOp}
+                onChange={(event) => setBinaryOp(event.target.value as BinaryOp)}
+              >
+                {BINARY_OP_OPTIONS.map((option) => (
+                  <option key={option.value} value={option.value}>
+                    {option.label}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <label className={styles.controlLabel}>
+              <span>B</span>
+              <select
+                className={styles.controlSelect}
+                value={sourceB}
+                onChange={(event) => setSourceBKey(event.target.value)}
+                disabled={!hasSources}
+              >
+                {sourceSeries.map((series) => (
+                  <option key={series.key} value={series.key}>
+                    {series.candidate.label}
+                  </option>
+                ))}
+              </select>
+            </label>
+          </>
+        ) : null}
+      </div>
+
+      <div className={styles.derivedActions}>
+        {!hasSources ? (
+          <span className={styles.derivedHint}>Select a real series first.</span>
+        ) : null}
+        <button
+          type="button"
+          className={styles.addDerivedButton}
+          onClick={handleAddDerived}
+          disabled={addDisabled}
+        >
+          Add
+        </button>
+      </div>
+    </div>
+  );
+}
+
 interface StackedSeriesPlotProps {
   series: TimeSeriesPlotSeries;
   startNs: number;
@@ -153,6 +301,10 @@ export function TimeSeriesDock({
   const xRange = xRangeControlled ? controlledXRange : localXRange;
   const selectedKeys = useMemo(
     () => new Set(snapshot?.selectedSeries.map((series) => series.key) ?? []),
+    [snapshot?.selectedSeries],
+  );
+  const realSelectedSeries = useMemo(
+    () => snapshot?.selectedSeries.filter((series) => !isDerivedSeriesKey(series.key)) ?? [],
     [snapshot?.selectedSeries],
   );
   const visibleSeries = snapshot?.selectedSeries.filter((series) => series.visible) ?? [];
@@ -268,6 +420,7 @@ export function TimeSeriesDock({
                     <span>{snapshot.selectedSeries.length}</span>
                   </div>
                 </div>
+                <DerivedSeriesForm snapshot={snapshot} sourceSeries={realSelectedSeries} />
                 {snapshot.selectedSeries.length ? (
                   <ul className={styles.seriesList}>
                     {snapshot.selectedSeries.map((series) => {
@@ -308,6 +461,9 @@ export function TimeSeriesDock({
                                 >
                                   {axisLabel}
                                 </span>
+                                {isDerivedSeriesKey(series.key) ? (
+                                  <span className={styles.derivedBadge}>derived</span>
+                                ) : null}
                                 {currentValue != null ? (
                                   <span>now {formatSeriesValue(currentValue)}</span>
                                 ) : null}

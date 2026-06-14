@@ -16,6 +16,24 @@ export interface TimeSeriesPlotSeries {
   series: NumericSeries | null;
 }
 
+export type DerivedSeriesKind = "moving-average" | "derivative" | "binary-op";
+
+export type BinaryOp = "add" | "subtract" | "multiply" | "divide";
+
+export interface DerivedSeriesDef {
+  id: string;
+  kind: DerivedSeriesKind;
+  sourceKeys: string[];
+  window?: number;
+  op?: BinaryOp;
+  color: string;
+  visible: boolean;
+}
+
+export type AddDerivedSeriesInput =
+  Omit<DerivedSeriesDef, "id" | "color" | "visible"> &
+  Partial<Pick<DerivedSeriesDef, "id" | "color" | "visible">>;
+
 export interface TimeSeriesXRange {
   minSec: number;
   maxSec: number;
@@ -30,6 +48,7 @@ export interface TimeSeriesSnapshot {
   endNs: number;
   warnings: string[];
   addSeriesKey: (key: string) => void;
+  addDerivedSeries: (def: AddDerivedSeriesInput) => void;
   removeSeriesKey: (key: string) => void;
   toggleSeriesVisible: (key: string) => void;
   seekToTimeNs: (timeNs: number) => void;

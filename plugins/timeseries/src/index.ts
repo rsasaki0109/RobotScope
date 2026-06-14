@@ -1,4 +1,8 @@
 export type {
+  AddDerivedSeriesInput,
+  BinaryOp,
+  DerivedSeriesDef,
+  DerivedSeriesKind,
   NumericFieldCandidate,
   TimeSeriesPlotSeries,
   TimeSeriesSnapshot,

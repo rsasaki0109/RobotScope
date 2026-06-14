@@ -145,6 +145,87 @@
   opacity: 0.62;
 }
 
+.derivedForm {
+  display: flex;
+  flex-direction: column;
+  gap: 0.42rem;
+  border: 1px solid var(--rs-border);
+  border-radius: 7px;
+  background: rgba(15, 23, 42, 0.38);
+  padding: 0.48rem;
+}
+
+.derivedControls {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.38rem;
+}
+
+.controlLabel {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.18rem;
+  color: var(--rs-text-muted);
+  font-size: 0.62rem;
+  font-weight: 650;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.controlSelect,
+.controlInput {
+  min-width: 0;
+  width: 100%;
+  border: 1px solid var(--rs-border);
+  border-radius: 5px;
+  background: rgba(8, 16, 24, 0.82);
+  color: var(--rs-text);
+  font-size: 0.68rem;
+  padding: 0.28rem 0.34rem;
+}
+
+.controlSelect:disabled,
+.controlInput:disabled {
+  cursor: not-allowed;
+  color: var(--rs-text-muted);
+  opacity: 0.58;
+}
+
+.derivedActions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.45rem;
+}
+
+.derivedHint {
+  min-width: 0;
+  overflow: hidden;
+  color: var(--rs-text-muted);
+  font-size: 0.66rem;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.addDerivedButton {
+  border: 1px solid rgba(78, 161, 255, 0.45);
+  border-radius: 5px;
+  background: rgba(78, 161, 255, 0.1);
+  color: var(--rs-accent);
+  padding: 0.26rem 0.55rem;
+  font-size: 0.66rem;
+  font-weight: 650;
+}
+
+.addDerivedButton:disabled {
+  cursor: not-allowed;
+  border-color: var(--rs-border);
+  background: rgba(148, 163, 184, 0.06);
+  color: var(--rs-text-muted);
+  opacity: 0.62;
+}
+
 .seriesList {
   margin: 0;
   padding: 0;
@@ -230,6 +311,17 @@
   overflow: hidden;
   border: 1px solid currentColor;
   border-radius: 4px;
+  padding: 0 0.25rem;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.derivedBadge {
+  max-width: 5rem;
+  overflow: hidden;
+  border: 1px solid rgba(167, 139, 250, 0.5);
+  border-radius: 4px;
+  color: #c4b5fd;
   padding: 0 0.25rem;
   text-overflow: ellipsis;
   white-space: nowrap;

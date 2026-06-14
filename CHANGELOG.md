@@ -4,6 +4,24 @@ All notable changes to RobotScope are documented in this file.
 
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and versioning follows [SemVer](https://semver.org/).
 
+## [1.6.0-alpha.0] - 2026-06-13
+
+Preempt controls for live Fibonacci action goals.
+
+### Added
+
+- **`preempt`** flag on `command.action_send_goal` — cancel active goal before sending replacement
+- Viewer **Preempt Fibonacci** button while action tracking is `running`
+- Python agent preempt path in `send_action_goal()` via cancel-then-send
+- Demo live agent preempt for simulated Fibonacci
+- Timeline event kind **`preempt_requested`**
+- [docs/release/v1.6.0-alpha.0.md](RobotScope/docs/release/v1.6.0-alpha.0.md)
+
+### Changed
+
+- [docs/action-gateway.md](RobotScope/docs/action-gateway.md) updated for v1.6 alpha preempt
+- [known-limitations.md](RobotScope/docs/known-limitations.md) updated — same-action preempt only
+
 ## [1.5.0] - 2026-06-13
 
 Fifteenth GA release — action timeline panel on live gateways.

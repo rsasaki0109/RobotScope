@@ -1,4 +1,4 @@
-/** Permission-gated live action goals (v1.2+) with progress tracking (v1.3) and cancel (v1.4 alpha). */
+/** Permission-gated live action goals (v1.2+) with progress tracking (v1.3), cancel (v1.4), and preempt (v1.6 alpha). */
 
 export const DEFAULT_FIBONACCI_ACTION = "/robotscope/demo/fibonacci";
 export const EXAMPLE_FIBONACCI_ACTION_SCHEMA = "example_interfaces/action/Fibonacci";
@@ -16,6 +16,8 @@ export interface LiveActionSendGoalRequest {
   schema: string;
   /** Agent sends Fibonacci goal when set. */
   fibonacci?: FibonacciActionGoal;
+  /** Cancel active goal on the same action before sending (v1.6 alpha). */
+  preempt?: boolean;
 }
 
 export interface LiveActionSendGoalResult {
@@ -67,7 +69,8 @@ export type LiveActionEventKind =
   | "feedback"
   | "outcome"
   | "cancel_requested"
-  | "cancel_result";
+  | "cancel_result"
+  | "preempt_requested";
 
 export interface LiveActionEvent {
   id: string;
@@ -92,6 +95,7 @@ function assertFiniteOrder(value: number): number {
 export function buildFibonacciActionGoalRequest(
   order: number,
   action: string = DEFAULT_FIBONACCI_ACTION,
+  options: { preempt?: boolean } = {},
 ): LiveActionSendGoalRequest {
   return {
     action,
@@ -99,6 +103,7 @@ export function buildFibonacciActionGoalRequest(
     fibonacci: {
       order: assertFiniteOrder(order),
     },
+    preempt: options.preempt === true ? true : undefined,
   };
 }
 

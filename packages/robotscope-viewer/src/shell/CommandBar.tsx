@@ -397,7 +397,7 @@ export function CommandBar() {
                   className={styles.buttonSecondary}
                   onClick={() => void sendLiveFibonacciGoal()}
                 >
-                  Send Fibonacci
+                  {liveActionTracking?.status === "running" ? "Preempt Fibonacci" : "Send Fibonacci"}
                 </button>
                 {liveActionTracking?.status === "running" ? (
                   <button

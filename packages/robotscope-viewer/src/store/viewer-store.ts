@@ -872,21 +872,33 @@ export const useViewerStore = create<ViewerState>((set, get) => ({
         "@robotscope/core"
       );
       const action = actionName ?? DEFAULT_FIBONACCI_ACTION;
+      const preempt =
+        state.liveActionTracking?.status === "running" &&
+        state.liveActionTracking.action === action;
+      let nextEvents = get().liveActionEvents;
+      if (preempt) {
+        nextEvents = appendLiveActionEvent(nextEvents, {
+          action,
+          kind: "preempt_requested",
+          status: "running",
+          message: `Replacing running goal with order n=${state.fibonacciActionOrder}`,
+        });
+      }
       set({
         liveActionTracking: {
           action,
           status: "running",
           sequence: [],
         },
-        liveActionEvents: appendLiveActionEvent(get().liveActionEvents, {
+        liveActionEvents: appendLiveActionEvent(nextEvents, {
           action,
           kind: "goal_sent",
           status: "running",
-          message: `Order n=${state.fibonacciActionOrder}`,
+          message: `${preempt ? "Preempt · " : ""}Order n=${state.fibonacciActionOrder}`,
         }),
       });
       const result = await ingest.sendActionGoal(
-        buildFibonacciActionGoalRequest(state.fibonacciActionOrder, action),
+        buildFibonacciActionGoalRequest(state.fibonacciActionOrder, action, { preempt }),
       );
       set({
         statusMessage: result.ok

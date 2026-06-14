@@ -367,6 +367,22 @@ server.on("connection", (socket) => {
         payload.fibonacci && typeof payload.fibonacci === "object"
           ? payload.fibonacci.order
           : 3;
+      const preempt = payload.preempt === true;
+
+      if (preempt && activeActionSimulations.has(action)) {
+        activeActionSimulations.get(action)?.cancel();
+      } else if (!preempt && activeActionSimulations.has(action)) {
+        socket.send(
+          JSON.stringify({
+            type: "command.action_result",
+            ok: false,
+            action,
+            goal_accepted: false,
+            message: `Demo agent rejected goal on ${action} — active goal running (use preempt)`,
+          }),
+        );
+        return;
+      }
 
       socket.send(
         JSON.stringify({

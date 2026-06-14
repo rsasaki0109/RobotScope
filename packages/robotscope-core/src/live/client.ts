@@ -364,6 +364,7 @@ export class LiveAgentClient {
           action: request.action,
           schema: request.schema,
           fibonacci: request.fibonacci,
+          preempt: request.preempt,
         }),
       );
     });

@@ -1,6 +1,6 @@
-# Action gateway (v1.5 GA)
+# Action gateway (v1.6 alpha)
 
-Permission-gated **live action goal send and cancel** from the viewer to a local ROS 2 agent, with **Fibonacci feedback / outcome tracking** (v1.3 GA) and **Action timeline panel** (v1.5 GA).
+Permission-gated **live action goal send, cancel, and preempt** from the viewer to a local ROS 2 agent, with **Fibonacci tracking** (v1.3 GA), **Action timeline** (v1.5 GA), and **preempt replace** (v1.6 alpha).
 
 ## Safety model
 
@@ -34,6 +34,7 @@ When **Allow action goals** is enabled and `/robotscope/demo/fibonacci` is allow
 - **Send Fibonacci** — sends `example_interfaces/action/Fibonacci` goal
 - **Tracking (v1.3)** — command bar shows `running · [0, 1, …]` then final `succeeded` / `aborted` / `canceled`
 - **Cancel (v1.4)** — **Cancel goal** button while status is `running`
+- **Preempt (v1.6 alpha)** — **Preempt Fibonacci** replaces running goal on same action (`preempt: true`)
 
 Native ROS agents can allow any Fibonacci-compatible action name.
 
@@ -65,7 +66,8 @@ Client Fibonacci goal:
   "type": "command.action_send_goal",
   "action": "/robotscope/demo/fibonacci",
   "schema": "example_interfaces/action/Fibonacci",
-  "fibonacci": { "order": 3 }
+  "fibonacci": { "order": 3 },
+  "preempt": true
 }
 ```
 
@@ -133,10 +135,10 @@ Cancel response (v1.4):
 - Viewer — command bar **Allow action goals** + **Send Fibonacci** + **Cancel goal** + **sequence tracking badge**
 - Sidebar — **Action timeline** panel (v1.5) with goal / feedback / outcome / cancel events
 
-## Out of scope (v1.5)
+## Out of scope (v1.6 alpha)
 
+- Cross-action preempt (different action names)
 - Cross-session action history persistence
-- Preempt controls (send new goal while running)
 - Arbitrary action goal editor
 - Plugin runtime permission enforcement
 

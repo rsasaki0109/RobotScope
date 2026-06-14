@@ -300,6 +300,19 @@ class LiveBridge(Node):
             if Fibonacci is None or ActionClient is None:
                 return False, "example_interfaces actions are not available in this ROS environment", None
 
+            preempt = bool(payload.get("preempt"))
+            if action in self._active_goal_handles:
+                if not preempt:
+                    return (
+                        False,
+                        f"Action {action} already has an active goal (set preempt to replace)",
+                        None,
+                    )
+                cancel_ok, cancel_msg, _ = self.cancel_action_goal(action)
+                if not cancel_ok:
+                    return False, f"Preempt cancel failed on {action}: {cancel_msg}", None
+                self._active_goal_handles.pop(action, None)
+
             client = self._action_clients.get(action)
             if client is None:
                 client = ActionClient(self, Fibonacci, action)

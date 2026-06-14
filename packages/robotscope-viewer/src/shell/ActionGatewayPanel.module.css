@@ -70,7 +70,8 @@
 
 .kind[data-kind="feedback"],
 .kind[data-kind="goal_accepted"],
-.kind[data-kind="goal_sent"] {
+.kind[data-kind="goal_sent"],
+.kind[data-kind="preempt_requested"] {
   color: var(--rs-accent, #3b82f6);
 }
 

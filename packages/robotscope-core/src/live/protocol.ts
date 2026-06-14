@@ -139,6 +139,7 @@ export interface LiveCommandActionSendGoalClientMessage {
   action: string;
   schema: string;
   fibonacci?: FibonacciActionGoal;
+  preempt?: boolean;
 }
 
 export interface LiveCommandActionCancelGoalClientMessage {

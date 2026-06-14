@@ -35,11 +35,34 @@ function definitionsFromSchema(schema: SchemaInfo): MessageDefinition[] | undefi
 
 function definitionsFromCommon(schemaName: string): MessageDefinition[] | undefined {
   const normalized = normalizeSchemaName(schemaName);
-  const entry = ros2humble[normalized as keyof typeof ros2humble];
-  if (!entry) {
+  const root = ros2humble[normalized as keyof typeof ros2humble];
+  if (!root) {
     return undefined;
   }
-  return [entry];
+
+  const collected: MessageDefinition[] = [];
+  const seen = new Set<string>();
+  const visit = (name: string): void => {
+    if (seen.has(name)) {
+      return;
+    }
+    seen.add(name);
+
+    const entry = ros2humble[name as keyof typeof ros2humble];
+    if (!entry) {
+      return;
+    }
+
+    collected.push(entry);
+    for (const field of entry.definitions) {
+      if (field.isComplex === true && field.isConstant !== true) {
+        visit(field.type);
+      }
+    }
+  };
+
+  visit(normalized);
+  return collected;
 }
 
 export function getMessageReader(schema: SchemaInfo): MessageReader | undefined {

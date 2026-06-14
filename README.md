@@ -90,7 +90,7 @@ Open an MCAP file from the viewer (drag & drop) or click **Connect Live** for a 
 
 ### Time-series plots (PlotJuggler-style)
 
-The `timeseries` layout turns any numeric ROS2 field into a live plot next to the 3D scene. Pick fields from the catalog (click or drag), overlay multiple series with per-series Y axes, or stack them one-per-plot. Drag to zoom / wheel to pan with a shared time axis, click anywhere on a plot to seek the 3D scene and timeline, and export the visible series to CSV. Zooming refetches just the visible window at full resolution, so it stays responsive on large recordings.
+The `timeseries` layout turns any numeric ROS2 field into a live plot next to the 3D scene. Pick fields from the catalog (click or drag), overlay multiple series with per-series Y axes, or stack them one-per-plot. Add derived **analysis channels** — moving average, derivative (d/dt), or series math (A `+` `-` `*` `/` B) — computed live from the selected signals. Drag to zoom / wheel to pan with a shared time axis, click anywhere on a plot to seek the 3D scene and timeline, and export the visible series to CSV. Zooming refetches just the visible window at full resolution, so it stays responsive on large recordings. Works on MCAP, rosbag2, and live agents.
 
 <p align="center">
   <a href="https://rsasaki0109.github.io/RobotScope/?layout=timeseries&demo=1">
@@ -99,7 +99,7 @@ The `timeseries` layout turns any numeric ROS2 field into a live plot next to th
 </p>
 
 <p align="center">
-  <em>Time-series demo (<code>layout=timeseries</code>): lateral / longitudinal error and cmd_vel overlaid with per-series Y axes; click a plot to seek the 3D scene, zoom for full-resolution detail, export to CSV.</em>
+  <em>Time-series demo (<code>layout=timeseries</code>): localization score and lateral / longitudinal error overlaid with per-series Y axes, plus a moving-average and a d/dt analysis channel computed from them; click a plot to seek the 3D scene, zoom for full-resolution detail, export to CSV.</em>
 </p>
 
 The timeline footer shows **all stack recipes** at the playhead (amber = Autoware, blue = Nav2, purple = MoveIt). Click colored ticks to jump. When recipes are active, the **cross-layout banner** below the command bar lists all stacks — click a chip to switch layout.

@@ -454,6 +454,7 @@ export function buildDerivedTimeSeries(
   for (const def of defs) {
     const result = computeDerivedSeries(def, sourceByKey);
     series.push(result.item);
+    sourceByKey.set(result.item.key, result.item);
     if (result.warning) {
       warnings.push(result.warning);
     }

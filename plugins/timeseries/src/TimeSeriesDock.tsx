@@ -369,10 +369,6 @@ export function TimeSeriesDock({
     () => new Set(snapshot?.selectedSeries.map((series) => series.key) ?? []),
     [snapshot?.selectedSeries],
   );
-  const realSelectedSeries = useMemo(
-    () => snapshot?.selectedSeries.filter((series) => !isDerivedSeriesKey(series.key)) ?? [],
-    [snapshot?.selectedSeries],
-  );
   const visibleSeries = snapshot?.selectedSeries.filter((series) => series.visible) ?? [];
   const visibleSampleCount = sampleCount(visibleSeries);
   const axisIndexByKey = useMemo(() => {
@@ -569,7 +565,7 @@ export function TimeSeriesDock({
                     <span>{snapshot.selectedSeries.length}</span>
                   </div>
                 </div>
-                <DerivedSeriesForm snapshot={snapshot} sourceSeries={realSelectedSeries} />
+                <DerivedSeriesForm snapshot={snapshot} sourceSeries={snapshot.selectedSeries} />
                 {snapshot.selectedSeries.length ? (
                   <ul className={styles.seriesList}>
                     {snapshot.selectedSeries.map((series) => {

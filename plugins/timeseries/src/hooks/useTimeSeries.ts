@@ -8,6 +8,7 @@ import {
 import {
   buildDerivedTimeSeries,
   derivedSeriesIdFromKey,
+  derivedSeriesKey,
   isDerivedSeriesKey,
 } from "../derived-series.js";
 import type {
@@ -269,10 +270,12 @@ export function useTimeSeries(slice: TimeSeriesViewerSlice): TimeSeriesDataState
 
     const sourceCount = requiredSourceCount(input.kind);
     const sourceKeys = input.sourceKeys.slice(0, sourceCount);
+    const isValidSource = (key: string) =>
+      seriesSelections.some((selection) => selection.key === key) ||
+      derivedDefs.some((def) => derivedSeriesKey(def.id) === key);
     if (
       sourceKeys.length !== sourceCount ||
-      sourceKeys.some((key) => isDerivedSeriesKey(key)) ||
-      sourceKeys.some((key) => !seriesSelections.some((selection) => selection.key === key))
+      !sourceKeys.every(isValidSource)
     ) {
       return;
     }
@@ -304,7 +307,7 @@ export function useTimeSeries(slice: TimeSeriesViewerSlice): TimeSeriesDataState
       }
       return [...current, def];
     });
-  }, [seriesSelections]);
+  }, [derivedDefs, seriesSelections]);
 
   const removeSeriesKey = useCallback((key: string) => {
     const derivedId = derivedSeriesIdFromKey(key);

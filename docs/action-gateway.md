@@ -1,4 +1,4 @@
-# Action gateway (v1.2 beta)
+# Action gateway (v1.2 GA)
 
 Permission-gated **live action goal send** from the viewer to a local ROS 2 agent.
 
@@ -25,7 +25,7 @@ npm run dev
 
 Demo agent **accepts** action goals but does not write to ROS (replay-only).
 
-## Fibonacci shortcut (v1.2 beta)
+## Fibonacci shortcut (v1.2)
 
 When **Allow action goals** is enabled and `/robotscope/demo/fibonacci` is allowlisted:
 
@@ -56,7 +56,7 @@ Session advertises allowlist:
 }
 ```
 
-Client Fibonacci goal (v1.2 beta):
+Client Fibonacci goal (v1.2):
 
 ```json
 {
@@ -86,7 +86,7 @@ Server response:
 - Python agent — `RobotScope/agent/robotscope_agent/bridge.py`
 - Viewer — command bar **Allow action goals** + **Send Fibonacci**
 
-## Out of scope (v1.2 beta)
+## Out of scope (v1.2)
 
 - Action feedback / result tracking UI
 - Arbitrary action goal editor

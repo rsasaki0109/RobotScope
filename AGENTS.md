@@ -30,8 +30,8 @@ RobotScope is an open observability platform for embodied intelligence — ROS2,
 
 | Path | Role |
 |------|------|
-| `RobotScope/docs/architecture.md` | Master architecture |
-| `RobotScope/packages/robotscope-core` | RDM, query API, ingest |
-| `RobotScope/packages/robotscope-viewer` | Web UI |
-| `RobotScope/plugins/autoware` | Autoware pack |
-| `RobotScope/agent` | ROS2 live bridge |
+| `docs/architecture.md` | Master architecture |
+| `packages/robotscope-core` | RDM, query API, ingest |
+| `packages/robotscope-viewer` | Web UI |
+| `plugins/autoware` | Autoware pack |
+| `agent` | ROS2 live bridge |

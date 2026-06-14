@@ -14,13 +14,13 @@ Beta consolidates Lanelet2 Boost binary heuristic parsing on v1.6 foundations. D
 
 ### Added
 
-- [docs/release/v1.7.0-beta.0.md](RobotScope/docs/release/v1.7.0-beta.0.md)
-- [docs/migration/v1.7-alpha-to-beta.md](RobotScope/docs/migration/v1.7-alpha-to-beta.md)
+- [docs/release/v1.7.0-beta.0.md](docs/release/v1.7.0-beta.0.md)
+- [docs/migration/v1.7-alpha-to-beta.md](docs/migration/v1.7-alpha-to-beta.md)
 
 ### Changed
 
-- README + [known-limitations.md](RobotScope/docs/known-limitations.md) updated for v1.7 beta boundaries
-- [docs/lanelet2-boost-bin.md](RobotScope/docs/lanelet2-boost-bin.md) — beta scope header
+- README + [known-limitations.md](docs/known-limitations.md) updated for v1.7 beta boundaries
+- [docs/lanelet2-boost-bin.md](docs/lanelet2-boost-bin.md) — beta scope header
 
 ## [1.7.0-alpha.0] - 2026-06-13
 
@@ -30,16 +30,16 @@ Native Autoware `lanelet2_io` Boost binary parsing (alpha heuristic).
 
 - **`parseBoostLaneletMap()`** — Boost archive detection + lanelet boundary extraction in `@robotscope/core`
 - **`lanelet-boost-bin.ts`** — point / linestring / lanelet layer scan + axis-aligned bounds fallback
-- Fixture `RobotScope/packages/robotscope-core/fixtures/lanelet-boost-1llt.bin` + `scripts/test-lanelet-boost.mjs`
+- Fixture `packages/robotscope-core/fixtures/lanelet-boost-1llt.bin` + `scripts/test-lanelet-boost.mjs`
 - `scripts/generate-lanelet-boost-fixture.sh` — regenerate fixture from ROS lanelet2
-- [docs/lanelet2-boost-bin.md](RobotScope/docs/lanelet2-boost-bin.md)
-- [docs/release/v1.7.0-alpha.0.md](RobotScope/docs/release/v1.7.0-alpha.0.md)
+- [docs/lanelet2-boost-bin.md](docs/lanelet2-boost-bin.md)
+- [docs/release/v1.7.0-alpha.0.md](docs/release/v1.7.0-alpha.0.md)
 
 ### Changed
 
 - **`parseLaneletMapBin()`** — returns `format: "boost-lanelet2"` for native bins (after RL2D magic check)
 - Autoware Map panel labels boost parses as **(Boost bin)**
-- [known-limitations.md](RobotScope/docs/known-limitations.md) — alpha boost scope vs OSM sidecar
+- [known-limitations.md](docs/known-limitations.md) — alpha boost scope vs OSM sidecar
 
 ## [1.6.0] - 2026-06-13
 
@@ -51,8 +51,8 @@ v1.6 GA marks stable delivery of alpha/beta features on top of v1.5. No intentio
 
 ### Added
 
-- [docs/release/v1.6.0.md](RobotScope/docs/release/v1.6.0.md)
-- [docs/migration/v1.6-beta-to-ga.md](RobotScope/docs/migration/v1.6-beta-to-ga.md)
+- [docs/release/v1.6.0.md](docs/release/v1.6.0.md)
+- [docs/migration/v1.6-beta-to-ga.md](docs/migration/v1.6-beta-to-ga.md)
 
 ### Changed
 
@@ -69,13 +69,13 @@ Beta consolidates action goal preempt on v1.5 live gateways. Documentation and k
 
 ### Added
 
-- [docs/release/v1.6.0-beta.0.md](RobotScope/docs/release/v1.6.0-beta.0.md)
-- [docs/migration/v1.6-alpha-to-beta.md](RobotScope/docs/migration/v1.6-alpha-to-beta.md)
+- [docs/release/v1.6.0-beta.0.md](docs/release/v1.6.0-beta.0.md)
+- [docs/migration/v1.6-alpha-to-beta.md](docs/migration/v1.6-alpha-to-beta.md)
 
 ### Changed
 
-- README + [known-limitations.md](RobotScope/docs/known-limitations.md) updated for v1.6 beta boundaries
-- [docs/action-gateway.md](RobotScope/docs/action-gateway.md) — beta scope header
+- README + [known-limitations.md](docs/known-limitations.md) updated for v1.6 beta boundaries
+- [docs/action-gateway.md](docs/action-gateway.md) — beta scope header
 
 ## [1.6.0-alpha.0] - 2026-06-13
 
@@ -88,12 +88,12 @@ Preempt controls for live Fibonacci action goals.
 - Python agent preempt path in `send_action_goal()` via cancel-then-send
 - Demo live agent preempt for simulated Fibonacci
 - Timeline event kind **`preempt_requested`**
-- [docs/release/v1.6.0-alpha.0.md](RobotScope/docs/release/v1.6.0-alpha.0.md)
+- [docs/release/v1.6.0-alpha.0.md](docs/release/v1.6.0-alpha.0.md)
 
 ### Changed
 
-- [docs/action-gateway.md](RobotScope/docs/action-gateway.md) updated for v1.6 alpha preempt
-- [known-limitations.md](RobotScope/docs/known-limitations.md) updated — same-action preempt only
+- [docs/action-gateway.md](docs/action-gateway.md) updated for v1.6 alpha preempt
+- [known-limitations.md](docs/known-limitations.md) updated — same-action preempt only
 
 ## [1.5.0] - 2026-06-13
 
@@ -105,8 +105,8 @@ v1.5 GA marks stable delivery of alpha/beta features on top of v1.4. No intentio
 
 ### Added
 
-- [docs/release/v1.5.0.md](RobotScope/docs/release/v1.5.0.md)
-- [docs/migration/v1.5-beta-to-ga.md](RobotScope/docs/migration/v1.5-beta-to-ga.md)
+- [docs/release/v1.5.0.md](docs/release/v1.5.0.md)
+- [docs/migration/v1.5-beta-to-ga.md](docs/migration/v1.5-beta-to-ga.md)
 
 ### Changed
 
@@ -123,13 +123,13 @@ Beta consolidates action timeline panel on v1.4 live gateways. Documentation and
 
 ### Added
 
-- [docs/release/v1.5.0-beta.0.md](RobotScope/docs/release/v1.5.0-beta.0.md)
-- [docs/migration/v1.5-alpha-to-beta.md](RobotScope/docs/migration/v1.5-alpha-to-beta.md)
+- [docs/release/v1.5.0-beta.0.md](docs/release/v1.5.0-beta.0.md)
+- [docs/migration/v1.5-alpha-to-beta.md](docs/migration/v1.5-alpha-to-beta.md)
 
 ### Changed
 
-- README + [known-limitations.md](RobotScope/docs/known-limitations.md) updated for v1.5 beta boundaries
-- [docs/action-gateway.md](RobotScope/docs/action-gateway.md) — beta scope header
+- README + [known-limitations.md](docs/known-limitations.md) updated for v1.5 beta boundaries
+- [docs/action-gateway.md](docs/action-gateway.md) — beta scope header
 
 ## [1.5.0-alpha.0] - 2026-06-13
 
@@ -139,12 +139,12 @@ Dedicated action timeline panel for live Fibonacci workflows.
 
 - Sidebar **Action timeline** panel — goal / feedback / outcome / cancel event history
 - `LiveActionEvent` types + `appendLiveActionEvent()` / `shouldAppendLiveActionFeedbackEvent()` helpers
-- [docs/release/v1.5.0-alpha.0.md](RobotScope/docs/release/v1.5.0-alpha.0.md)
+- [docs/release/v1.5.0-alpha.0.md](docs/release/v1.5.0-alpha.0.md)
 
 ### Changed
 
-- [docs/action-gateway.md](RobotScope/docs/action-gateway.md) updated for v1.5 alpha timeline panel
-- [known-limitations.md](RobotScope/docs/known-limitations.md) updated — sidebar timeline only; no cross-session persistence
+- [docs/action-gateway.md](docs/action-gateway.md) updated for v1.5 alpha timeline panel
+- [known-limitations.md](docs/known-limitations.md) updated — sidebar timeline only; no cross-session persistence
 
 ## [1.4.0] - 2026-06-13
 
@@ -156,8 +156,8 @@ v1.4 GA marks stable delivery of alpha/beta features on top of v1.3. No intentio
 
 ### Added
 
-- [docs/release/v1.4.0.md](RobotScope/docs/release/v1.4.0.md)
-- [docs/migration/v1.4-beta-to-ga.md](RobotScope/docs/migration/v1.4-beta-to-ga.md)
+- [docs/release/v1.4.0.md](docs/release/v1.4.0.md)
+- [docs/migration/v1.4-beta-to-ga.md](docs/migration/v1.4-beta-to-ga.md)
 
 ### Changed
 
@@ -174,13 +174,13 @@ Beta consolidates action goal cancel on v1.3 live gateways. Documentation and kn
 
 ### Added
 
-- [docs/release/v1.4.0-beta.0.md](RobotScope/docs/release/v1.4.0-beta.0.md)
-- [docs/migration/v1.4-alpha-to-beta.md](RobotScope/docs/migration/v1.4-alpha-to-beta.md)
+- [docs/release/v1.4.0-beta.0.md](docs/release/v1.4.0-beta.0.md)
+- [docs/migration/v1.4-alpha-to-beta.md](docs/migration/v1.4-alpha-to-beta.md)
 
 ### Changed
 
-- README + [known-limitations.md](RobotScope/docs/known-limitations.md) updated for v1.4 beta boundaries
-- [docs/action-gateway.md](RobotScope/docs/action-gateway.md) — beta scope header
+- README + [known-limitations.md](docs/known-limitations.md) updated for v1.4 beta boundaries
+- [docs/action-gateway.md](docs/action-gateway.md) — beta scope header
 
 ## [1.4.0-alpha.0] - 2026-06-13
 
@@ -193,12 +193,12 @@ Permission-gated action goal cancel for live Fibonacci workflows.
 - Python agent `cancel_action_goal()` via ROS `GoalHandle.cancel_goal_async()`
 - Demo live agent cancels simulated Fibonacci progress
 - `buildFibonacciActionCancelRequest()` helper in core
-- [docs/release/v1.4.0-alpha.0.md](RobotScope/docs/release/v1.4.0-alpha.0.md)
+- [docs/release/v1.4.0-alpha.0.md](docs/release/v1.4.0-alpha.0.md)
 
 ### Changed
 
-- [docs/action-gateway.md](RobotScope/docs/action-gateway.md) updated for v1.4 alpha cancel
-- [known-limitations.md](RobotScope/docs/known-limitations.md) updated — cancel available; no preempt UI
+- [docs/action-gateway.md](docs/action-gateway.md) updated for v1.4 alpha cancel
+- [known-limitations.md](docs/known-limitations.md) updated — cancel available; no preempt UI
 
 ## [1.3.0] - 2026-06-13
 
@@ -210,8 +210,8 @@ v1.3 GA marks stable delivery of alpha/beta features on top of v1.2. No intentio
 
 ### Added
 
-- [docs/release/v1.3.0.md](RobotScope/docs/release/v1.3.0.md)
-- [docs/migration/v1.3-beta-to-ga.md](RobotScope/docs/migration/v1.3-beta-to-ga.md)
+- [docs/release/v1.3.0.md](docs/release/v1.3.0.md)
+- [docs/migration/v1.3-beta-to-ga.md](docs/migration/v1.3-beta-to-ga.md)
 
 ### Changed
 
@@ -228,13 +228,13 @@ Beta consolidates action feedback / outcome tracking on v1.2 live gateways. Docu
 
 ### Added
 
-- [docs/release/v1.3.0-beta.0.md](RobotScope/docs/release/v1.3.0-beta.0.md)
-- [docs/migration/v1.3-alpha-to-beta.md](RobotScope/docs/migration/v1.3-alpha-to-beta.md)
+- [docs/release/v1.3.0-beta.0.md](docs/release/v1.3.0-beta.0.md)
+- [docs/migration/v1.3-alpha-to-beta.md](docs/migration/v1.3-alpha-to-beta.md)
 
 ### Changed
 
-- README + [known-limitations.md](RobotScope/docs/known-limitations.md) updated for v1.3 beta boundaries
-- [docs/action-gateway.md](RobotScope/docs/action-gateway.md) — beta scope header
+- README + [known-limitations.md](docs/known-limitations.md) updated for v1.3 beta boundaries
+- [docs/action-gateway.md](docs/action-gateway.md) — beta scope header
 
 ## [1.3.0-alpha.0] - 2026-06-12
 
@@ -247,12 +247,12 @@ Live action feedback / outcome tracking for Fibonacci goals.
 - Python agent streams Fibonacci feedback + outcome from ROS `ActionClient`
 - Demo live agent simulates Fibonacci progress without ROS
 - `applyLiveActionProgressUpdate()` + `formatFibonacciSequence()` helpers in core
-- [docs/release/v1.3.0-alpha.0.md](RobotScope/docs/release/v1.3.0-alpha.0.md)
+- [docs/release/v1.3.0-alpha.0.md](docs/release/v1.3.0-alpha.0.md)
 
 ### Changed
 
-- [docs/action-gateway.md](RobotScope/docs/action-gateway.md) updated for v1.3 alpha tracking
-- [known-limitations.md](RobotScope/docs/known-limitations.md) updated — Fibonacci tracking in command bar only
+- [docs/action-gateway.md](docs/action-gateway.md) updated for v1.3 alpha tracking
+- [known-limitations.md](docs/known-limitations.md) updated — Fibonacci tracking in command bar only
 
 ## [1.2.0] - 2026-06-13
 
@@ -264,8 +264,8 @@ v1.2 GA marks stable delivery of alpha/beta features on top of v1.1. No intentio
 
 ### Added
 
-- [docs/release/v1.2.0.md](RobotScope/docs/release/v1.2.0.md)
-- [docs/migration/v1.2-beta-to-ga.md](RobotScope/docs/migration/v1.2-beta-to-ga.md)
+- [docs/release/v1.2.0.md](docs/release/v1.2.0.md)
+- [docs/migration/v1.2-beta-to-ga.md](docs/migration/v1.2-beta-to-ga.md)
 
 ### Changed
 
@@ -282,13 +282,13 @@ Beta consolidates action goal gateway on v1.1 live gateways. Documentation and k
 
 ### Added
 
-- [docs/release/v1.2.0-beta.0.md](RobotScope/docs/release/v1.2.0-beta.0.md)
-- [docs/migration/v1.2-alpha-to-beta.md](RobotScope/docs/migration/v1.2-alpha-to-beta.md)
+- [docs/release/v1.2.0-beta.0.md](docs/release/v1.2.0-beta.0.md)
+- [docs/migration/v1.2-alpha-to-beta.md](docs/migration/v1.2-alpha-to-beta.md)
 
 ### Changed
 
-- README + [known-limitations.md](RobotScope/docs/known-limitations.md) updated for v1.2 beta boundaries
-- [docs/action-gateway.md](RobotScope/docs/action-gateway.md) — beta scope header
+- README + [known-limitations.md](docs/known-limitations.md) updated for v1.2 beta boundaries
+- [docs/action-gateway.md](docs/action-gateway.md) — beta scope header
 
 ## [1.2.0-alpha.0] - 2026-06-13
 
@@ -300,13 +300,13 @@ Permission-gated action goal gateway for live agents.
 - Agent **`--allow-action ACTION`** allowlist + session **`capabilities.command_action_send_goal`**
 - Viewer **Allow action goals** opt-in + **Send Fibonacci** button with order input
 - `buildFibonacciActionGoalRequest()` for `example_interfaces/action/Fibonacci` shortcut
-- [docs/action-gateway.md](RobotScope/docs/action-gateway.md)
-- [docs/release/v1.2.0-alpha.0.md](RobotScope/docs/release/v1.2.0-alpha.0.md)
+- [docs/action-gateway.md](docs/action-gateway.md)
+- [docs/release/v1.2.0-alpha.0.md](docs/release/v1.2.0-alpha.0.md)
 
 ### Changed
 
 - Demo live agent defaults include **`--allow-action /robotscope/demo/fibonacci`**
-- [known-limitations.md](RobotScope/docs/known-limitations.md) updated for v1.2 alpha action gateway
+- [known-limitations.md](docs/known-limitations.md) updated for v1.2 alpha action gateway
 
 ## [1.1.0] - 2026-06-13
 
@@ -318,8 +318,8 @@ v1.1 GA marks stable delivery of alpha/beta features on top of v1.0. No intentio
 
 ### Added
 
-- [docs/release/v1.1.0.md](RobotScope/docs/release/v1.1.0.md)
-- [docs/migration/v1.1-beta-to-ga.md](RobotScope/docs/migration/v1.1-beta-to-ga.md)
+- [docs/release/v1.1.0.md](docs/release/v1.1.0.md)
+- [docs/migration/v1.1-beta-to-ga.md](docs/migration/v1.1-beta-to-ga.md)
 
 ### Changed
 
@@ -336,13 +336,13 @@ Beta consolidates service call gateway on v1.0 command gateway. Documentation an
 
 ### Added
 
-- [docs/release/v1.1.0-beta.0.md](RobotScope/docs/release/v1.1.0-beta.0.md)
-- [docs/migration/v1.1-alpha-to-beta.md](RobotScope/docs/migration/v1.1-alpha-to-beta.md)
+- [docs/release/v1.1.0-beta.0.md](docs/release/v1.1.0-beta.0.md)
+- [docs/migration/v1.1-alpha-to-beta.md](docs/migration/v1.1-alpha-to-beta.md)
 
 ### Changed
 
-- README + [known-limitations.md](RobotScope/docs/known-limitations.md) updated for v1.1 beta boundaries
-- [docs/service-gateway.md](RobotScope/docs/service-gateway.md) — beta scope header
+- README + [known-limitations.md](docs/known-limitations.md) updated for v1.1 beta boundaries
+- [docs/service-gateway.md](docs/service-gateway.md) — beta scope header
 
 ## [1.1.0-alpha.0] - 2026-06-13
 
@@ -354,13 +354,13 @@ Permission-gated service call gateway for live agents.
 - Agent **`--allow-service SERVICE`** allowlist + session **`capabilities.command_service_call`**
 - Viewer **Allow service calls** opt-in + **Call trigger** button
 - `buildTriggerServiceCallRequest()` for `std_srvs/srv/Trigger` shortcut
-- [docs/service-gateway.md](RobotScope/docs/service-gateway.md)
-- [docs/release/v1.1.0-alpha.0.md](RobotScope/docs/release/v1.1.0-alpha.0.md)
+- [docs/service-gateway.md](docs/service-gateway.md)
+- [docs/release/v1.1.0-alpha.0.md](docs/release/v1.1.0-alpha.0.md)
 
 ### Changed
 
 - Demo live agent defaults include **`--allow-service /robotscope/demo/trigger`**
-- [known-limitations.md](RobotScope/docs/known-limitations.md) updated for v1.1 alpha service gateway
+- [known-limitations.md](docs/known-limitations.md) updated for v1.1 alpha service gateway
 
 ## [1.0.0] - 2026-06-13
 
@@ -372,8 +372,8 @@ v1.0 GA marks stable delivery of alpha/beta features on top of v0.9. No intentio
 
 ### Added
 
-- [docs/release/v1.0.0.md](RobotScope/docs/release/v1.0.0.md)
-- [docs/migration/v1.0-beta-to-ga.md](RobotScope/docs/migration/v1.0-beta-to-ga.md)
+- [docs/release/v1.0.0.md](docs/release/v1.0.0.md)
+- [docs/migration/v1.0-beta-to-ga.md](docs/migration/v1.0-beta-to-ga.md)
 
 ### Changed
 
@@ -390,13 +390,13 @@ Beta consolidates 6-DOF Twist editor on the command gateway. Documentation and k
 
 ### Added
 
-- [docs/release/v1.0.0-beta.0.md](RobotScope/docs/release/v1.0.0-beta.0.md)
-- [docs/migration/v1.0-alpha-to-beta.md](RobotScope/docs/migration/v1.0-alpha-to-beta.md)
+- [docs/release/v1.0.0-beta.0.md](docs/release/v1.0.0-beta.0.md)
+- [docs/migration/v1.0-alpha-to-beta.md](docs/migration/v1.0-alpha-to-beta.md)
 
 ### Changed
 
-- README + [known-limitations.md](RobotScope/docs/known-limitations.md) updated for v1.0 beta boundaries
-- [docs/command-gateway.md](RobotScope/docs/command-gateway.md) — beta scope header
+- README + [known-limitations.md](docs/known-limitations.md) updated for v1.0 beta boundaries
+- [docs/command-gateway.md](docs/command-gateway.md) — beta scope header
 
 ## [1.0.0-alpha.0] - 2026-06-13
 
@@ -407,13 +407,13 @@ Full 6-DOF Twist editor for command gateway.
 - **`twist`** payload fields — `linear_y`, `linear_z`, `angular_x`, `angular_y` in addition to v0.9 `linear_x` / `angular_z`
 - Viewer **vx / vy / vz / ωx / ωy / ωz** inputs + updated publish status summary
 - `normalizeTwistVelocityCommand()` and `formatTwistVelocitySummary()` in core command gateway helpers
-- [docs/release/v1.0.0-alpha.0.md](RobotScope/docs/release/v1.0.0-alpha.0.md)
+- [docs/release/v1.0.0-alpha.0.md](docs/release/v1.0.0-alpha.0.md)
 
 ### Changed
 
 - Python ROS agent builds full `geometry_msgs/msg/Twist` from six-axis `twist` payload
-- [docs/command-gateway.md](RobotScope/docs/command-gateway.md) updated for v1.0 alpha 6-DOF editor
-- [known-limitations.md](RobotScope/docs/known-limitations.md) updated for v1.0 alpha
+- [docs/command-gateway.md](docs/command-gateway.md) updated for v1.0 alpha 6-DOF editor
+- [known-limitations.md](docs/known-limitations.md) updated for v1.0 alpha
 
 ## [0.9.0] - 2026-06-13
 
@@ -425,8 +425,8 @@ v0.9 GA marks stable delivery of alpha/beta features on top of v0.8. No intentio
 
 ### Added
 
-- [docs/release/v0.9.0.md](RobotScope/docs/release/v0.9.0.md)
-- [docs/migration/v0.9-beta-to-ga.md](RobotScope/docs/migration/v0.9-beta-to-ga.md)
+- [docs/release/v0.9.0.md](docs/release/v0.9.0.md)
+- [docs/migration/v0.9-beta-to-ga.md](docs/migration/v0.9-beta-to-ga.md)
 
 ### Changed
 
@@ -443,13 +443,13 @@ Beta consolidates Twist velocity editor on the command gateway. Documentation an
 
 ### Added
 
-- [docs/release/v0.9.0-beta.0.md](RobotScope/docs/release/v0.9.0-beta.0.md)
-- [docs/migration/v0.9-alpha-to-beta.md](RobotScope/docs/migration/v0.9-alpha-to-beta.md)
+- [docs/release/v0.9.0-beta.0.md](docs/release/v0.9.0-beta.0.md)
+- [docs/migration/v0.9-alpha-to-beta.md](docs/migration/v0.9-alpha-to-beta.md)
 
 ### Changed
 
-- README + [known-limitations.md](RobotScope/docs/known-limitations.md) updated for v0.9 beta boundaries
-- [docs/command-gateway.md](RobotScope/docs/command-gateway.md) — beta scope header
+- README + [known-limitations.md](docs/known-limitations.md) updated for v0.9 beta boundaries
+- [docs/command-gateway.md](docs/command-gateway.md) — beta scope header
 
 ## [0.9.0-alpha.0] - 2026-06-13
 
@@ -460,12 +460,12 @@ Twist velocity editor for command gateway.
 - **`twist`** field on `command.publish` — `linear_x` / `angular_z` for `geometry_msgs/msg/Twist`
 - Viewer **vx** / **ωz** inputs + **Publish cmd_vel** button
 - `buildTwistPublishRequest()` in core command gateway helpers
-- [docs/release/v0.9.0-alpha.0.md](RobotScope/docs/release/v0.9.0-alpha.0.md)
+- [docs/release/v0.9.0-alpha.0.md](docs/release/v0.9.0-alpha.0.md)
 
 ### Changed
 
-- [docs/command-gateway.md](RobotScope/docs/command-gateway.md) updated for v0.9 alpha velocity editor
-- [known-limitations.md](RobotScope/docs/known-limitations.md) updated for v0.9 alpha
+- [docs/command-gateway.md](docs/command-gateway.md) updated for v0.9 alpha velocity editor
+- [known-limitations.md](docs/known-limitations.md) updated for v0.9 alpha
 
 ## [0.8.0] - 2026-06-13
 
@@ -477,8 +477,8 @@ v0.8 GA marks stable delivery of alpha/beta features on top of v0.7. No intentio
 
 ### Added
 
-- [docs/release/v0.8.0.md](RobotScope/docs/release/v0.8.0.md)
-- [docs/migration/v0.8-beta-to-ga.md](RobotScope/docs/migration/v0.8-beta-to-ga.md)
+- [docs/release/v0.8.0.md](docs/release/v0.8.0.md)
+- [docs/migration/v0.8-beta-to-ga.md](docs/migration/v0.8-beta-to-ga.md)
 
 ### Changed
 
@@ -495,13 +495,13 @@ Beta consolidates permission-gated command gateway. Documentation and known-limi
 
 ### Added
 
-- [docs/release/v0.8.0-beta.0.md](RobotScope/docs/release/v0.8.0-beta.0.md)
-- [docs/migration/v0.8-alpha-to-beta.md](RobotScope/docs/migration/v0.8-alpha-to-beta.md)
+- [docs/release/v0.8.0-beta.0.md](docs/release/v0.8.0-beta.0.md)
+- [docs/migration/v0.8-alpha-to-beta.md](docs/migration/v0.8-alpha-to-beta.md)
 
 ### Changed
 
-- README + [known-limitations.md](RobotScope/docs/known-limitations.md) updated for v0.8 beta boundaries
-- [docs/command-gateway.md](RobotScope/docs/command-gateway.md) — beta scope header
+- README + [known-limitations.md](docs/known-limitations.md) updated for v0.8 beta boundaries
+- [docs/command-gateway.md](docs/command-gateway.md) — beta scope header
 
 ## [0.8.0-alpha.0] - 2026-06-13
 
@@ -513,12 +513,12 @@ Permission-gated live command gateway (zero cmd_vel).
 - ROS 2 agent **`--allow-publish TOPIC`** allowlist + lazy publishers
 - Demo live agent **`--allow-publish`** + default in `npm run demo:live-agent`
 - Viewer **Allow publish** opt-in + **Zero cmd_vel** when agent allowlists `/cmd_vel`
-- [docs/command-gateway.md](RobotScope/docs/command-gateway.md)
-- [docs/release/v0.8.0-alpha.0.md](RobotScope/docs/release/v0.8.0-alpha.0.md)
+- [docs/command-gateway.md](docs/command-gateway.md)
+- [docs/release/v0.8.0-alpha.0.md](docs/release/v0.8.0-alpha.0.md)
 
 ### Changed
 
-- [known-limitations.md](RobotScope/docs/known-limitations.md) updated for v0.8 alpha gateway scope
+- [known-limitations.md](docs/known-limitations.md) updated for v0.8 alpha gateway scope
 
 ## [0.7.0] - 2026-06-13
 
@@ -530,8 +530,8 @@ v0.7 GA marks stable delivery of alpha/beta features on top of v0.6. No intentio
 
 ### Added
 
-- [docs/release/v0.7.0.md](RobotScope/docs/release/v0.7.0.md)
-- [docs/migration/v0.7-beta-to-ga.md](RobotScope/docs/migration/v0.7-beta-to-ga.md)
+- [docs/release/v0.7.0.md](docs/release/v0.7.0.md)
+- [docs/migration/v0.7-beta-to-ga.md](docs/migration/v0.7-beta-to-ga.md)
 
 ### Changed
 
@@ -548,13 +548,13 @@ Beta consolidates OSM regulatory elements overlay. Documentation and known-limit
 
 ### Added
 
-- [docs/release/v0.7.0-beta.0.md](RobotScope/docs/release/v0.7.0-beta.0.md)
-- [docs/migration/v0.7-alpha-to-beta.md](RobotScope/docs/migration/v0.7-alpha-to-beta.md)
+- [docs/release/v0.7.0-beta.0.md](docs/release/v0.7.0-beta.0.md)
+- [docs/migration/v0.7-alpha-to-beta.md](docs/migration/v0.7-alpha-to-beta.md)
 
 ### Changed
 
-- README + [known-limitations.md](RobotScope/docs/known-limitations.md) updated for v0.7 beta boundaries
-- [docs/lanelet2-osm.md](RobotScope/docs/lanelet2-osm.md) — beta scope header
+- README + [known-limitations.md](docs/known-limitations.md) updated for v0.7 beta boundaries
+- [docs/lanelet2-osm.md](docs/lanelet2-osm.md) — beta scope header
 
 ## [0.7.0-alpha.0] - 2026-06-13
 
@@ -565,12 +565,12 @@ OSM regulatory elements (traffic rules geometry).
 - **`parseLaneletOsm()`** — `<relation type=regulatory_element>` with `subtype` + geometry members
 - Map panel regulatory count + subtype breakdown + purple overlay in 2D preview
 - 3D trajectories for regulatory `ref_line` / `refers` / `crosswalk_polygon` / `light_bulbs`
-- [docs/release/v0.7.0-alpha.0.md](RobotScope/docs/release/v0.7.0-alpha.0.md)
+- [docs/release/v0.7.0-alpha.0.md](docs/release/v0.7.0-alpha.0.md)
 
 ### Changed
 
-- [docs/lanelet2-osm.md](RobotScope/docs/lanelet2-osm.md) updated for v0.7 alpha regulatory elements
-- [known-limitations.md](RobotScope/docs/known-limitations.md) updated for v0.7 alpha
+- [docs/lanelet2-osm.md](docs/lanelet2-osm.md) updated for v0.7 alpha regulatory elements
+- [known-limitations.md](docs/known-limitations.md) updated for v0.7 alpha
 
 ## [0.6.0] - 2026-06-13
 
@@ -582,8 +582,8 @@ v0.6 GA marks stable delivery of alpha/beta features on top of v0.5. No intentio
 
 ### Added
 
-- [docs/release/v0.6.0.md](RobotScope/docs/release/v0.6.0.md)
-- [docs/migration/v0.6-beta-to-ga.md](RobotScope/docs/migration/v0.6-beta-to-ga.md)
+- [docs/release/v0.6.0.md](docs/release/v0.6.0.md)
+- [docs/migration/v0.6-beta-to-ga.md](docs/migration/v0.6-beta-to-ga.md)
 
 ### Changed
 
@@ -600,13 +600,13 @@ Beta consolidates OSM lanelet relations overlay. Documentation and known-limitat
 
 ### Added
 
-- [docs/release/v0.6.0-beta.0.md](RobotScope/docs/release/v0.6.0-beta.0.md)
-- [docs/migration/v0.6-alpha-to-beta.md](RobotScope/docs/migration/v0.6-alpha-to-beta.md)
+- [docs/release/v0.6.0-beta.0.md](docs/release/v0.6.0-beta.0.md)
+- [docs/migration/v0.6-alpha-to-beta.md](docs/migration/v0.6-alpha-to-beta.md)
 
 ### Changed
 
-- README + [known-limitations.md](RobotScope/docs/known-limitations.md) updated for v0.6 beta boundaries
-- [docs/lanelet2-osm.md](RobotScope/docs/lanelet2-osm.md) — beta scope header
+- README + [known-limitations.md](docs/known-limitations.md) updated for v0.6 beta boundaries
+- [docs/lanelet2-osm.md](docs/lanelet2-osm.md) — beta scope header
 
 ## [0.6.0-alpha.0] - 2026-06-12
 
@@ -617,12 +617,12 @@ OSM lanelet relations (left/right/centerline).
 - **`parseLaneletOsm()`** — `<relation type=lanelet>` member resolution
 - Map panel lanelet count + RL2D-style OSM lanelet 2D preview
 - 3D closed bounds for lanelet left/right + centerline trajectories
-- [docs/release/v0.6.0-alpha.0.md](RobotScope/docs/release/v0.6.0-alpha.0.md)
+- [docs/release/v0.6.0-alpha.0.md](docs/release/v0.6.0-alpha.0.md)
 
 ### Changed
 
-- [docs/lanelet2-osm.md](RobotScope/docs/lanelet2-osm.md) updated for v0.6 alpha relations
-- [known-limitations.md](RobotScope/docs/known-limitations.md) updated for v0.6 alpha
+- [docs/lanelet2-osm.md](docs/lanelet2-osm.md) updated for v0.6 alpha relations
+- [known-limitations.md](docs/known-limitations.md) updated for v0.6 alpha
 
 ## [0.5.0] - 2026-06-13
 
@@ -634,8 +634,8 @@ v0.5 GA marks stable delivery of alpha/beta features on top of v0.4. No intentio
 
 ### Added
 
-- [docs/release/v0.5.0.md](RobotScope/docs/release/v0.5.0.md)
-- [docs/migration/v0.5-beta-to-ga.md](RobotScope/docs/migration/v0.5-beta-to-ga.md)
+- [docs/release/v0.5.0.md](docs/release/v0.5.0.md)
+- [docs/migration/v0.5-beta-to-ga.md](docs/migration/v0.5-beta-to-ga.md)
 
 ### Changed
 
@@ -652,14 +652,14 @@ Beta consolidates Lanelet2 OSM sidecar overlay. Documentation and known-limitati
 
 ### Added
 
-- [docs/release/v0.5.0-beta.0.md](RobotScope/docs/release/v0.5.0-beta.0.md)
-- [docs/migration/v0.5-alpha-to-beta.md](RobotScope/docs/migration/v0.5-alpha-to-beta.md)
+- [docs/release/v0.5.0-beta.0.md](docs/release/v0.5.0-beta.0.md)
+- [docs/migration/v0.5-alpha-to-beta.md](docs/migration/v0.5-alpha-to-beta.md)
 - README hero GIF (`docs/assets/readme-hero.gif`) + `npm run capture:readme-hero`
 
 ### Changed
 
-- README + [known-limitations.md](RobotScope/docs/known-limitations.md) updated for v0.5 beta boundaries
-- [docs/lanelet2-osm.md](RobotScope/docs/lanelet2-osm.md) — beta scope header
+- README + [known-limitations.md](docs/known-limitations.md) updated for v0.5 beta boundaries
+- [docs/lanelet2-osm.md](docs/lanelet2-osm.md) — beta scope header
 
 ## [0.5.0-alpha.0] - 2026-06-12
 
@@ -670,11 +670,11 @@ Lanelet2 OSM sidecar overlay (first native map ingest step).
 - **`parseLaneletOsm()`** — Autoware OSM subset (`local_x`/`local_y` nodes + ways)
 - Viewer **Load map OSM** / **Clear OSM** commands
 - Map panel 2D preview + 3D trajectory merge for OSM sidecar
-- [docs/lanelet2-osm.md](RobotScope/docs/lanelet2-osm.md)
+- [docs/lanelet2-osm.md](docs/lanelet2-osm.md)
 
 ### Changed
 
-- [known-limitations.md](RobotScope/docs/known-limitations.md) updated for v0.5 alpha
+- [known-limitations.md](docs/known-limitations.md) updated for v0.5 alpha
 
 ## [0.4.0] - 2026-06-12
 
@@ -686,8 +686,8 @@ v0.4 GA marks stable delivery of alpha/beta features on top of v0.3. No intentio
 
 ### Added
 
-- [docs/release/v0.4.0.md](RobotScope/docs/release/v0.4.0.md)
-- [docs/migration/v0.4-beta-to-ga.md](RobotScope/docs/migration/v0.4-beta-to-ga.md)
+- [docs/release/v0.4.0.md](docs/release/v0.4.0.md)
+- [docs/migration/v0.4-beta-to-ga.md](docs/migration/v0.4-beta-to-ga.md)
 
 ### Changed
 
@@ -704,13 +704,13 @@ Beta consolidates rosbag2 folder bag ingest. Documentation and known-limitations
 
 ### Added
 
-- [docs/release/v0.4.0-beta.0.md](RobotScope/docs/release/v0.4.0-beta.0.md)
-- [docs/migration/v0.4-alpha-to-beta.md](RobotScope/docs/migration/v0.4-alpha-to-beta.md)
+- [docs/release/v0.4.0-beta.0.md](docs/release/v0.4.0-beta.0.md)
+- [docs/migration/v0.4-alpha-to-beta.md](docs/migration/v0.4-alpha-to-beta.md)
 
 ### Changed
 
-- README + [known-limitations.md](RobotScope/docs/known-limitations.md) updated for v0.4 beta boundaries
-- [docs/rosbag2.md](RobotScope/docs/rosbag2.md) — beta scope header
+- README + [known-limitations.md](docs/known-limitations.md) updated for v0.4 beta boundaries
+- [docs/rosbag2.md](docs/rosbag2.md) — beta scope header
 
 ## [0.4.0-alpha.0] - 2026-06-12
 
@@ -725,7 +725,7 @@ Rosbag2 folder bag ingest (`metadata.yaml` + multiple `.db3`).
 
 ### Changed
 
-- [docs/rosbag2.md](RobotScope/docs/rosbag2.md) + [known-limitations.md](RobotScope/docs/known-limitations.md) updated for v0.4 alpha
+- [docs/rosbag2.md](docs/rosbag2.md) + [known-limitations.md](docs/known-limitations.md) updated for v0.4 alpha
 
 ## [0.3.0] - 2026-06-12
 
@@ -737,8 +737,8 @@ v0.3 GA marks stable delivery of alpha/beta features on top of v0.2. No intentio
 
 ### Added
 
-- [docs/release/v0.3.0.md](RobotScope/docs/release/v0.3.0.md)
-- [docs/migration/v0.3-beta-to-ga.md](RobotScope/docs/migration/v0.3-beta-to-ga.md)
+- [docs/release/v0.3.0.md](docs/release/v0.3.0.md)
+- [docs/migration/v0.3-beta-to-ga.md](docs/migration/v0.3-beta-to-ga.md)
 
 ### Changed
 
@@ -755,13 +755,13 @@ Beta consolidates rosbag2 sidecar cache. Documentation and known-limitations bou
 
 ### Added
 
-- [docs/release/v0.3.0-beta.0.md](RobotScope/docs/release/v0.3.0-beta.0.md)
-- [docs/migration/v0.3-alpha-to-beta.md](RobotScope/docs/migration/v0.3-alpha-to-beta.md)
+- [docs/release/v0.3.0-beta.0.md](docs/release/v0.3.0-beta.0.md)
+- [docs/migration/v0.3-alpha-to-beta.md](docs/migration/v0.3-alpha-to-beta.md)
 
 ### Changed
 
-- README + [known-limitations.md](RobotScope/docs/known-limitations.md) updated for v0.3 beta boundaries
-- [docs/rosbag2.md](RobotScope/docs/rosbag2.md) — beta scope header
+- README + [known-limitations.md](docs/known-limitations.md) updated for v0.3 beta boundaries
+- [docs/rosbag2.md](docs/rosbag2.md) — beta scope header
 
 ## [0.3.0-alpha.0] - 2026-06-13
 
@@ -776,7 +776,7 @@ Rosbag2 sidecar cache for faster re-open.
 
 - Sidecar manifest supports `recording_source` (`mcap` | `rosbag2`)
 - Rosbag2 re-open uses cached sidecar when fingerprint matches
-- [docs/rosbag2.md](RobotScope/docs/rosbag2.md) + [known-limitations.md](RobotScope/docs/known-limitations.md) updated
+- [docs/rosbag2.md](docs/rosbag2.md) + [known-limitations.md](docs/known-limitations.md) updated
 
 ## [0.2.0] - 2026-06-13
 
@@ -788,8 +788,8 @@ v0.2 GA marks stable delivery of alpha/beta features on top of v0.1. No intentio
 
 ### Added
 
-- [docs/release/v0.2.0.md](RobotScope/docs/release/v0.2.0.md)
-- [docs/migration/v0.2-beta-to-ga.md](RobotScope/docs/migration/v0.2-beta-to-ga.md)
+- [docs/release/v0.2.0.md](docs/release/v0.2.0.md)
+- [docs/migration/v0.2-beta-to-ga.md](docs/migration/v0.2-beta-to-ga.md)
 
 ### Changed
 
@@ -806,14 +806,14 @@ Beta consolidates cross-layout recipe banner + rosbag2 ingest. Demo MCAP bundle 
 
 ### Added
 
-- [docs/release/v0.2.0-beta.0.md](RobotScope/docs/release/v0.2.0-beta.0.md)
-- [docs/migration/v0.2-alpha-to-beta.md](RobotScope/docs/migration/v0.2-alpha-to-beta.md)
+- [docs/release/v0.2.0-beta.0.md](docs/release/v0.2.0-beta.0.md)
+- [docs/migration/v0.2-alpha-to-beta.md](docs/migration/v0.2-alpha-to-beta.md)
 
 ### Changed
 
 - **Lazy rosbag2 import** — `openRosbag2` dynamic import; sql.js excluded from default viewer bundle
 - `isRosbag2Filename()` moved to `recording-format.ts` (no sql.js dependency)
-- README + [known-limitations.md](RobotScope/docs/known-limitations.md) updated for v0.2 beta boundaries
+- README + [known-limitations.md](docs/known-limitations.md) updated for v0.2 beta boundaries
 
 ## [0.2.0-alpha.1] - 2026-06-13
 
@@ -823,11 +823,11 @@ Rosbag2 SQLite browser ingest (first native step).
 
 - **`openRosbag2()`** — browser playback of rosbag2 `.db3` via sql.js + `Rosbag2QueryEngineImpl`
 - Viewer **Open recording** accepts `.db3` / `.sqlite3`
-- [docs/rosbag2.md](RobotScope/docs/rosbag2.md) + `npm run convert:rosbag2` fallback script
+- [docs/rosbag2.md](docs/rosbag2.md) + `npm run convert:rosbag2` fallback script
 
 ### Changed
 
-- [known-limitations.md](RobotScope/docs/known-limitations.md) — documents alpha rosbag2 support vs remaining gaps
+- [known-limitations.md](docs/known-limitations.md) — documents alpha rosbag2 support vs remaining gaps
 
 ## [0.2.0-alpha.0] - 2026-06-13
 
@@ -848,8 +848,8 @@ GA marks the completion of the v0.1 line: alpha → beta → RC → **0.1.0**. D
 
 ### Added
 
-- [docs/release/v0.1.0.md](RobotScope/docs/release/v0.1.0.md) — GA milestone notes
-- [docs/migration/rc-to-ga.md](RobotScope/docs/migration/rc-to-ga.md) — RC → GA checklist
+- [docs/release/v0.1.0.md](docs/release/v0.1.0.md) — GA milestone notes
+- [docs/migration/rc-to-ga.md](docs/migration/rc-to-ga.md) — RC → GA checklist
 
 ### Changed
 
@@ -868,7 +868,7 @@ Autoware Map panel Lanelet2 2D preview.
 
 ### Changed
 
-- [known-limitations.md](RobotScope/docs/known-limitations.md) — documents 2D panel preview
+- [known-limitations.md](docs/known-limitations.md) — documents 2D panel preview
 
 ## [0.1.0-rc.0] - 2026-06-13
 
@@ -876,8 +876,8 @@ First v0.1 release candidate — API freeze for integrators.
 
 ### Added
 
-- [docs/api-v0.1.md](RobotScope/docs/api-v0.1.md) — frozen plugin manifest, query API, URL params, live protocol
-- [docs/migration/beta-to-rc.md](RobotScope/docs/migration/beta-to-rc.md) — beta → RC checklist for plugin authors
+- [docs/api-v0.1.md](docs/api-v0.1.md) — frozen plugin manifest, query API, URL params, live protocol
+- [docs/migration/beta-to-rc.md](docs/migration/beta-to-rc.md) — beta → RC checklist for plugin authors
 
 ### Changed
 
@@ -892,12 +892,12 @@ Plugin SDK minimal third-party example pack.
 
 - **`plugins/example/`** — copyable template: manifest, profile, snapshot builder, dock, session panel
 - Layout **`example`** / **`example-starter`** registered in viewer + command bar
-- [docs/plugin-sdk-example.md](RobotScope/docs/plugin-sdk-example.md) — register, validate, snapshot hook pattern
+- [docs/plugin-sdk-example.md](docs/plugin-sdk-example.md) — register, validate, snapshot hook pattern
 - `npm run demo:example` — opens `?layout=example&demo=1`
 
 ### Changed
 
-- [docs/plugins.md](RobotScope/docs/plugins.md) links to SDK example
+- [docs/plugins.md](docs/plugins.md) links to SDK example
 
 ## [0.1.0-beta.1] - 2026-06-13
 
@@ -912,7 +912,7 @@ Lanelet2 RL2D demo format parser and 3D boundary rendering.
 
 ### Changed
 
-- [known-limitations.md](RobotScope/docs/known-limitations.md) — documents RL2D demo vs native Autoware bin
+- [known-limitations.md](docs/known-limitations.md) — documents RL2D demo vs native Autoware bin
 
 ## [0.1.0-beta.0] - 2026-06-13
 
@@ -924,8 +924,8 @@ Beta marks a stable **daily-debug demo** surface: MCAP + live agent + Autoware/N
 
 ### Added
 
-- [docs/known-limitations.md](RobotScope/docs/known-limitations.md) — beta scope boundaries
-- [docs/release/v0.1.0-beta.0.md](RobotScope/docs/release/v0.1.0-beta.0.md) — beta milestone notes
+- [docs/known-limitations.md](docs/known-limitations.md) — beta scope boundaries
+- [docs/release/v0.1.0-beta.0.md](docs/release/v0.1.0-beta.0.md) — beta milestone notes
 
 ### Changed
 
@@ -945,7 +945,7 @@ Live failure recipe evaluation on the unified timeline.
 ### Changed
 
 - Failure recipe strip visible during live sessions (was MCAP-only)
-- [docs/live-agent.md](RobotScope/docs/live-agent.md) documents live recipe behavior
+- [docs/live-agent.md](docs/live-agent.md) documents live recipe behavior
 
 ## [0.1.0-alpha.7] - 2026-06-13
 
@@ -956,7 +956,7 @@ Live agent connection UX and failure recipe timeline legend.
 - **Failure recipe timeline legend** (stack colors + “click ticks to seek”)
 - **Live agent URL preset** in command bar (`Local demo :8765`)
 - **`?live=1` / `?liveUrl=`** query params for auto-connect
-- [docs/live-agent.md](RobotScope/docs/live-agent.md) — demo agent, ROS2 agent, Pages note
+- [docs/live-agent.md](docs/live-agent.md) — demo agent, ROS2 agent, Pages note
 
 ### Changed
 

@@ -1,6 +1,6 @@
-# Known limitations (v1.6 GA)
+# Known limitations (v1.7 alpha)
 
-Concrete scope boundaries for **v1.6.0**. Product choices or not-yet-built — not necessarily bugs.
+Concrete scope boundaries for **1.7.0-alpha.0**. Product choices or not-yet-built — not necessarily bugs.
 
 Plugin manifest **`api: "0.1"`** remains stable (from v0.1 GA) — see [api-v0.1.md](RobotScope/docs/api-v0.1.md).
 
@@ -17,7 +17,7 @@ Plugin manifest **`api: "0.1"`** remains stable (from v0.1 GA) — see [api-v0.1
 
 | Limitation | Notes |
 |------------|-------|
-| **Lanelet2** — stats + **2D panel preview** + centerline polylines + **RL2D demo bin** boundaries in 3D + **OSM sidecar** (ways + lanelet relations + **regulatory element geometry**) | Full Autoware `lanelet2_io` **boost binary** not parsed — use [lanelet2-osm.md](RobotScope/docs/lanelet2-osm.md) sidecar; regulatory `yield` relation refs not rendered |
+| **Lanelet2** — stats + **2D panel preview** + centerline polylines + **RL2D demo bin** boundaries in 3D + **OSM sidecar** + **Boost bin alpha** (heuristic point/lanelet extract) | Full `lanelet2_io` topology (regulatory/area layers, cross-boost portability) — use [lanelet2-osm.md](RobotScope/docs/lanelet2-osm.md) sidecar; see [lanelet2-boost-bin.md](RobotScope/docs/lanelet2-boost-bin.md) |
 | **Occupancy grid** — 2D preview + 3D mesh | No full costmap plugin parity with RViz |
 | **Point clouds** — basic decode + scene | No advanced filtering / accumulation UI |
 | **WebGPU** experimental | WebGL2 is the default render path |

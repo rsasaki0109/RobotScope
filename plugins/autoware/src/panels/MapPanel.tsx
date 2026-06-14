@@ -566,7 +566,11 @@ export function MapPanel({
                   <dt>Lanelets</dt>
                   <dd>
                     {lanelet.lanelet_count} parsed
-                    {lanelet.parse_format === "demo-rl2d" ? " (RL2D demo)" : ""}
+                    {lanelet.parse_format === "demo-rl2d"
+                      ? " (RL2D demo)"
+                      : lanelet.parse_format === "boost-lanelet2"
+                        ? " (Boost bin)"
+                        : ""}
                   </dd>
                 </>
               ) : null}

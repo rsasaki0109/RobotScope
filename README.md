@@ -99,6 +99,27 @@ RobotScope/
 └── sample_data/             Sample MCAP fetch scripts
 ```
 
+## v1.7.0-alpha.0
+
+Native Autoware `lanelet2_io` Boost binary parsing (alpha). See [release notes](RobotScope/docs/release/v1.7.0-alpha.0.md) and [CHANGELOG.md](RobotScope/CHANGELOG.md).
+
+**Shipped**
+
+| Layer | Features |
+|-------|----------|
+| Map | **Boost bin alpha** — `parseBoostLaneletMap()` boundary extract + Map panel **(Boost bin)** label |
+| v1.6 carry-over | Action preempt · timeline · cancel · tracking · gateways |
+
+**Docs**
+
+- [Lanelet2 Boost bin guide](RobotScope/docs/lanelet2-boost-bin.md)
+- [Lanelet2 OSM guide](RobotScope/docs/lanelet2-osm.md)
+- [Known limitations](RobotScope/docs/known-limitations.md)
+
+**Out of scope (v1.7 alpha)**
+
+- Full lanelet topology · regulatory yield refs · cross-boost portability
+
 ## v1.6.0 (GA)
 
 Preempt controls on v1.5 action timeline. See [release notes](RobotScope/docs/release/v1.6.0.md) and [CHANGELOG.md](RobotScope/CHANGELOG.md).

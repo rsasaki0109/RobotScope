@@ -23,7 +23,7 @@ Use **Clear OSM** to remove the overlay.
 | `<relation type=lanelet>` with `left` / `right` / `centerline` members | **Supported** (v0.6+) |
 | `<relation type=regulatory_element>` with `subtype` + geometry members | **Supported** (v0.7) |
 | Regulatory `yield` lanelet refs (relation members) | Counted only — no geometry overlay |
-| Native `LaneletMapBin` boost bin | Still **unknown** — use OSM sidecar or RL2D demo MCAP |
+| Native `LaneletMapBin` boost bin | **Alpha heuristic** — see [lanelet2-boost-bin.md](RobotScope/docs/lanelet2-boost-bin.md); OSM sidecar for full topology |
 
 Regulatory geometry roles parsed for preview: `refers`, `ref_line`, `crosswalk_polygon`, `light_bulbs`. Common subtypes include `traffic_light`, `speed_limit`, `crosswalk`, `detection_area`.
 

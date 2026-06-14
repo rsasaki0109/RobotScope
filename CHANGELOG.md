@@ -4,6 +4,25 @@ All notable changes to RobotScope are documented in this file.
 
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and versioning follows [SemVer](https://semver.org/).
 
+## [1.7.0-alpha.0] - 2026-06-13
+
+Native Autoware `lanelet2_io` Boost binary parsing (alpha heuristic).
+
+### Added
+
+- **`parseBoostLaneletMap()`** — Boost archive detection + lanelet boundary extraction in `@robotscope/core`
+- **`lanelet-boost-bin.ts`** — point / linestring / lanelet layer scan + axis-aligned bounds fallback
+- Fixture `RobotScope/packages/robotscope-core/fixtures/lanelet-boost-1llt.bin` + `scripts/test-lanelet-boost.mjs`
+- `scripts/generate-lanelet-boost-fixture.sh` — regenerate fixture from ROS lanelet2
+- [docs/lanelet2-boost-bin.md](RobotScope/docs/lanelet2-boost-bin.md)
+- [docs/release/v1.7.0-alpha.0.md](RobotScope/docs/release/v1.7.0-alpha.0.md)
+
+### Changed
+
+- **`parseLaneletMapBin()`** — returns `format: "boost-lanelet2"` for native bins (after RL2D magic check)
+- Autoware Map panel labels boost parses as **(Boost bin)**
+- [known-limitations.md](RobotScope/docs/known-limitations.md) — alpha boost scope vs OSM sidecar
+
 ## [1.6.0] - 2026-06-13
 
 Sixteenth GA release — action goal preempt on live gateways.

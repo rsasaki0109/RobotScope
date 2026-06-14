@@ -1,3 +1,5 @@
+import { parseBoostLaneletMap } from "./lanelet-boost-bin.js";
+
 const DEMO_MAGIC = [0x52, 0x4c, 0x32, 0x44]; // "RL2D"
 
 export interface ParsedLaneletBoundary {
@@ -6,10 +8,12 @@ export interface ParsedLaneletBoundary {
 }
 
 export interface ParsedLaneletMapBin {
-  format: "demo-rl2d" | "unknown";
+  format: "demo-rl2d" | "boost-lanelet2" | "unknown";
   lanelets: ParsedLaneletBoundary[];
   lanelet_count: number;
   boundary_point_count: number;
+  point_count?: number;
+  linestring_count?: number;
 }
 
 function toByteArray(raw: unknown): Uint8Array | null {
@@ -73,7 +77,7 @@ function readDemoRl2d(bytes: Uint8Array): ParsedLaneletMapBin | null {
   };
 }
 
-/** Parse LaneletMapBin payloads. Supports RobotScope demo RL2D v1; Autoware native bin returns unknown. */
+/** Parse LaneletMapBin payloads. Supports RobotScope demo RL2D v1 and lanelet2_io Boost bins (alpha). */
 export function parseLaneletMapBin(decoded: unknown): ParsedLaneletMapBin | null {
   const msg = decoded as { data?: unknown; format_version?: string };
   const bytes = toByteArray(msg.data);
@@ -86,6 +90,21 @@ export function parseLaneletMapBin(decoded: unknown): ParsedLaneletMapBin | null
     return demo;
   }
 
+  const boost = parseBoostLaneletMap(bytes);
+  if (boost) {
+    return {
+      format: "boost-lanelet2",
+      lanelets: boost.lanelets.map((lanelet) => ({
+        id: lanelet.id,
+        boundary: lanelet.boundary,
+      })),
+      lanelet_count: boost.lanelet_count,
+      boundary_point_count: boost.boundary_point_count,
+      point_count: boost.point_count,
+      linestring_count: boost.linestring_count,
+    };
+  }
+
   return {
     format: "unknown",
     lanelets: [],
@@ -96,4 +115,8 @@ export function parseLaneletMapBin(decoded: unknown): ParsedLaneletMapBin | null
 
 export function isDemoLaneletMapFormat(decoded: unknown): boolean {
   return parseLaneletMapBin(decoded)?.format === "demo-rl2d";
+}
+
+export function isBoostLaneletMapFormat(decoded: unknown): boolean {
+  return parseLaneletMapBin(decoded)?.format === "boost-lanelet2";
 }

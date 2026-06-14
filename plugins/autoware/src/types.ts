@@ -22,7 +22,7 @@ export interface AutowareLanelet2View {
   format_version?: string | number;
   lanelet_count?: number;
   boundary_point_count?: number;
-  parse_format?: "demo-rl2d" | "unknown";
+  parse_format?: "demo-rl2d" | "boost-lanelet2" | "unknown";
   boundaries?: LaneletPolyline2D[];
   centerlines?: LaneletPolyline2D[];
 }

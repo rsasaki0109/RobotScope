@@ -1,8 +1,8 @@
-# Lanelet2 Boost binary (v1.7 alpha)
+# Lanelet2 Boost binary (v1.7 beta)
 
-Native **`LaneletMapBin.data`** parsing for Autoware / `lanelet2_io` Boost archives (alpha heuristic).
+Native **`LaneletMapBin.data`** parsing for Autoware / `lanelet2_io` Boost archives (beta — heuristic scope unchanged from alpha).
 
-## Scope (alpha)
+## Scope (beta)
 
 | Feature | Status |
 |---------|--------|

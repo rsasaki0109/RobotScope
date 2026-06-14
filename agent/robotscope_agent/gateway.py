@@ -12,6 +12,8 @@ from websockets.server import WebSocketServerProtocol
 from .bridge import ChannelInfo, LiveBridge
 from .protocol import (
     channel_message,
+    command_action_feedback_message,
+    command_action_outcome_message,
     command_action_result_message,
     command_publish_result_message,
     command_service_result_message,
@@ -44,6 +46,32 @@ class LiveGateway:
 
     def attach_bridge_callbacks(self) -> None:
         self.bridge.set_callbacks(self.notify_channel_added, self.notify_subscription_status)
+        self.bridge.set_action_callbacks(self.notify_action_feedback, self.notify_action_outcome)
+
+    def notify_action_feedback(self, action: str, sequence: list[int]) -> None:
+        if self._loop is None:
+            return
+        payload = command_action_feedback_message(action, sequence)
+        asyncio.run_coroutine_threadsafe(self._broadcast(payload), self._loop)
+
+    def notify_action_outcome(
+        self,
+        action: str,
+        ok: bool,
+        status: str,
+        sequence: list[int],
+        message: str | None,
+    ) -> None:
+        if self._loop is None:
+            return
+        payload = command_action_outcome_message(
+            action,
+            ok,
+            status,
+            sequence,
+            message=message,
+        )
+        asyncio.run_coroutine_threadsafe(self._broadcast(payload), self._loop)
 
     def publish(self, channel: ChannelInfo, log_time_ns: int, publish_time_ns: int, data: bytes) -> None:
         if self._loop is None:

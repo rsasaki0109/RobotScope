@@ -12,6 +12,7 @@ export interface LiveOpenOptions {
     stats: LiveIngestStats,
     engine: LiveQueryEngineImpl,
   ) => void;
+  onActionProgress?: (update: import("./action-gateway.js").LiveActionProgressUpdate) => void;
 }
 
 export async function openLive(url: string, options: LiveOpenOptions = {}): Promise<LiveIngestHandle> {
@@ -22,6 +23,7 @@ export async function openLive(url: string, options: LiveOpenOptions = {}): Prom
     onSessionUpdate: (bounds, stats, liveEngine) => {
       options.onSessionUpdate?.(bounds, stats, liveEngine);
     },
+    onActionProgress: options.onActionProgress,
   });
   await client.connect();
 

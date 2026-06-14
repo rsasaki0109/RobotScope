@@ -1,7 +1,11 @@
-/** Permission-gated live action goals (v1.2 alpha). */
+/** Permission-gated live action goals (v1.2+) with progress tracking (v1.3 alpha). */
 
 export const DEFAULT_FIBONACCI_ACTION = "/robotscope/demo/fibonacci";
 export const EXAMPLE_FIBONACCI_ACTION_SCHEMA = "example_interfaces/action/Fibonacci";
+
+export type LiveActionOutcomeStatus = "succeeded" | "aborted" | "canceled" | "failed";
+
+export type LiveActionTrackingStatus = "running" | LiveActionOutcomeStatus;
 
 export interface FibonacciActionGoal {
   order: number;
@@ -19,6 +23,30 @@ export interface LiveActionSendGoalResult {
   action?: string;
   message: string;
   goal_accepted?: boolean;
+}
+
+export interface LiveActionFeedbackUpdate {
+  kind: "feedback";
+  action: string;
+  sequence: number[];
+}
+
+export interface LiveActionOutcomeUpdate {
+  kind: "outcome";
+  action: string;
+  ok: boolean;
+  status: LiveActionOutcomeStatus;
+  sequence: number[];
+  message?: string;
+}
+
+export type LiveActionProgressUpdate = LiveActionFeedbackUpdate | LiveActionOutcomeUpdate;
+
+export interface LiveActionTrackingState {
+  action: string;
+  status: LiveActionTrackingStatus;
+  sequence: number[];
+  message?: string;
 }
 
 function assertFiniteOrder(value: number): number {
@@ -41,5 +69,32 @@ export function buildFibonacciActionGoalRequest(
     fibonacci: {
       order: assertFiniteOrder(order),
     },
+  };
+}
+
+export function formatFibonacciSequence(sequence: number[]): string {
+  if (sequence.length === 0) {
+    return "[]";
+  }
+  return `[${sequence.join(", ")}]`;
+}
+
+export function applyLiveActionProgressUpdate(
+  _current: LiveActionTrackingState | null,
+  update: LiveActionProgressUpdate,
+): LiveActionTrackingState {
+  if (update.kind === "feedback") {
+    return {
+      action: update.action,
+      status: "running",
+      sequence: [...update.sequence],
+    };
+  }
+
+  return {
+    action: update.action,
+    status: update.status,
+    sequence: [...update.sequence],
+    message: update.message,
   };
 }

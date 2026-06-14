@@ -15,6 +15,56 @@ import { WebSocketServer } from "ws";
 const LIVE_PROTOCOL_VERSION = "robotscope.live.v0.1";
 const repoRoot = join(dirname(fileURLToPath(import.meta.url)), "..");
 
+function fibonacciSequence(order) {
+  const normalized = Math.max(0, Math.trunc(Number(order) || 0));
+  if (normalized === 0) {
+    return [0];
+  }
+  const sequence = [0, 1];
+  while (sequence.length <= normalized) {
+    sequence.push(sequence[sequence.length - 1] + sequence[sequence.length - 2]);
+  }
+  return sequence.slice(0, normalized + 1);
+}
+
+function simulateFibonacciAction(socket, action, order) {
+  const sequence = fibonacciSequence(order);
+  let index = 0;
+
+  const tick = () => {
+    if (socket.readyState !== 1) {
+      return;
+    }
+
+    socket.send(
+      JSON.stringify({
+        type: "command.action_feedback",
+        action,
+        sequence: sequence.slice(0, index + 1),
+      }),
+    );
+
+    if (index >= sequence.length - 1) {
+      socket.send(
+        JSON.stringify({
+          type: "command.action_outcome",
+          action,
+          ok: true,
+          status: "succeeded",
+          sequence,
+          message: `Demo Fibonacci completed (order=${order})`,
+        }),
+      );
+      return;
+    }
+
+    index += 1;
+    setTimeout(tick, 120);
+  };
+
+  setTimeout(tick, 120);
+}
+
 function defaultMcapPath() {
   const candidates = [
     resolve(repoRoot, "packages/robotscope-viewer/public/demo/demo-scene.mcap"),
@@ -289,6 +339,7 @@ server.on("connection", (socket) => {
           message: `Demo agent accepted Fibonacci goal order=${order} on ${action} (no ROS action)`,
         }),
       );
+      simulateFibonacciAction(socket, action, order);
       return;
     }
 

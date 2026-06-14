@@ -1,6 +1,7 @@
 import type {
   IngestHandle,
   IngestProgress,
+  LiveActionTrackingState,
   MappedTopic,
   ParsedLaneletOsmMap,
   RawMessage,
@@ -10,7 +11,13 @@ import type {
   TfTreeSnapshot,
   TopicInfo,
 } from "@robotscope/core";
-import { isLiveIngestHandle, isMcapQueryEngine, validateSidecarFingerprint } from "@robotscope/core";
+import {
+  applyLiveActionProgressUpdate,
+  formatFibonacciSequence,
+  isLiveIngestHandle,
+  isMcapQueryEngine,
+  validateSidecarFingerprint,
+} from "@robotscope/core";
 import { create } from "zustand";
 
 import { downloadLiveRecordingBundle } from "../storage/live-recording-download";
@@ -149,6 +156,7 @@ export interface ViewerState {
   liveServiceCallServices: string[];
   liveActionSendGoalActions: string[];
   fibonacciActionOrder: number;
+  liveActionTracking: LiveActionTrackingState | null;
   cmdVelLinearX: number;
   cmdVelLinearY: number;
   cmdVelLinearZ: number;
@@ -222,6 +230,7 @@ const initialState = {
   liveServiceCallServices: [] as string[],
   liveActionSendGoalActions: [] as string[],
   fibonacciActionOrder: 3,
+  liveActionTracking: null as LiveActionTrackingState | null,
   cmdVelLinearX: 0,
   cmdVelLinearY: 0,
   cmdVelLinearZ: 0,
@@ -576,6 +585,19 @@ export const useViewerStore = create<ViewerState>((set, get) => ({
           set(await loadViewerData({ ...get() }));
         })();
       },
+      onActionProgress: (update) => {
+        const nextTracking = applyLiveActionProgressUpdate(get().liveActionTracking, update);
+        const sequenceLabel = formatFibonacciSequence(nextTracking.sequence);
+        const statusMessage =
+          update.kind === "outcome"
+            ? update.message ??
+              `Action ${update.status} on ${update.action} ${sequenceLabel}`
+            : `Action running on ${update.action} ${sequenceLabel}`;
+        set({
+          liveActionTracking: nextTracking,
+          statusMessage,
+        });
+      },
     });
 
     const session = await handle.engine.getSessionInfo();
@@ -639,6 +661,7 @@ export const useViewerStore = create<ViewerState>((set, get) => ({
       livePublishTopics: [],
       liveServiceCallServices: [],
       liveActionSendGoalActions: [],
+      liveActionTracking: null,
       liveConnection: {
         phase: "disconnected",
         url: null,
@@ -817,6 +840,13 @@ export const useViewerStore = create<ViewerState>((set, get) => ({
         "@robotscope/core"
       );
       const action = actionName ?? DEFAULT_FIBONACCI_ACTION;
+      set({
+        liveActionTracking: {
+          action,
+          status: "running",
+          sequence: [],
+        },
+      });
       const result = await ingest.sendActionGoal(
         buildFibonacciActionGoalRequest(state.fibonacciActionOrder, action),
       );
@@ -824,6 +854,14 @@ export const useViewerStore = create<ViewerState>((set, get) => ({
         statusMessage: result.ok
           ? `${result.message}${result.goal_accepted === false ? " · goal rejected" : ""}`
           : `Action goal failed: ${result.message}`,
+        liveActionTracking: result.ok && result.goal_accepted !== false
+          ? get().liveActionTracking
+          : {
+              action,
+              status: "failed",
+              sequence: [],
+              message: result.message,
+            },
       });
     } catch (error) {
       set({

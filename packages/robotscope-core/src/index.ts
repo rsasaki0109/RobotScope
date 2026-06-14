@@ -31,11 +31,17 @@ export {
   buildFibonacciActionGoalRequest,
   DEFAULT_FIBONACCI_ACTION,
   EXAMPLE_FIBONACCI_ACTION_SCHEMA,
+  applyLiveActionProgressUpdate,
+  formatFibonacciSequence,
 } from "./live/action-gateway.js";
 export type {
   FibonacciActionGoal,
+  LiveActionOutcomeStatus,
+  LiveActionProgressUpdate,
   LiveActionSendGoalRequest,
   LiveActionSendGoalResult,
+  LiveActionTrackingState,
+  LiveActionTrackingStatus,
 } from "./live/action-gateway.js";
 export type { LiveRecordingResult } from "./query.js";
 export { LiveMcapRecorder, defaultLiveRecordingFilename } from "./live/recorder.js";

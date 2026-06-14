@@ -257,3 +257,33 @@
   text-overflow: ellipsis;
   max-width: 28rem;
 }
+
+.actionTracking {
+  display: inline-flex;
+  align-items: center;
+  max-width: 18rem;
+  padding: 0.2rem 0.45rem;
+  border-radius: 4px;
+  border: 1px solid var(--rs-border);
+  background: var(--rs-bg);
+  font-size: 0.72rem;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  color: var(--rs-text-muted);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.actionTracking[data-status="running"] {
+  color: var(--rs-accent, #3b82f6);
+}
+
+.actionTracking[data-status="succeeded"] {
+  color: #16a34a;
+}
+
+.actionTracking[data-status="aborted"],
+.actionTracking[data-status="canceled"],
+.actionTracking[data-status="failed"] {
+  color: #dc2626;
+}

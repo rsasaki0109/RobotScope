@@ -138,3 +138,36 @@ def command_action_result_message(
     if goal_accepted is not None:
         payload["goal_accepted"] = goal_accepted
     return json.dumps(payload)
+
+
+def command_action_feedback_message(
+    action: str,
+    sequence: list[int],
+) -> str:
+    return json.dumps(
+        {
+            "type": "command.action_feedback",
+            "action": action,
+            "sequence": sequence,
+        }
+    )
+
+
+def command_action_outcome_message(
+    action: str,
+    ok: bool,
+    status: str,
+    sequence: list[int],
+    *,
+    message: str | None = None,
+) -> str:
+    payload: dict[str, Any] = {
+        "type": "command.action_outcome",
+        "action": action,
+        "ok": ok,
+        "status": status,
+        "sequence": sequence,
+    }
+    if message:
+        payload["message"] = message
+    return json.dumps(payload)

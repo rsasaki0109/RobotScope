@@ -1,6 +1,7 @@
 import type { IngestProgress, LiveRecordingResult, TimeRange } from "../query.js";
 
 import type {
+  LiveActionProgressUpdate,
   LiveActionSendGoalRequest,
   LiveActionSendGoalResult,
 } from "./action-gateway.js";
@@ -25,6 +26,7 @@ export interface LiveClientOptions {
     stats: LiveIngestStats,
     engine: LiveQueryEngineImpl,
   ) => void;
+  onActionProgress?: (update: LiveActionProgressUpdate) => void;
 }
 
 function statusToProgress(message: LiveStatusMessage): IngestProgress {
@@ -169,6 +171,27 @@ export class LiveAgentClient {
               message: message.message,
               goal_accepted: message.goal_accepted,
             });
+            break;
+          case "command.action_feedback":
+            if (message.action && Array.isArray(message.sequence)) {
+              this.options.onActionProgress?.({
+                kind: "feedback",
+                action: message.action,
+                sequence: message.sequence,
+              });
+            }
+            break;
+          case "command.action_outcome":
+            if (message.action && Array.isArray(message.sequence)) {
+              this.options.onActionProgress?.({
+                kind: "outcome",
+                action: message.action,
+                ok: message.ok,
+                status: message.status,
+                sequence: message.sequence,
+                message: message.message,
+              });
+            }
             break;
           default:
             break;

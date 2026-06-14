@@ -1,6 +1,6 @@
-# Action gateway (v1.2 GA)
+# Action gateway (v1.3 alpha)
 
-Permission-gated **live action goal send** from the viewer to a local ROS 2 agent.
+Permission-gated **live action goal send** from the viewer to a local ROS 2 agent, with **Fibonacci feedback / outcome tracking** (v1.3 alpha).
 
 ## Safety model
 
@@ -8,7 +8,7 @@ Permission-gated **live action goal send** from the viewer to a local ROS 2 agen
 |-------|----------|
 | **Viewer** | Action UI is **off by default**. User must check **Allow action goals** while connected live. |
 | **Agent** | Actions are **allowlisted** via `--allow-action ACTION` (repeatable). No allowlist → read-only gateway. |
-| **Protocol** | `command.action_send_goal` / `command.action_result` over existing live WebSocket v0.1 |
+| **Protocol** | `command.action_send_goal` / `command.action_result` / `command.action_feedback` / `command.action_outcome` over live WebSocket v0.1 |
 
 MCAP / rosbag2 playback remains **read-only**. Only live agent connections can send action goals.
 
@@ -21,17 +21,18 @@ npm run demo:live-agent
 # Terminal 2 — viewer
 npm run dev
 # Connect Live → Allow action goals → set n → Send Fibonacci
+# Command bar shows running sequence → succeeded
 ```
 
 Demo agent **accepts** action goals but does not write to ROS (replay-only).
 
-## Fibonacci shortcut (v1.2)
+## Fibonacci shortcut (v1.2+)
 
 When **Allow action goals** is enabled and `/robotscope/demo/fibonacci` is allowlisted:
 
 - **n** — Fibonacci order (goal field)
 - **Send Fibonacci** — sends `example_interfaces/action/Fibonacci` goal
-- Response includes `goal_accepted` from agent (goal acceptance only — no result tracking in alpha)
+- **Tracking (v1.3 alpha)** — command bar shows `running · [0, 1, …]` then final `succeeded` / `aborted` / `canceled`
 
 Native ROS agents can allow any Fibonacci-compatible action name.
 
@@ -56,7 +57,7 @@ Session advertises allowlist:
 }
 ```
 
-Client Fibonacci goal (v1.2):
+Client Fibonacci goal:
 
 ```json
 {
@@ -67,7 +68,7 @@ Client Fibonacci goal (v1.2):
 }
 ```
 
-Server response:
+Goal acceptance response:
 
 ```json
 {
@@ -79,18 +80,41 @@ Server response:
 }
 ```
 
+Feedback stream (v1.3 alpha):
+
+```json
+{
+  "type": "command.action_feedback",
+  "action": "/robotscope/demo/fibonacci",
+  "sequence": [0, 1, 1]
+}
+```
+
+Final outcome (v1.3 alpha):
+
+```json
+{
+  "type": "command.action_outcome",
+  "action": "/robotscope/demo/fibonacci",
+  "ok": true,
+  "status": "succeeded",
+  "sequence": [0, 1, 1, 2],
+  "message": "Fibonacci succeeded on /robotscope/demo/fibonacci"
+}
+```
+
 ## Implementation
 
 - Core — `RobotScope/packages/robotscope-core/src/live/action-gateway.ts`
 - Live client — `LiveAgentClient.sendActionGoal()`
 - Python agent — `RobotScope/agent/robotscope_agent/bridge.py`
-- Viewer — command bar **Allow action goals** + **Send Fibonacci**
+- Viewer — command bar **Allow action goals** + **Send Fibonacci** + **sequence tracking badge**
 
-## Out of scope (v1.2)
+## Out of scope (v1.3 alpha)
 
-- Action feedback / result tracking UI
-- Arbitrary action goal editor
 - Cancel / preempt controls
+- Arbitrary action goal editor
+- Dedicated action timeline panel
 - Plugin runtime permission enforcement
 
 See [known-limitations.md](RobotScope/docs/known-limitations.md).

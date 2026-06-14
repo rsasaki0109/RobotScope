@@ -78,6 +78,21 @@ export interface LiveCommandActionResultMessage {
   goal_accepted?: boolean;
 }
 
+export interface LiveCommandActionFeedbackMessage {
+  type: "command.action_feedback";
+  action: string;
+  sequence: number[];
+}
+
+export interface LiveCommandActionOutcomeMessage {
+  type: "command.action_outcome";
+  action: string;
+  ok: boolean;
+  status: "succeeded" | "aborted" | "canceled" | "failed";
+  sequence: number[];
+  message?: string;
+}
+
 export type LiveServerMessage =
   | LiveSessionMessage
   | LiveChannelMessage
@@ -86,7 +101,9 @@ export type LiveServerMessage =
   | LiveErrorMessage
   | LiveCommandPublishResultMessage
   | LiveCommandServiceResultMessage
-  | LiveCommandActionResultMessage;
+  | LiveCommandActionResultMessage
+  | LiveCommandActionFeedbackMessage
+  | LiveCommandActionOutcomeMessage;
 
 export interface LiveCommandPublishClientMessage {
   type: "command.publish";

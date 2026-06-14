@@ -4,6 +4,24 @@ All notable changes to RobotScope are documented in this file.
 
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and versioning follows [SemVer](https://semver.org/).
 
+## [1.3.0-alpha.0] - 2026-06-12
+
+Live action feedback / outcome tracking for Fibonacci goals.
+
+### Added
+
+- **`command.action_feedback`** / **`command.action_outcome`** on live WebSocket protocol v0.1
+- Viewer command bar **action tracking badge** — running sequence + final status
+- Python agent streams Fibonacci feedback + outcome from ROS `ActionClient`
+- Demo live agent simulates Fibonacci progress without ROS
+- `applyLiveActionProgressUpdate()` + `formatFibonacciSequence()` helpers in core
+- [docs/release/v1.3.0-alpha.0.md](RobotScope/docs/release/v1.3.0-alpha.0.md)
+
+### Changed
+
+- [docs/action-gateway.md](RobotScope/docs/action-gateway.md) updated for v1.3 alpha tracking
+- [known-limitations.md](RobotScope/docs/known-limitations.md) updated — Fibonacci tracking in command bar only
+
 ## [1.2.0] - 2026-06-13
 
 Twelfth GA release — action goal gateway on live gateways.

@@ -1,6 +1,6 @@
 import { useCallback, useState } from "react";
 
-import { parseSidecarManifest, DEFAULT_FIBONACCI_ACTION, DEFAULT_TRIGGER_SERVICE } from "@robotscope/core";
+import { parseSidecarManifest, DEFAULT_FIBONACCI_ACTION, DEFAULT_TRIGGER_SERVICE, formatFibonacciSequence } from "@robotscope/core";
 
 import { listLayoutOptions } from "../plugins/registry";
 import {
@@ -45,6 +45,7 @@ export function CommandBar() {
   const livePublishTopics = useViewerStore((s) => s.livePublishTopics);
   const liveServiceCallServices = useViewerStore((s) => s.liveServiceCallServices);
   const liveActionSendGoalActions = useViewerStore((s) => s.liveActionSendGoalActions);
+  const liveActionTracking = useViewerStore((s) => s.liveActionTracking);
   const fibonacciActionOrder = useViewerStore((s) => s.fibonacciActionOrder);
   const cmdVelLinearX = useViewerStore((s) => s.cmdVelLinearX);
   const cmdVelLinearY = useViewerStore((s) => s.cmdVelLinearY);
@@ -397,6 +398,17 @@ export function CommandBar() {
                 >
                   Send Fibonacci
                 </button>
+                {liveActionTracking ? (
+                  <span
+                    className={styles.actionTracking}
+                    data-status={liveActionTracking.status}
+                    title={liveActionTracking.message}
+                  >
+                    {liveActionTracking.status}
+                    {" · "}
+                    {formatFibonacciSequence(liveActionTracking.sequence)}
+                  </span>
+                ) : null}
               </>
             ) : null}
             <span className={styles.liveBadge} data-phase={connectionPhase}>

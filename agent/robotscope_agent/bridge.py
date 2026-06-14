@@ -36,6 +36,11 @@ try:
 except ImportError:  # pragma: no cover - optional at import time
     ActionClient = None  # type: ignore[misc, assignment]
 
+try:
+    from action_msgs.msg import GoalStatus
+except ImportError:  # pragma: no cover - optional at import time
+    GoalStatus = None  # type: ignore[misc, assignment]
+
 
 @dataclass
 class ChannelInfo:
@@ -79,6 +84,8 @@ class LiveBridge(Node):
         self._service_clients: dict[str, object] = {}
         self._action_allowlist = set(action_allowlist or [])
         self._action_clients: dict[str, object] = {}
+        self._on_action_feedback: Callable[[str, list[int]], None] | None = None
+        self._on_action_outcome: Callable[[str, bool, str, list[int], str | None], None] | None = None
 
         self._scan_and_subscribe()
         self._emit_subscription_status()
@@ -109,6 +116,14 @@ class LiveBridge(Node):
     ) -> None:
         self._on_channel_added = on_channel_added
         self._on_subscription_status = on_subscription_status
+
+    def set_action_callbacks(
+        self,
+        on_feedback: Callable[[str, list[int]], None] | None,
+        on_outcome: Callable[[str, bool, str, list[int], str | None], None] | None,
+    ) -> None:
+        self._on_action_feedback = on_feedback
+        self._on_action_outcome = on_outcome
 
     def _on_retry_timer(self) -> None:
         before = len(self._channels)
@@ -294,18 +309,68 @@ class LiveBridge(Node):
 
             goal = Fibonacci.Goal()
             goal.order = int(fibonacci_payload.get("order", 3))
-            future = client.send_goal_async(goal)
-            rclpy.spin_until_future_complete(self, future, timeout_sec=5.0)
-            if not future.done():
+
+            def feedback_callback(feedback_msg: object) -> None:
+                feedback = getattr(feedback_msg, "feedback", None)
+                sequence = getattr(feedback, "sequence", None)
+                if not isinstance(sequence, (list, tuple)):
+                    return
+                if self._on_action_feedback is not None:
+                    self._on_action_feedback(action, [int(value) for value in sequence])
+
+            send_goal_future = client.send_goal_async(goal, feedback_callback=feedback_callback)
+            rclpy.spin_until_future_complete(self, send_goal_future, timeout_sec=5.0)
+            if not send_goal_future.done():
                 return False, f"Action goal send to {action} timed out", None
-            goal_handle = future.result()
+            goal_handle = send_goal_future.result()
             if goal_handle is None:
                 return False, f"Action goal send to {action} failed", None
             if not goal_handle.accepted:
                 return False, f"Action goal rejected on {action}", False
+
+            result_future = goal_handle.get_result_async()
+            result_future.add_done_callback(
+                lambda future, action_name=action: self._handle_action_outcome(action_name, future)
+            )
             return True, f"Fibonacci goal accepted on {action} (order={goal.order})", True
 
         return False, "Missing fibonacci shortcut or unsupported payload", None
+
+    def _handle_action_outcome(self, action: str, future: object) -> None:
+        if self._on_action_outcome is None:
+            return
+
+        try:
+            wrapped = future.result()  # type: ignore[union-attr]
+            status_code = getattr(wrapped, "status", None)
+            result = getattr(wrapped, "result", None)
+            sequence_raw = getattr(result, "sequence", None) if result is not None else None
+            sequence = [int(value) for value in sequence_raw] if isinstance(sequence_raw, (list, tuple)) else []
+            status_name = self._goal_status_name(status_code)
+            ok = status_name == "succeeded"
+            message = f"Fibonacci {status_name} on {action}"
+            self._on_action_outcome(action, ok, status_name, sequence, message)
+        except Exception as exc:  # pragma: no cover - defensive path
+            self._on_action_outcome(action, False, "failed", [], str(exc))
+
+    def _goal_status_name(self, status_code: object) -> str:
+        if GoalStatus is not None:
+            mapping = {
+                GoalStatus.STATUS_SUCCEEDED: "succeeded",
+                GoalStatus.STATUS_ABORTED: "aborted",
+                GoalStatus.STATUS_CANCELED: "canceled",
+            }
+            if status_code in mapping:
+                return mapping[status_code]
+
+        numeric_mapping = {
+            4: "succeeded",
+            5: "canceled",
+            6: "aborted",
+        }
+        if isinstance(status_code, int) and status_code in numeric_mapping:
+            return numeric_mapping[status_code]
+        return "failed"
 
     def _handle_message(self, topic: str, msg: object) -> None:
         channel = self._channels.get(topic)

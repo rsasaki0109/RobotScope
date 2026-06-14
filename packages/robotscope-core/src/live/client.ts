@@ -1,6 +1,8 @@
 import type { IngestProgress, LiveRecordingResult, TimeRange } from "../query.js";
 
 import type {
+  LiveActionCancelGoalRequest,
+  LiveActionCancelGoalResult,
   LiveActionProgressUpdate,
   LiveActionSendGoalRequest,
   LiveActionSendGoalResult,
@@ -73,6 +75,9 @@ export class LiveAgentClient {
   private actionResolver: ((result: LiveActionSendGoalResult) => void) | null = null;
   private actionReject: ((error: Error) => void) | null = null;
   private actionTimeout: ReturnType<typeof setTimeout> | undefined;
+  private actionCancelResolver: ((result: LiveActionCancelGoalResult) => void) | null = null;
+  private actionCancelReject: ((error: Error) => void) | null = null;
+  private actionCancelTimeout: ReturnType<typeof setTimeout> | undefined;
 
   constructor(
     private readonly url: string,
@@ -193,6 +198,14 @@ export class LiveAgentClient {
               });
             }
             break;
+          case "command.action_cancel_result":
+            this.resolveActionCancel({
+              ok: message.ok,
+              action: message.action,
+              message: message.message,
+              cancel_accepted: message.cancel_accepted,
+            });
+            break;
           default:
             break;
         }
@@ -239,6 +252,7 @@ export class LiveAgentClient {
     this.clearPublishPending(new Error("Live agent disconnected"));
     this.clearServicePending(new Error("Live agent disconnected"));
     this.clearActionPending(new Error("Live agent disconnected"));
+    this.clearActionCancelPending(new Error("Live agent disconnected"));
     this.unsubscribeBuffer?.();
     this.recorder = null;
     this.socket?.close();
@@ -350,6 +364,35 @@ export class LiveAgentClient {
           action: request.action,
           schema: request.schema,
           fibonacci: request.fibonacci,
+        }),
+      );
+    });
+  }
+
+  cancelActionGoal(request: LiveActionCancelGoalRequest): Promise<LiveActionCancelGoalResult> {
+    if (!this.socket || this.socket.readyState !== WebSocket.OPEN) {
+      return Promise.reject(new Error("Live agent not connected"));
+    }
+    if (!this.actionSendGoalActions.includes(request.action)) {
+      return Promise.reject(
+        new Error(`Action ${request.action} is not allowlisted by the live agent`),
+      );
+    }
+    if (this.actionCancelResolver) {
+      return Promise.reject(new Error("Another action cancel is in progress"));
+    }
+
+    return new Promise((resolve, reject) => {
+      this.actionCancelResolver = resolve;
+      this.actionCancelReject = reject;
+      this.actionCancelTimeout = setTimeout(() => {
+        this.clearActionCancelPending(new Error("Action cancel timed out"));
+      }, 5000);
+
+      this.socket?.send(
+        encodeLiveClientMessage({
+          type: "command.action_cancel_goal",
+          action: request.action,
         }),
       );
     });
@@ -479,6 +522,28 @@ export class LiveAgentClient {
     const reject = this.actionReject;
     this.actionResolver = null;
     this.actionReject = null;
+    if (error && reject) {
+      reject(error);
+    }
+  }
+
+  private resolveActionCancel(result: LiveActionCancelGoalResult): void {
+    if (!this.actionCancelResolver) {
+      return;
+    }
+    const resolve = this.actionCancelResolver;
+    this.clearActionCancelPending();
+    resolve(result);
+  }
+
+  private clearActionCancelPending(error?: Error): void {
+    if (this.actionCancelTimeout) {
+      clearTimeout(this.actionCancelTimeout);
+      this.actionCancelTimeout = undefined;
+    }
+    const reject = this.actionCancelReject;
+    this.actionCancelResolver = null;
+    this.actionCancelReject = null;
     if (error && reject) {
       reject(error);
     }

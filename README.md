@@ -99,6 +99,26 @@ RobotScope/
 └── sample_data/             Sample MCAP fetch scripts
 ```
 
+## v1.4.0-alpha.0
+
+Action goal cancel on v1.3 action tracking. See [release notes](RobotScope/docs/release/v1.4.0-alpha.0.md) and [CHANGELOG.md](RobotScope/CHANGELOG.md).
+
+**Shipped**
+
+| Layer | Features |
+|-------|----------|
+| Live | **Action cancel** — Cancel goal while Fibonacci is running |
+| v1.3 carry-over | Feedback/outcome tracking · action goal send · service · Twist |
+
+**Docs**
+
+- [Action gateway guide](RobotScope/docs/action-gateway.md)
+- [Known limitations](RobotScope/docs/known-limitations.md)
+
+**Out of scope (v1.4 alpha)**
+
+- Preempt controls · arbitrary action editor · dedicated action panel · native Lanelet2 boost bin
+
 ## v1.3.0 (GA)
 
 Action feedback / outcome tracking on v1.2 action gateway. See [release notes](RobotScope/docs/release/v1.3.0.md) and [CHANGELOG.md](RobotScope/CHANGELOG.md).
@@ -118,7 +138,7 @@ Action feedback / outcome tracking on v1.2 action gateway. See [release notes](R
 
 **Out of scope (v1.3)**
 
-- Cancel / preempt · arbitrary action editor · dedicated action panel · native Lanelet2 boost bin
+- Arbitrary action editor · dedicated action panel · native Lanelet2 boost bin
 
 ## v1.3.0-beta.0
 

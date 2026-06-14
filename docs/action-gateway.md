@@ -1,6 +1,6 @@
-# Action gateway (v1.3 GA)
+# Action gateway (v1.4 alpha)
 
-Permission-gated **live action goal send** from the viewer to a local ROS 2 agent, with **Fibonacci feedback / outcome tracking** (v1.3 GA).
+Permission-gated **live action goal send and cancel** from the viewer to a local ROS 2 agent, with **Fibonacci feedback / outcome tracking** (v1.3 GA).
 
 ## Safety model
 
@@ -8,7 +8,7 @@ Permission-gated **live action goal send** from the viewer to a local ROS 2 agen
 |-------|----------|
 | **Viewer** | Action UI is **off by default**. User must check **Allow action goals** while connected live. |
 | **Agent** | Actions are **allowlisted** via `--allow-action ACTION` (repeatable). No allowlist → read-only gateway. |
-| **Protocol** | `command.action_send_goal` / `command.action_result` / `command.action_feedback` / `command.action_outcome` over live WebSocket v0.1 |
+| **Protocol** | `command.action_send_goal` / `command.action_result` / `command.action_feedback` / `command.action_outcome` / `command.action_cancel_goal` / `command.action_cancel_result` over live WebSocket v0.1 |
 
 MCAP / rosbag2 playback remains **read-only**. Only live agent connections can send action goals.
 
@@ -33,6 +33,7 @@ When **Allow action goals** is enabled and `/robotscope/demo/fibonacci` is allow
 - **n** — Fibonacci order (goal field)
 - **Send Fibonacci** — sends `example_interfaces/action/Fibonacci` goal
 - **Tracking (v1.3)** — command bar shows `running · [0, 1, …]` then final `succeeded` / `aborted` / `canceled`
+- **Cancel (v1.4 alpha)** — **Cancel goal** button while status is `running`
 
 Native ROS agents can allow any Fibonacci-compatible action name.
 
@@ -103,16 +104,37 @@ Final outcome (v1.3):
 }
 ```
 
+Cancel request (v1.4 alpha):
+
+```json
+{
+  "type": "command.action_cancel_goal",
+  "action": "/robotscope/demo/fibonacci"
+}
+```
+
+Cancel response (v1.4 alpha):
+
+```json
+{
+  "type": "command.action_cancel_result",
+  "ok": true,
+  "action": "/robotscope/demo/fibonacci",
+  "cancel_accepted": true,
+  "message": "Cancel requested on /robotscope/demo/fibonacci"
+}
+```
+
 ## Implementation
 
 - Core — `RobotScope/packages/robotscope-core/src/live/action-gateway.ts`
 - Live client — `LiveAgentClient.sendActionGoal()`
 - Python agent — `RobotScope/agent/robotscope_agent/bridge.py`
-- Viewer — command bar **Allow action goals** + **Send Fibonacci** + **sequence tracking badge**
+- Viewer — command bar **Allow action goals** + **Send Fibonacci** + **Cancel goal** + **sequence tracking badge**
 
-## Out of scope (v1.3)
+## Out of scope (v1.4 alpha)
 
-- Cancel / preempt controls
+- Preempt controls (send new goal while running)
 - Arbitrary action goal editor
 - Dedicated action timeline panel
 - Plugin runtime permission enforcement

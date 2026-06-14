@@ -62,6 +62,7 @@ export function CommandBar() {
   const publishLiveZeroCmdVel = useViewerStore((s) => s.publishLiveZeroCmdVel);
   const callLiveTriggerService = useViewerStore((s) => s.callLiveTriggerService);
   const sendLiveFibonacciGoal = useViewerStore((s) => s.sendLiveFibonacciGoal);
+  const cancelLiveFibonacciGoal = useViewerStore((s) => s.cancelLiveFibonacciGoal);
   const [liveUrl, setLiveUrl] = useState(DEFAULT_LIVE_AGENT_URL);
   const [livePresetId, setLivePresetId] = useState(LIVE_AGENT_PRESETS[0]?.id ?? "custom");
 
@@ -398,6 +399,15 @@ export function CommandBar() {
                 >
                   Send Fibonacci
                 </button>
+                {liveActionTracking?.status === "running" ? (
+                  <button
+                    type="button"
+                    className={styles.buttonSecondary}
+                    onClick={() => void cancelLiveFibonacciGoal()}
+                  >
+                    Cancel goal
+                  </button>
+                ) : null}
                 {liveActionTracking ? (
                   <span
                     className={styles.actionTracking}

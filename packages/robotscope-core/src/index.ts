@@ -28,6 +28,7 @@ export type {
   LiveServiceCallResult,
 } from "./live/service-gateway.js";
 export {
+  buildFibonacciActionCancelRequest,
   buildFibonacciActionGoalRequest,
   DEFAULT_FIBONACCI_ACTION,
   EXAMPLE_FIBONACCI_ACTION_SCHEMA,
@@ -36,6 +37,8 @@ export {
 } from "./live/action-gateway.js";
 export type {
   FibonacciActionGoal,
+  LiveActionCancelGoalRequest,
+  LiveActionCancelGoalResult,
   LiveActionOutcomeStatus,
   LiveActionProgressUpdate,
   LiveActionSendGoalRequest,

@@ -134,6 +134,7 @@ export interface LiveIngestHandle extends IngestHandle {
   publishCommand(request: import("./live/command-gateway.js").LiveCommandPublishRequest): Promise<import("./live/command-gateway.js").LiveCommandPublishResult>;
   callService(request: import("./live/service-gateway.js").LiveServiceCallRequest): Promise<import("./live/service-gateway.js").LiveServiceCallResult>;
   sendActionGoal(request: import("./live/action-gateway.js").LiveActionSendGoalRequest): Promise<import("./live/action-gateway.js").LiveActionSendGoalResult>;
+  cancelActionGoal(request: import("./live/action-gateway.js").LiveActionCancelGoalRequest): Promise<import("./live/action-gateway.js").LiveActionCancelGoalResult>;
 }
 
 export function isLiveIngestHandle(

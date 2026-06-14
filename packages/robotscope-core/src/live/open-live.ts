@@ -42,6 +42,7 @@ export async function openLive(url: string, options: LiveOpenOptions = {}): Prom
     publishCommand: (request) => client.publishCommand(request),
     callService: (request) => client.callService(request),
     sendActionGoal: (request) => client.sendActionGoal(request),
+    cancelActionGoal: (request) => client.cancelActionGoal(request),
   };
 }
 

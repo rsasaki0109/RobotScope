@@ -27,12 +27,49 @@ function fibonacciSequence(order) {
   return sequence.slice(0, normalized + 1);
 }
 
-function simulateFibonacciAction(socket, action, order) {
+function simulateFibonacciAction(socket, action, order, activeSimulations) {
+  const existing = activeSimulations.get(action);
+  if (existing) {
+    existing.cancel();
+  }
+
   const sequence = fibonacciSequence(order);
   let index = 0;
+  let timer;
+  let cancelled = false;
+
+  const sendOutcome = (status, ok, message) => {
+    activeSimulations.delete(action);
+    if (socket.readyState !== 1) {
+      return;
+    }
+    socket.send(
+      JSON.stringify({
+        type: "command.action_outcome",
+        action,
+        ok,
+        status,
+        sequence: sequence.slice(0, Math.max(index + 1, 1)),
+        message,
+      }),
+    );
+  };
+
+  const simulation = {
+    cancel() {
+      if (cancelled) {
+        return;
+      }
+      cancelled = true;
+      if (timer !== undefined) {
+        clearTimeout(timer);
+      }
+      sendOutcome("canceled", false, `Demo Fibonacci canceled on ${action}`);
+    },
+  };
 
   const tick = () => {
-    if (socket.readyState !== 1) {
+    if (socket.readyState !== 1 || cancelled) {
       return;
     }
 
@@ -45,24 +82,16 @@ function simulateFibonacciAction(socket, action, order) {
     );
 
     if (index >= sequence.length - 1) {
-      socket.send(
-        JSON.stringify({
-          type: "command.action_outcome",
-          action,
-          ok: true,
-          status: "succeeded",
-          sequence,
-          message: `Demo Fibonacci completed (order=${order})`,
-        }),
-      );
+      sendOutcome("succeeded", true, `Demo Fibonacci completed (order=${order})`);
       return;
     }
 
     index += 1;
-    setTimeout(tick, 120);
+    timer = setTimeout(tick, 120);
   };
 
-  setTimeout(tick, 120);
+  activeSimulations.set(action, simulation);
+  timer = setTimeout(tick, 120);
 }
 
 function defaultMcapPath() {
@@ -257,6 +286,15 @@ if (options.allowAction.length > 0) {
 
 server.on("connection", (socket) => {
   console.log("Viewer connected");
+  const activeActionSimulations = new Map();
+
+  socket.on("close", () => {
+    for (const simulation of activeActionSimulations.values()) {
+      simulation.cancel();
+    }
+    activeActionSimulations.clear();
+  });
+
   void streamRecording(
     socket,
     recording,
@@ -339,7 +377,47 @@ server.on("connection", (socket) => {
           message: `Demo agent accepted Fibonacci goal order=${order} on ${action} (no ROS action)`,
         }),
       );
-      simulateFibonacciAction(socket, action, order);
+      simulateFibonacciAction(socket, action, order, activeActionSimulations);
+      return;
+    }
+
+    if (payload?.type === "command.action_cancel_goal") {
+      const action = payload.action;
+      if (typeof action !== "string" || !options.allowAction.includes(action)) {
+        socket.send(
+          JSON.stringify({
+            type: "command.action_cancel_result",
+            ok: false,
+            action,
+            message: `Action ${action ?? "?"} is not allowlisted for goal cancel`,
+          }),
+        );
+        return;
+      }
+
+      const simulation = activeActionSimulations.get(action);
+      if (!simulation) {
+        socket.send(
+          JSON.stringify({
+            type: "command.action_cancel_result",
+            ok: false,
+            action,
+            message: `No active goal on ${action}`,
+          }),
+        );
+        return;
+      }
+
+      simulation.cancel();
+      socket.send(
+        JSON.stringify({
+          type: "command.action_cancel_result",
+          ok: true,
+          action,
+          cancel_accepted: true,
+          message: `Demo agent canceled Fibonacci on ${action}`,
+        }),
+      );
       return;
     }
 

@@ -12,6 +12,7 @@ from websockets.server import WebSocketServerProtocol
 from .bridge import ChannelInfo, LiveBridge
 from .protocol import (
     channel_message,
+    command_action_cancel_result_message,
     command_action_feedback_message,
     command_action_outcome_message,
     command_action_result_message,
@@ -266,6 +267,28 @@ class LiveGateway:
             ok, message, goal_accepted = self.bridge.send_action_goal(action, schema, payload)
             await websocket.send(
                 command_action_result_message(ok, message, action=action, goal_accepted=goal_accepted)
+            )
+            return
+
+        if message_type == "command.action_cancel_goal":
+            action = payload.get("action")
+            if not isinstance(action, str):
+                await websocket.send(
+                    command_action_cancel_result_message(
+                        False,
+                        "command.action_cancel_goal requires action",
+                    )
+                )
+                return
+
+            ok, message, cancel_accepted = self.bridge.cancel_action_goal(action)
+            await websocket.send(
+                command_action_cancel_result_message(
+                    ok,
+                    message,
+                    action=action,
+                    cancel_accepted=cancel_accepted,
+                )
             )
             return
 

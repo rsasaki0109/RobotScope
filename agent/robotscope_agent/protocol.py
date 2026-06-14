@@ -171,3 +171,22 @@ def command_action_outcome_message(
     if message:
         payload["message"] = message
     return json.dumps(payload)
+
+
+def command_action_cancel_result_message(
+    ok: bool,
+    message: str,
+    *,
+    action: str | None = None,
+    cancel_accepted: bool | None = None,
+) -> str:
+    payload: dict[str, Any] = {
+        "type": "command.action_cancel_result",
+        "ok": ok,
+        "message": message,
+    }
+    if action:
+        payload["action"] = action
+    if cancel_accepted is not None:
+        payload["cancel_accepted"] = cancel_accepted
+    return json.dumps(payload)

@@ -4,6 +4,24 @@ All notable changes to RobotScope are documented in this file.
 
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and versioning follows [SemVer](https://semver.org/).
 
+## [1.4.0-alpha.0] - 2026-06-13
+
+Permission-gated action goal cancel for live Fibonacci workflows.
+
+### Added
+
+- **`command.action_cancel_goal`** / **`command.action_cancel_result`** on live WebSocket protocol v0.1
+- Viewer **Cancel goal** button while action tracking is `running`
+- Python agent `cancel_action_goal()` via ROS `GoalHandle.cancel_goal_async()`
+- Demo live agent cancels simulated Fibonacci progress
+- `buildFibonacciActionCancelRequest()` helper in core
+- [docs/release/v1.4.0-alpha.0.md](RobotScope/docs/release/v1.4.0-alpha.0.md)
+
+### Changed
+
+- [docs/action-gateway.md](RobotScope/docs/action-gateway.md) updated for v1.4 alpha cancel
+- [known-limitations.md](RobotScope/docs/known-limitations.md) updated — cancel available; no preempt UI
+
 ## [1.3.0] - 2026-06-13
 
 Thirteenth GA release — action feedback / outcome tracking on live gateways.

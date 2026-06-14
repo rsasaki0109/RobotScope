@@ -1,4 +1,4 @@
-/** Permission-gated live action goals (v1.2+) with progress tracking (v1.3 alpha). */
+/** Permission-gated live action goals (v1.2+) with progress tracking (v1.3) and cancel (v1.4 alpha). */
 
 export const DEFAULT_FIBONACCI_ACTION = "/robotscope/demo/fibonacci";
 export const EXAMPLE_FIBONACCI_ACTION_SCHEMA = "example_interfaces/action/Fibonacci";
@@ -23,6 +23,17 @@ export interface LiveActionSendGoalResult {
   action?: string;
   message: string;
   goal_accepted?: boolean;
+}
+
+export interface LiveActionCancelGoalRequest {
+  action: string;
+}
+
+export interface LiveActionCancelGoalResult {
+  ok: boolean;
+  action?: string;
+  message: string;
+  cancel_accepted?: boolean;
 }
 
 export interface LiveActionFeedbackUpdate {
@@ -70,6 +81,12 @@ export function buildFibonacciActionGoalRequest(
       order: assertFiniteOrder(order),
     },
   };
+}
+
+export function buildFibonacciActionCancelRequest(
+  action: string = DEFAULT_FIBONACCI_ACTION,
+): LiveActionCancelGoalRequest {
+  return { action };
 }
 
 export function formatFibonacciSequence(sequence: number[]): string {

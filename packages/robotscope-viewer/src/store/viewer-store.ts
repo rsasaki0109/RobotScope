@@ -193,6 +193,7 @@ export interface ViewerState {
   publishLiveZeroCmdVel: () => Promise<void>;
   callLiveTriggerService: (service?: string) => Promise<void>;
   sendLiveFibonacciGoal: (action?: string) => Promise<void>;
+  cancelLiveFibonacciGoal: (action?: string) => Promise<void>;
   refreshInspection: () => Promise<void>;
   setCurrentTimeNs: (timeNs: number) => void;
   setPlaying: (playing: boolean) => void;
@@ -866,6 +867,43 @@ export const useViewerStore = create<ViewerState>((set, get) => ({
     } catch (error) {
       set({
         statusMessage: error instanceof Error ? error.message : "Action goal failed",
+      });
+    }
+  },
+
+  async cancelLiveFibonacciGoal(actionName) {
+    const state = get();
+    if (!state.actionGatewayEnabled) {
+      set({ statusMessage: "Enable action gateway before canceling a goal" });
+      return;
+    }
+
+    const tracking = state.liveActionTracking;
+    if (!tracking || tracking.status !== "running") {
+      set({ statusMessage: "No running action goal to cancel" });
+      return;
+    }
+
+    const ingest = state.ingest;
+    if (!ingest || !isLiveIngestHandle(ingest)) {
+      set({ statusMessage: "Connect a live agent before canceling an action goal" });
+      return;
+    }
+
+    try {
+      const { buildFibonacciActionCancelRequest, DEFAULT_FIBONACCI_ACTION } = await import(
+        "@robotscope/core"
+      );
+      const action = actionName ?? tracking.action ?? DEFAULT_FIBONACCI_ACTION;
+      const result = await ingest.cancelActionGoal(buildFibonacciActionCancelRequest(action));
+      set({
+        statusMessage: result.ok
+          ? `${result.message}${result.cancel_accepted === false ? " · cancel rejected" : ""}`
+          : `Action cancel failed: ${result.message}`,
+      });
+    } catch (error) {
+      set({
+        statusMessage: error instanceof Error ? error.message : "Action cancel failed",
       });
     }
   },

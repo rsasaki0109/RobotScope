@@ -93,6 +93,14 @@ export interface LiveCommandActionOutcomeMessage {
   message?: string;
 }
 
+export interface LiveCommandActionCancelResultMessage {
+  type: "command.action_cancel_result";
+  ok: boolean;
+  action?: string;
+  message: string;
+  cancel_accepted?: boolean;
+}
+
 export type LiveServerMessage =
   | LiveSessionMessage
   | LiveChannelMessage
@@ -103,7 +111,8 @@ export type LiveServerMessage =
   | LiveCommandServiceResultMessage
   | LiveCommandActionResultMessage
   | LiveCommandActionFeedbackMessage
-  | LiveCommandActionOutcomeMessage;
+  | LiveCommandActionOutcomeMessage
+  | LiveCommandActionCancelResultMessage;
 
 export interface LiveCommandPublishClientMessage {
   type: "command.publish";
@@ -132,11 +141,17 @@ export interface LiveCommandActionSendGoalClientMessage {
   fibonacci?: FibonacciActionGoal;
 }
 
+export interface LiveCommandActionCancelGoalClientMessage {
+  type: "command.action_cancel_goal";
+  action: string;
+}
+
 export type LiveClientMessage =
   | LivePingMessage
   | LiveCommandPublishClientMessage
   | LiveCommandServiceCallClientMessage
-  | LiveCommandActionSendGoalClientMessage;
+  | LiveCommandActionSendGoalClientMessage
+  | LiveCommandActionCancelGoalClientMessage;
 
 export function parseLiveServerMessage(raw: string): LiveServerMessage | null {
   try {

@@ -84,6 +84,7 @@ class LiveBridge(Node):
         self._service_clients: dict[str, object] = {}
         self._action_allowlist = set(action_allowlist or [])
         self._action_clients: dict[str, object] = {}
+        self._active_goal_handles: dict[str, object] = {}
         self._on_action_feedback: Callable[[str, list[int]], None] | None = None
         self._on_action_outcome: Callable[[str, bool, str, list[int], str | None], None] | None = None
 
@@ -328,6 +329,8 @@ class LiveBridge(Node):
             if not goal_handle.accepted:
                 return False, f"Action goal rejected on {action}", False
 
+            self._active_goal_handles[action] = goal_handle
+
             result_future = goal_handle.get_result_async()
             result_future.add_done_callback(
                 lambda future, action_name=action: self._handle_action_outcome(action_name, future)
@@ -336,7 +339,26 @@ class LiveBridge(Node):
 
         return False, "Missing fibonacci shortcut or unsupported payload", None
 
+    def cancel_action_goal(self, action: str) -> tuple[bool, str, bool | None]:
+        if action not in self._action_allowlist:
+            return False, f"Action {action} is not allowlisted for goal cancel", None
+
+        goal_handle = self._active_goal_handles.get(action)
+        if goal_handle is None:
+            return False, f"No active goal on {action}", None
+
+        cancel_future = goal_handle.cancel_goal_async()  # type: ignore[union-attr]
+        rclpy.spin_until_future_complete(self, cancel_future, timeout_sec=5.0)
+        if not cancel_future.done():
+            return False, f"Action cancel on {action} timed out", None
+        cancel_response = cancel_future.result()
+        if cancel_response is None:
+            return False, f"Action cancel on {action} failed", None
+
+        return True, f"Cancel requested on {action}", True
+
     def _handle_action_outcome(self, action: str, future: object) -> None:
+        self._active_goal_handles.pop(action, None)
         if self._on_action_outcome is None:
             return
 

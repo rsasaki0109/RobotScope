@@ -1,6 +1,6 @@
-# Known limitations (v1.3 GA)
+# Known limitations (v1.4 alpha)
 
-Concrete scope boundaries for **v1.3.0**. Product choices or not-yet-built — not necessarily bugs.
+Concrete scope boundaries for **v1.4.0-alpha.0**. Product choices or not-yet-built — not necessarily bugs.
 
 Plugin manifest **`api: "0.1"`** remains stable (from v0.1 GA) — see [api-v0.1.md](RobotScope/docs/api-v0.1.md).
 
@@ -38,7 +38,7 @@ Plugin manifest **`api: "0.1"`** remains stable (from v0.1 GA) — see [api-v0.1
 | **Read-only playback** | MCAP / rosbag2 / GitHub Pages demo cannot publish |
 | **Live command gateway** | Opt-in **Allow publish** + agent **`--allow-publish`** allowlist — see [command-gateway.md](RobotScope/docs/command-gateway.md). **6-DOF Twist editor** (v1.0) |
 | **Live service gateway** | Opt-in **Allow service calls** + agent **`--allow-service`** allowlist — see [service-gateway.md](RobotScope/docs/service-gateway.md). **Trigger shortcut only** (v1.1) |
-| **Live action gateway** | Opt-in **Allow action goals** + agent **`--allow-action`** allowlist — see [action-gateway.md](RobotScope/docs/action-gateway.md). **Fibonacci goal send** (v1.2) + **command bar sequence tracking** (v1.3); no cancel/preempt or dedicated action panel |
+| **Live action gateway** | Opt-in **Allow action goals** + agent **`--allow-action`** allowlist — see [action-gateway.md](RobotScope/docs/action-gateway.md). **Fibonacci goal send** (v1.2) + **sequence tracking** (v1.3) + **Cancel goal** while running (v1.4 alpha); no preempt UI or dedicated action panel |
 | **No cloud / fleet dashboard** | Single-session web viewer |
 | **No multi-user auth** | Local or static deploy only |
 | GitHub Pages is **static demo** | Live connect targets `localhost` agent |

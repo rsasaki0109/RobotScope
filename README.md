@@ -78,6 +78,16 @@ Open an MCAP file from the viewer (drag & drop) or click **Connect Live** for a 
 | `nav2` | ~0.5s / ~1.8s | Controller stuck / localization uncertainty |
 | `moveit` | ~0.7s / ~1.8s | Joint overspeed / scene collision |
 
+<p align="center">
+  <a href="https://rsasaki0109.github.io/RobotScope/?layout=nav2&demo=1">
+    <img src="docs/assets/readme-nav2.png" alt="RobotScope Nav2 debug layout showing a controller stuck failure recipe with AMCL, costmap, global plan, local plan, goal, and controller panels" width="920" />
+  </a>
+</p>
+
+<p align="center">
+  <em>Nav2 demo (<code>layout=nav2</code>): controller-stuck recipe at ~0.5s with plan, goal, costmap, and cmd_vel context on the same timeline.</em>
+</p>
+
 The timeline footer shows **all stack recipes** at the playhead (amber = Autoware, blue = Nav2, purple = MoveIt). Click colored ticks to jump. When recipes are active, the **cross-layout banner** below the command bar lists all stacks — click a chip to switch layout.
 
 ### Live agent

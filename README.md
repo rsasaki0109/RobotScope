@@ -70,7 +70,7 @@ npm run dev                                                # → http://localhos
 
 Open an MCAP file from the viewer (drag & drop) or click **Connect Live** for a WebSocket agent.
 
-**Live demo (GitHub Pages):** [Autoware layout + bundled MCAP](https://rsasaki0109.github.io/RobotScope/?layout=autoware&demo=1) — the same MCAP works with `layout=nav2` or `layout=moveit`.
+**Live demo (GitHub Pages):** [Autoware layout + bundled MCAP](https://rsasaki0109.github.io/RobotScope/?layout=autoware&demo=1) — the same MCAP works with `layout=nav2`, `layout=moveit`, or `layout=timeseries` (PlotJuggler-style plots).
 
 | Layout | Scrub to | Failure recipe |
 |--------|----------|----------------|
@@ -86,6 +86,20 @@ Open an MCAP file from the viewer (drag & drop) or click **Connect Live** for a 
 
 <p align="center">
   <em>Nav2 demo (<code>layout=nav2</code>): controller-stuck recipe at ~0.5s with plan, goal, costmap, and cmd_vel context on the same timeline.</em>
+</p>
+
+### Time-series plots (PlotJuggler-style)
+
+The `timeseries` layout turns any numeric ROS2 field into a live plot next to the 3D scene. Pick fields from the catalog (click or drag), overlay multiple series with per-series Y axes, or stack them one-per-plot. Drag to zoom / wheel to pan with a shared time axis, click anywhere on a plot to seek the 3D scene and timeline, and export the visible series to CSV. Zooming refetches just the visible window at full resolution, so it stays responsive on large recordings.
+
+<p align="center">
+  <a href="https://rsasaki0109.github.io/RobotScope/?layout=timeseries&demo=1">
+    <img src="docs/assets/readme-timeseries.png" alt="RobotScope time-series layout showing four overlaid numeric ROS2 signals with per-series Y axes and a click-to-seek playhead cursor next to the 3D scene" width="920" />
+  </a>
+</p>
+
+<p align="center">
+  <em>Time-series demo (<code>layout=timeseries</code>): lateral / longitudinal error and cmd_vel overlaid with per-series Y axes; click a plot to seek the 3D scene, zoom for full-resolution detail, export to CSV.</em>
 </p>
 
 The timeline footer shows **all stack recipes** at the playhead (amber = Autoware, blue = Nav2, purple = MoveIt). Click colored ticks to jump. When recipes are active, the **cross-layout banner** below the command bar lists all stacks — click a chip to switch layout.

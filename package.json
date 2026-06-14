@@ -22,7 +22,7 @@
     "demo:live-agent": "node scripts/live-agent-demo.mjs --allow-publish /cmd_vel --allow-service /robotscope/demo/trigger --allow-action /robotscope/demo/fibonacci",
     "demo:ros2-agent": "bash scripts/run-ros2-agent.sh",
     "demo:ros2-agent:autoware": "bash scripts/run-ros2-agent.sh --profile autoware",
-    "build:pages": "node scripts/create-tf-demo.mjs packages/robotscope-viewer/public/demo/demo-scene.mcap && npm run build:pages --workspace=@robotscope/viewer",
+    "build:pages": "node scripts/create-tf-demo.mjs packages/robotscope-viewer/public/demo/demo-scene.mcap && node scripts/create-rosbag2-demo.mjs packages/robotscope-viewer/public/demo/demo-rosbag2 && npm run build:pages --workspace=@robotscope/viewer",
     "preview:pages": "npm run preview:pages --workspace=@robotscope/viewer",
     "validate:plugins": "node scripts/validate-plugin-manifests.mjs",
     "convert:rosbag2": "bash scripts/rosbag2-to-mcap.sh",

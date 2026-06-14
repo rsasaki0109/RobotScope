@@ -42,6 +42,7 @@ sample_data/demo-rosbag2/
 
 # Generated demo bundle for GitHub Pages builds
 packages/robotscope-viewer/public/demo/*.mcap
+packages/robotscope-viewer/public/demo/demo-rosbag2/
 
 # README hero capture intermediates (see scripts/capture-readme-hero.mjs)
 docs/assets/readme-frames/

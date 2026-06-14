@@ -15,10 +15,18 @@ function resolveLayoutFromUrl(): string {
   return params.get("layout") ?? "default";
 }
 
-function shouldAutoLoadDemo(): boolean {
+type DemoSource = "mcap" | "rosbag2";
+
+function resolveDemoSource(): DemoSource | null {
   const params = new URLSearchParams(window.location.search);
   const demo = params.get("demo");
-  return demo === "1" || demo === "true";
+  if (demo === "1" || demo === "true") {
+    return "mcap";
+  }
+  if (demo === "rosbag2") {
+    return "rosbag2";
+  }
+  return null;
 }
 
 export function Workspace() {
@@ -33,10 +41,14 @@ export function Workspace() {
   }, [setLayoutId]);
 
   useEffect(() => {
-    if (!shouldAutoLoadDemo() || session) {
+    const demoSource = resolveDemoSource();
+    if (!demoSource || session) {
       return;
     }
-    const demoUrl = `${import.meta.env.BASE_URL}demo/demo-scene.mcap`;
+    const demoUrl =
+      demoSource === "rosbag2"
+        ? `${import.meta.env.BASE_URL}demo/demo-rosbag2/demo-rosbag2_0.db3`
+        : `${import.meta.env.BASE_URL}demo/demo-scene.mcap`;
     void openMcapUrl(demoUrl).catch((error: unknown) => {
       const message = error instanceof Error ? error.message : String(error);
       useViewerStore.setState({ statusMessage: `Demo load failed: ${message}` });
@@ -44,7 +56,7 @@ export function Workspace() {
   }, [openMcapUrl, session]);
 
   useEffect(() => {
-    if (shouldAutoLoadDemo()) {
+    if (resolveDemoSource()) {
       return;
     }
     const liveUrl = resolveLiveAgentUrlFromSearch(window.location.search);

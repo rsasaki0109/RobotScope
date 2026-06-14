@@ -1,6 +1,6 @@
-# Action gateway (v1.5 beta)
+# Action gateway (v1.5 GA)
 
-Permission-gated **live action goal send and cancel** from the viewer to a local ROS 2 agent, with **Fibonacci feedback / outcome tracking** (v1.3 GA) and **Action timeline panel** (v1.5 beta).
+Permission-gated **live action goal send and cancel** from the viewer to a local ROS 2 agent, with **Fibonacci feedback / outcome tracking** (v1.3 GA) and **Action timeline panel** (v1.5 GA).
 
 ## Safety model
 
@@ -133,7 +133,7 @@ Cancel response (v1.4):
 - Viewer — command bar **Allow action goals** + **Send Fibonacci** + **Cancel goal** + **sequence tracking badge**
 - Sidebar — **Action timeline** panel (v1.5) with goal / feedback / outcome / cancel events
 
-## Out of scope (v1.5 beta)
+## Out of scope (v1.5)
 
 - Cross-session action history persistence
 - Preempt controls (send new goal while running)

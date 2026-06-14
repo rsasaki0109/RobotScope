@@ -99,6 +99,27 @@ RobotScope/
 └── sample_data/             Sample MCAP fetch scripts
 ```
 
+## v1.5.0-beta.0
+
+Dedicated action timeline panel on v1.4 action gateway. See [release notes](RobotScope/docs/release/v1.5.0-beta.0.md) and [CHANGELOG.md](RobotScope/CHANGELOG.md).
+
+**Shipped**
+
+| Layer | Features |
+|-------|----------|
+| Live | **Action timeline panel** — sidebar event history for Fibonacci goals |
+| v1.4 carry-over | Cancel goal · tracking badge · goal send · service · Twist |
+
+**Docs**
+
+- [Action gateway guide](RobotScope/docs/action-gateway.md)
+- [Migration v1.5 alpha → beta](RobotScope/docs/migration/v1.5-alpha-to-beta.md)
+- [Known limitations](RobotScope/docs/known-limitations.md)
+
+**Out of scope (v1.5 beta)**
+
+- Cross-session persistence · preempt controls · native Lanelet2 boost bin
+
 ## v1.5.0-alpha.0
 
 Dedicated action timeline panel on v1.4 action gateway. See [release notes](RobotScope/docs/release/v1.5.0-alpha.0.md) and [CHANGELOG.md](RobotScope/CHANGELOG.md).

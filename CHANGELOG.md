@@ -4,6 +4,24 @@ All notable changes to RobotScope are documented in this file.
 
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and versioning follows [SemVer](https://semver.org/).
 
+## [1.4.0] - 2026-06-13
+
+Fourteenth GA release — action goal cancel on live gateways.
+
+### Summary
+
+v1.4 GA marks stable delivery of alpha/beta features on top of v1.3. No intentional breaking changes from `1.4.0-beta.0`. Plugin API `0.1` unchanged.
+
+### Added
+
+- [docs/release/v1.4.0.md](RobotScope/docs/release/v1.4.0.md)
+- [docs/migration/v1.4-beta-to-ga.md](RobotScope/docs/migration/v1.4-beta-to-ga.md)
+
+### Changed
+
+- README status section updated for **v1.4.0 GA**
+- Version series advances from `1.4.0-beta.0` to **`1.4.0`**
+
 ## [1.4.0-beta.0] - 2026-06-13
 
 First v1.4 beta — scope consolidation after alpha.0.

@@ -14,11 +14,12 @@ import initSqlJs from "sql.js";
 const require = createRequire(import.meta.url);
 
 const BAG_FILENAME = "demo-rosbag2_0.db3";
-const MESSAGE_TYPE = "std_msgs/msg/Float64";
 const SERIALIZATION_FORMAT = "cdr";
 const BASE_NS = 1_000_000_000_000;
 const STEP_NS = 100_000_000;
 const SAMPLE_COUNT = 20;
+const EXPECTED_TOPIC_COUNT = 5;
+const EXPECTED_MESSAGE_COUNT = 100;
 
 const outDir = resolve(process.argv[2] ?? "sample_data/demo-rosbag2");
 const dbPath = resolve(outDir, BAG_FILENAME);
@@ -28,23 +29,75 @@ const topics = [
   {
     id: 1,
     name: "/localization/pose_estimator/ndt_score",
-    valueAt(sampleIndex) {
+    type: "std_msgs/msg/Float64",
+    messageAt(sampleIndex) {
       const t = sampleIndex / (SAMPLE_COUNT - 1);
-      return 1.0 - 0.6 * t + 0.006 * Math.sin(4 * Math.PI * t);
+      return { data: roundSignal(1.0 - 0.6 * t + 0.006 * Math.sin(4 * Math.PI * t)) };
     },
   },
   {
     id: 2,
     name: "/control/trajectory_follower/lateral_error",
-    valueAt(sampleIndex) {
-      return 0.2 * Math.sin((2 * Math.PI * sampleIndex) / 10);
+    type: "std_msgs/msg/Float64",
+    messageAt(sampleIndex) {
+      return { data: roundSignal(0.2 * Math.sin((2 * Math.PI * sampleIndex) / 10)) };
     },
   },
   {
     id: 3,
     name: "/control/trajectory_follower/longitudinal_error",
-    valueAt(sampleIndex) {
-      return 0.15 * Math.sin((2 * Math.PI * sampleIndex) / 10 + Math.PI / 3);
+    type: "std_msgs/msg/Float64",
+    messageAt(sampleIndex) {
+      return {
+        data: roundSignal(0.15 * Math.sin((2 * Math.PI * sampleIndex) / 10 + Math.PI / 3)),
+      };
+    },
+  },
+  {
+    id: 4,
+    name: "/cmd_vel",
+    type: "geometry_msgs/msg/Twist",
+    messageAt(sampleIndex) {
+      const phase = (2 * Math.PI * sampleIndex) / 10;
+      return {
+        linear: { x: roundSignal(0.5 + 0.4 * Math.sin(phase)), y: 0, z: 0 },
+        angular: { x: 0, y: 0, z: roundSignal(0.2 * Math.cos(phase)) },
+      };
+    },
+  },
+  {
+    id: 5,
+    name: "/odom",
+    type: "nav_msgs/msg/Odometry",
+    messageAt(sampleIndex, timestamp) {
+      return {
+        header: {
+          stamp: {
+            sec: Math.floor(timestamp / 1_000_000_000),
+            nanosec: timestamp % 1_000_000_000,
+          },
+          frame_id: "odom",
+        },
+        child_frame_id: "base_link",
+        pose: {
+          pose: {
+            position: {
+              x: roundSignal(0.1 * sampleIndex),
+              y: roundSignal(0.02 * sampleIndex),
+              z: 0,
+            },
+            orientation: { x: 0, y: 0, z: 0, w: 1 },
+          },
+          covariance: new Array(36).fill(0),
+        },
+        twist: {
+          twist: {
+            linear: { x: 0.5, y: 0, z: 0 },
+            angular: { x: 0, y: 0, z: 0.1 },
+          },
+          covariance: new Array(36).fill(0),
+        },
+      };
     },
   },
 ];
@@ -61,6 +114,39 @@ function requiredSingleValue(db, sql) {
   return Number(row[0]);
 }
 
+function normalizeMessageType(type) {
+  return type.replace("/msg/", "/");
+}
+
+function collectDefinitions(rootName) {
+  const out = [];
+  const seen = new Set();
+  const visit = (name) => {
+    if (seen.has(name)) {
+      return;
+    }
+    seen.add(name);
+
+    const entry = ros2humble[name];
+    if (!entry) {
+      return;
+    }
+
+    out.push(entry);
+    for (const field of entry.definitions) {
+      if (field.isComplex === true && field.isConstant !== true) {
+        visit(field.type);
+      }
+    }
+  };
+
+  visit(rootName);
+  if (out.length === 0) {
+    throw new Error(`Missing ROS2 message definition from @foxglove/rosmsg-msgs-common: ${rootName}`);
+  }
+  return out;
+}
+
 function buildMetadata() {
   const totalMessages = topics.length * SAMPLE_COUNT;
   const durationNs = (SAMPLE_COUNT - 1) * STEP_NS;
@@ -68,7 +154,7 @@ function buildMetadata() {
     .map(
       (topic) => `    - topic_metadata:
         name: ${topic.name}
-        type: ${MESSAGE_TYPE}
+        type: ${topic.type}
         serialization_format: ${SERIALIZATION_FORMAT}
         offered_qos_profiles: ""
       message_count: ${SAMPLE_COUNT}`,
@@ -90,15 +176,15 @@ ${topicEntries}
 `;
 }
 
-const float64Definition = ros2humble["std_msgs/Float64"];
-if (!float64Definition) {
-  throw new Error("Missing std_msgs/Float64 definition from @foxglove/rosmsg-msgs-common");
-}
-
 const SQL = await initSqlJs({
   locateFile: () => require.resolve("sql.js/dist/sql-wasm.wasm"),
 });
-const writer = new MessageWriter([float64Definition]);
+const writersByType = new Map(
+  [...new Set(topics.map((topic) => topic.type))].map((type) => [
+    type,
+    new MessageWriter(collectDefinitions(normalizeMessageType(type))),
+  ]),
+);
 const db = new SQL.Database();
 
 db.run(`
@@ -122,7 +208,7 @@ INSERT INTO topics(id, name, type, serialization_format, offered_qos_profiles)
 VALUES (?, ?, ?, ?, ?)
 `);
 for (const topic of topics) {
-  insertTopic.run([topic.id, topic.name, MESSAGE_TYPE, SERIALIZATION_FORMAT, ""]);
+  insertTopic.run([topic.id, topic.name, topic.type, SERIALIZATION_FORMAT, ""]);
 }
 insertTopic.free();
 
@@ -134,8 +220,11 @@ let messageId = 1;
 for (let sampleIndex = 0; sampleIndex < SAMPLE_COUNT; sampleIndex += 1) {
   const timestamp = BASE_NS + sampleIndex * STEP_NS;
   for (const topic of topics) {
-    const value = roundSignal(topic.valueAt(sampleIndex));
-    const payload = writer.writeMessage({ data: value });
+    const writer = writersByType.get(topic.type);
+    if (!writer) {
+      throw new Error(`Missing MessageWriter for ${topic.type}`);
+    }
+    const payload = writer.writeMessage(topic.messageAt(sampleIndex, timestamp));
     insertMessage.run([messageId, topic.id, timestamp, payload]);
     messageId += 1;
   }
@@ -154,17 +243,17 @@ const minPayloadBytes = requiredSingleValue(verificationDb, "SELECT MIN(length(d
 const maxPayloadBytes = requiredSingleValue(verificationDb, "SELECT MAX(length(data)) FROM messages");
 verificationDb.close();
 
-if (verifiedTopics !== topics.length) {
-  throw new Error(`Self-check failed: expected ${topics.length} topics, got ${verifiedTopics}`);
+if (verifiedTopics !== EXPECTED_TOPIC_COUNT) {
+  throw new Error(`Self-check failed: expected ${EXPECTED_TOPIC_COUNT} topics, got ${verifiedTopics}`);
 }
-if (verifiedMessages !== topics.length * SAMPLE_COUNT) {
+if (verifiedMessages !== EXPECTED_MESSAGE_COUNT) {
   throw new Error(
-    `Self-check failed: expected ${topics.length * SAMPLE_COUNT} messages, got ${verifiedMessages}`,
+    `Self-check failed: expected ${EXPECTED_MESSAGE_COUNT} messages, got ${verifiedMessages}`,
   );
 }
-if (minPayloadBytes !== 12 || maxPayloadBytes !== 12) {
+if (minPayloadBytes <= 0 || maxPayloadBytes < minPayloadBytes) {
   throw new Error(
-    `Self-check failed: expected 12-byte Float64 CDR payloads, got ${minPayloadBytes}-${maxPayloadBytes}`,
+    `Self-check failed: invalid CDR payload byte range ${minPayloadBytes}-${maxPayloadBytes}`,
   );
 }
 

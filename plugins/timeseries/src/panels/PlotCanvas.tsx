@@ -3,6 +3,7 @@ import uPlot from "uplot";
 import type { AlignedData, Options } from "uplot";
 import "uplot/dist/uPlot.min.css";
 
+import { buildAlignedTimeSeriesData } from "../series-align.js";
 import type { TimeSeriesPlotSeries } from "../types.js";
 import styles from "./PlotCanvas.module.css";
 
@@ -56,41 +57,14 @@ function formatValue(value: number): string {
 }
 
 function buildPlotData(series: TimeSeriesPlotSeries[], startNs: number): PlotData {
-  const visibleSeries = series.filter((item) =>
-    item.visible && item.series && item.series.t.length > 0,
-  );
-  if (visibleSeries.length === 0) {
+  const aligned = buildAlignedTimeSeriesData(series);
+  if (aligned.alignedSeries.length === 0 || aligned.timeNs.length === 0) {
     return { data: [[]], visibleSeries: [] };
   }
 
-  const timeSet = new Set<number>();
-  for (const item of visibleSeries) {
-    const itemSeries = item.series!;
-    for (let i = 0; i < itemSeries.t.length; i += 1) {
-      timeSet.add(itemSeries.t[i]!);
-    }
-  }
+  const x = aligned.timeNs.map((time) => (time - startNs) / 1e9);
 
-  const timeNs = [...timeSet].sort((left, right) => left - right);
-  const indexByTime = new Map<number, number>();
-  for (let i = 0; i < timeNs.length; i += 1) {
-    indexByTime.set(timeNs[i]!, i);
-  }
-
-  const x = timeNs.map((time) => (time - startNs) / 1e9);
-  const yValues = visibleSeries.map((item) => {
-    const values = Array<number | null>(timeNs.length).fill(null);
-    const itemSeries = item.series!;
-    for (let i = 0; i < itemSeries.t.length; i += 1) {
-      const index = indexByTime.get(itemSeries.t[i]!);
-      if (index != null) {
-        values[index] = itemSeries.v[i]!;
-      }
-    }
-    return values;
-  });
-
-  return { data: [x, ...yValues], visibleSeries };
+  return { data: [x, ...aligned.valueColumns], visibleSeries: aligned.alignedSeries };
 }
 
 function clampSeconds(value: number, endNs: number, startNs: number): number {

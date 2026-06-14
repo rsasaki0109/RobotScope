@@ -1,5 +1,6 @@
-import { useMemo, useState, type DragEvent, type ReactNode } from "react";
+import { useCallback, useMemo, useState, type DragEvent, type ReactNode } from "react";
 
+import { countExportableRows, downloadTimeSeriesCsv } from "./csv-export.js";
 import { PlotCanvas } from "./panels/PlotCanvas.js";
 import type {
   NumericFieldCandidate,
@@ -98,6 +99,16 @@ export function TimeSeriesDock({ snapshot, loading, inspector }: TimeSeriesDockP
     }
     return next;
   }, [snapshot?.selectedSeries]);
+  const exportableRows = useMemo(
+    () => countExportableRows(snapshot?.selectedSeries ?? []),
+    [snapshot?.selectedSeries],
+  );
+  const handleExportCsv = useCallback(() => {
+    if (!snapshot || exportableRows === 0) {
+      return;
+    }
+    downloadTimeSeriesCsv(snapshot.selectedSeries, snapshot.startNs);
+  }, [exportableRows, snapshot]);
 
   return (
     <aside className={styles.timeseriesDock}>
@@ -141,7 +152,18 @@ export function TimeSeriesDock({ snapshot, loading, inspector }: TimeSeriesDockP
               <section className={styles.seriesPanel} aria-label="Selected time series">
                 <div className={styles.sectionHeader}>
                   <h3>Series</h3>
-                  <span>{snapshot.selectedSeries.length}</span>
+                  <div className={styles.sectionActions}>
+                    <button
+                      type="button"
+                      className={styles.exportButton}
+                      onClick={handleExportCsv}
+                      disabled={exportableRows === 0}
+                      title="Download visible series as CSV"
+                    >
+                      Export CSV
+                    </button>
+                    <span>{snapshot.selectedSeries.length}</span>
+                  </div>
                 </div>
                 {snapshot.selectedSeries.length ? (
                   <ul className={styles.seriesList}>

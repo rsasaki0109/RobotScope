@@ -8,14 +8,24 @@ export interface NumericFieldCandidate {
   schema: string;
 }
 
+export interface TimeSeriesPlotSeries {
+  key: string;
+  candidate: NumericFieldCandidate;
+  color: string;
+  visible: boolean;
+  series: NumericSeries | null;
+}
+
 export interface TimeSeriesSnapshot {
   session: SessionInfo;
   candidates: NumericFieldCandidate[];
-  selection: NumericFieldCandidate | null;
-  series: NumericSeries | null;
+  selectedSeries: TimeSeriesPlotSeries[];
   currentTimeNs: number;
   startNs: number;
   endNs: number;
   warnings: string[];
-  setSelectionKey: (key: string) => void;
+  addSeriesKey: (key: string) => void;
+  removeSeriesKey: (key: string) => void;
+  toggleSeriesVisible: (key: string) => void;
+  seekToTimeNs: (timeNs: number) => void;
 }

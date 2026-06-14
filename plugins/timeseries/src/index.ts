@@ -1,5 +1,6 @@
 export type {
   NumericFieldCandidate,
+  TimeSeriesPlotSeries,
   TimeSeriesSnapshot,
 } from "./types.js";
 export {

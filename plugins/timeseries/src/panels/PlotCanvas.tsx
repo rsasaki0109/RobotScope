@@ -1,18 +1,18 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState, type DragEvent } from "react";
 import uPlot from "uplot";
 import type { AlignedData, Options } from "uplot";
 import "uplot/dist/uPlot.min.css";
 
-import type { NumericSeries } from "@robotscope/core";
-
+import type { TimeSeriesPlotSeries } from "../types.js";
 import styles from "./PlotCanvas.module.css";
 
 export interface PlotCanvasProps {
-  series: NumericSeries | null;
-  label: string;
+  series: TimeSeriesPlotSeries[];
   startNs: number;
   endNs: number;
   currentTimeNs: number;
+  onSeekTimeNs: (timeNs: number) => void;
+  onDropFieldKey?: (key: string) => void;
 }
 
 interface Size {
@@ -20,39 +20,84 @@ interface Size {
   height: number;
 }
 
+interface PlotData {
+  data: AlignedData;
+  visibleSeries: TimeSeriesPlotSeries[];
+}
+
+const FIELD_DROP_TYPE = "application/x-robotscope-timeseries-field";
+
 function formatValue(value: number): string {
+  if (value === 0) {
+    return "0";
+  }
   if (Math.abs(value) >= 1000 || Math.abs(value) < 0.001) {
     return value.toExponential(2);
   }
   return value.toFixed(3).replace(/\.?0+$/, "");
 }
 
-function seriesToData(series: NumericSeries | null, startNs: number): AlignedData {
-  if (!series || series.t.length === 0) {
-    return [[], []];
+function buildPlotData(series: TimeSeriesPlotSeries[], startNs: number): PlotData {
+  const visibleSeries = series.filter((item) =>
+    item.visible && item.series && item.series.t.length > 0,
+  );
+  if (visibleSeries.length === 0) {
+    return { data: [[]], visibleSeries: [] };
   }
-  const x: number[] = [];
-  const y: number[] = [];
-  for (let i = 0; i < series.t.length; i += 1) {
-    x.push((series.t[i]! - startNs) / 1e9);
-    y.push(series.v[i]!);
+
+  const timeSet = new Set<number>();
+  for (const item of visibleSeries) {
+    const itemSeries = item.series!;
+    for (let i = 0; i < itemSeries.t.length; i += 1) {
+      timeSet.add(itemSeries.t[i]!);
+    }
   }
-  return [x, y];
+
+  const timeNs = [...timeSet].sort((left, right) => left - right);
+  const indexByTime = new Map<number, number>();
+  for (let i = 0; i < timeNs.length; i += 1) {
+    indexByTime.set(timeNs[i]!, i);
+  }
+
+  const x = timeNs.map((time) => (time - startNs) / 1e9);
+  const yValues = visibleSeries.map((item) => {
+    const values = Array<number | null>(timeNs.length).fill(null);
+    const itemSeries = item.series!;
+    for (let i = 0; i < itemSeries.t.length; i += 1) {
+      const index = indexByTime.get(itemSeries.t[i]!);
+      if (index != null) {
+        values[index] = itemSeries.v[i]!;
+      }
+    }
+    return values;
+  });
+
+  return { data: [x, ...yValues], visibleSeries };
+}
+
+function clampSeconds(value: number, endNs: number, startNs: number): number {
+  if (!Number.isFinite(value)) {
+    return 0;
+  }
+  const endSeconds = Math.max((endNs - startNs) / 1e9, 0);
+  return Math.min(endSeconds, Math.max(0, value));
 }
 
 export function PlotCanvas({
   series,
-  label,
   startNs,
   endNs,
   currentTimeNs,
+  onSeekTimeNs,
+  onDropFieldKey,
 }: PlotCanvasProps) {
   const shellRef = useRef<HTMLDivElement | null>(null);
   const plotRootRef = useRef<HTMLDivElement | null>(null);
   const plotRef = useRef<uPlot | null>(null);
   const [size, setSize] = useState<Size>({ width: 0, height: 0 });
-  const data = useMemo(() => seriesToData(series, startNs), [series, startNs]);
-  const hasData = Boolean(series && series.t.length > 0);
+  const [dropActive, setDropActive] = useState(false);
+  const plotData = useMemo(() => buildPlotData(series, startNs), [series, startNs]);
+  const hasData = plotData.visibleSeries.length > 0;
 
   useEffect(() => {
     const shell = shellRef.current;
@@ -116,24 +161,69 @@ export function PlotCanvas({
       ],
       series: [
         {},
-        {
-          label,
-          stroke: "#38bdf8",
+        ...plotData.visibleSeries.map((item) => ({
+          label: item.candidate.label,
+          stroke: item.color,
           width: 2,
           points: { show: false },
-        },
+          spanGaps: true,
+        })),
       ],
     };
 
-    const plot = new uPlot(options, data, plotRoot);
+    const plot = new uPlot(options, plotData.data, plotRoot);
     plotRef.current = plot;
+
+    let seeking = false;
+    const seekFromPointer = (event: PointerEvent) => {
+      const rect = plot.over.getBoundingClientRect();
+      const left = event.clientX - rect.left;
+      const xSeconds = clampSeconds(plot.posToVal(left, "x"), endNs, startNs);
+      onSeekTimeNs(startNs + xSeconds * 1e9);
+    };
+    const onPointerDown = (event: PointerEvent) => {
+      if (event.button !== 0) {
+        return;
+      }
+      seeking = true;
+      plot.over.setPointerCapture(event.pointerId);
+      seekFromPointer(event);
+      event.preventDefault();
+    };
+    const onPointerMove = (event: PointerEvent) => {
+      if (!seeking) {
+        return;
+      }
+      seekFromPointer(event);
+      event.preventDefault();
+    };
+    const stopSeeking = (event: PointerEvent) => {
+      if (!seeking) {
+        return;
+      }
+      seeking = false;
+      if (plot.over.hasPointerCapture(event.pointerId)) {
+        plot.over.releasePointerCapture(event.pointerId);
+      }
+      event.preventDefault();
+    };
+
+    plot.over.addEventListener("pointerdown", onPointerDown);
+    plot.over.addEventListener("pointermove", onPointerMove);
+    plot.over.addEventListener("pointerup", stopSeeking);
+    plot.over.addEventListener("pointercancel", stopSeeking);
+
     return () => {
+      plot.over.removeEventListener("pointerdown", onPointerDown);
+      plot.over.removeEventListener("pointermove", onPointerMove);
+      plot.over.removeEventListener("pointerup", stopSeeking);
+      plot.over.removeEventListener("pointercancel", stopSeeking);
       plot.destroy();
       if (plotRef.current === plot) {
         plotRef.current = null;
       }
     };
-  }, [data, hasData, label, size]);
+  }, [endNs, hasData, onSeekTimeNs, plotData, size, startNs]);
 
   useEffect(() => {
     const plot = plotRef.current;
@@ -152,10 +242,40 @@ export function PlotCanvas({
     plot.setCursor({ left: plot.valToPos(xSeconds, "x"), top: 0 }, false);
   }, [currentTimeNs, endNs, hasData, size, startNs]);
 
+  const handleDragOver = (event: DragEvent<HTMLDivElement>) => {
+    if (!onDropFieldKey) {
+      return;
+    }
+    event.preventDefault();
+    event.dataTransfer.dropEffect = "copy";
+    setDropActive(true);
+  };
+
+  const handleDrop = (event: DragEvent<HTMLDivElement>) => {
+    if (!onDropFieldKey) {
+      return;
+    }
+    event.preventDefault();
+    setDropActive(false);
+    const key = event.dataTransfer.getData(FIELD_DROP_TYPE) ||
+      event.dataTransfer.getData("text/plain");
+    if (key) {
+      onDropFieldKey(key);
+    }
+  };
+
   return (
-    <div ref={shellRef} className={styles.plotShell}>
+    <div
+      ref={shellRef}
+      className={dropActive ? styles.plotShellDropActive : styles.plotShell}
+      data-visible-series={plotData.visibleSeries.length}
+      onDragEnter={() => setDropActive(Boolean(onDropFieldKey))}
+      onDragLeave={() => setDropActive(false)}
+      onDragOver={handleDragOver}
+      onDrop={handleDrop}
+    >
       <div ref={plotRootRef} className={styles.plotRoot} />
-      {!hasData ? <div className={styles.empty}>No numeric samples</div> : null}
+      {!hasData ? <div className={styles.empty}>Add visible numeric fields to plot.</div> : null}
     </div>
   );
 }

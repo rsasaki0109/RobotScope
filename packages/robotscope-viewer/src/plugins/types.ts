@@ -8,6 +8,7 @@ export interface PluginViewerSlice {
   ingest: import("@robotscope/core").IngestHandle | null;
   session: import("@robotscope/core").SessionInfo | null;
   currentTimeNs: number;
+  setCurrentTimeNs: (timeNs: number) => void;
   laneletOsmOverlay?: ParsedLaneletOsmMap | null;
 }
 

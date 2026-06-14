@@ -180,6 +180,10 @@ function normalizeBinaryOp(op: BinaryOp | undefined): BinaryOp {
   return op ?? "add";
 }
 
+function normalizeFiniteNumber(value: number | undefined, fallback: number): number {
+  return typeof value === "number" && Number.isFinite(value) ? value : fallback;
+}
+
 export function useTimeSeries(slice: TimeSeriesViewerSlice): TimeSeriesDataState {
   const [seriesSelections, setSeriesSelections] = useState<SeriesSelection[]>([]);
   const [derivedDefs, setDerivedDefs] = useState<DerivedSeriesDef[]>([]);
@@ -293,6 +297,10 @@ export function useTimeSeries(slice: TimeSeriesViewerSlice): TimeSeriesDataState
       }
       if (input.kind === "binary-op") {
         def.op = normalizeBinaryOp(input.op);
+      }
+      if (input.kind === "scale-offset") {
+        def.scale = normalizeFiniteNumber(input.scale, 1);
+        def.offset = normalizeFiniteNumber(input.offset, 0);
       }
       return [...current, def];
     });

@@ -135,6 +135,8 @@ function DerivedSeriesForm({ snapshot, sourceSeries }: DerivedSeriesFormProps) {
   const [sourceBKey, setSourceBKey] = useState("");
   const [binaryOp, setBinaryOp] = useState<BinaryOp>("add");
   const [windowInput, setWindowInput] = useState("5");
+  const [scaleInput, setScaleInput] = useState("1");
+  const [offsetInput, setOffsetInput] = useState("0");
   const hasSources = sourceSeries.length > 0;
   const sourceA = selectedSourceKey(sourceSeries, sourceAKey, 0);
   const sourceB = selectedSourceKey(sourceSeries, sourceBKey, sourceSeries.length > 1 ? 1 : 0);
@@ -151,8 +153,20 @@ function DerivedSeriesForm({ snapshot, sourceSeries }: DerivedSeriesFormProps) {
       sourceKeys: kind === "binary-op" ? [sourceA, sourceB] : [sourceA],
       window: kind === "moving-average" ? windowSize : undefined,
       op: kind === "binary-op" ? binaryOp : undefined,
+      scale: kind === "scale-offset" ? Number.parseFloat(scaleInput) : undefined,
+      offset: kind === "scale-offset" ? Number.parseFloat(offsetInput) : undefined,
     });
-  }, [addDisabled, binaryOp, kind, snapshot, sourceA, sourceB, windowInput]);
+  }, [
+    addDisabled,
+    binaryOp,
+    kind,
+    offsetInput,
+    scaleInput,
+    snapshot,
+    sourceA,
+    sourceB,
+    windowInput,
+  ]);
 
   return (
     <div className={styles.derivedForm} aria-label="Add derived channel">
@@ -166,6 +180,9 @@ function DerivedSeriesForm({ snapshot, sourceSeries }: DerivedSeriesFormProps) {
           >
             <option value="moving-average">Moving average</option>
             <option value="derivative">Derivative</option>
+            <option value="integral">Integral</option>
+            <option value="abs">Abs</option>
+            <option value="scale-offset">Scale &amp; offset</option>
             <option value="binary-op">A op B</option>
           </select>
         </label>
@@ -198,6 +215,31 @@ function DerivedSeriesForm({ snapshot, sourceSeries }: DerivedSeriesFormProps) {
               onChange={(event) => setWindowInput(event.target.value)}
             />
           </label>
+        ) : null}
+
+        {kind === "scale-offset" ? (
+          <>
+            <label className={styles.controlLabel}>
+              <span>Scale</span>
+              <input
+                className={styles.controlInput}
+                type="number"
+                step="any"
+                value={scaleInput}
+                onChange={(event) => setScaleInput(event.target.value)}
+              />
+            </label>
+            <label className={styles.controlLabel}>
+              <span>Offset</span>
+              <input
+                className={styles.controlInput}
+                type="number"
+                step="any"
+                value={offsetInput}
+                onChange={(event) => setOffsetInput(event.target.value)}
+              />
+            </label>
+          </>
         ) : null}
 
         {kind === "binary-op" ? (

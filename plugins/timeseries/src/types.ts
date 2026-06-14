@@ -16,7 +16,13 @@ export interface TimeSeriesPlotSeries {
   series: NumericSeries | null;
 }
 
-export type DerivedSeriesKind = "moving-average" | "derivative" | "binary-op";
+export type DerivedSeriesKind =
+  | "moving-average"
+  | "derivative"
+  | "binary-op"
+  | "integral"
+  | "abs"
+  | "scale-offset";
 
 export type BinaryOp = "add" | "subtract" | "multiply" | "divide";
 
@@ -26,6 +32,8 @@ export interface DerivedSeriesDef {
   sourceKeys: string[];
   window?: number;
   op?: BinaryOp;
+  scale?: number;
+  offset?: number;
   color: string;
   visible: boolean;
 }

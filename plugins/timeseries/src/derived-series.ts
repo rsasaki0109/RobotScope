@@ -156,6 +156,118 @@ function derivative(source: TimeSeriesPlotSeries): ComputedSeriesResult {
       };
 }
 
+function integral(source: TimeSeriesPlotSeries): ComputedSeriesResult {
+  if (!hasSamples(source)) {
+    return {
+      series: null,
+      warning: "source series has no numeric samples.",
+    };
+  }
+
+  const samples = finiteSamples(source.series);
+  if (samples.t.length < 2) {
+    return {
+      series: null,
+      warning: "integral needs at least two finite samples.",
+    };
+  }
+
+  const t: number[] = [samples.t[0]!];
+  const v: number[] = [0];
+  let acc = 0;
+  for (let i = 1; i < samples.t.length; i += 1) {
+    const dtSec = (samples.t[i]! - samples.t[i - 1]!) / 1e9;
+    if (!Number.isFinite(dtSec) || dtSec <= 0) {
+      continue;
+    }
+
+    acc += ((samples.v[i]! + samples.v[i - 1]!) / 2) * dtSec;
+    if (Number.isFinite(acc)) {
+      t.push(samples.t[i]!);
+      v.push(acc);
+    }
+  }
+
+  return t.length > 0
+    ? { series: seriesFromArrays(t, v), warning: null }
+    : {
+        series: null,
+        warning: "integral produced no finite samples.",
+      };
+}
+
+function absValue(source: TimeSeriesPlotSeries): ComputedSeriesResult {
+  if (!hasSamples(source)) {
+    return {
+      series: null,
+      warning: "source series has no numeric samples.",
+    };
+  }
+
+  const samples = finiteSamples(source.series);
+  if (samples.t.length === 0) {
+    return {
+      series: null,
+      warning: "source series has no finite numeric samples.",
+    };
+  }
+
+  const t: number[] = [];
+  const v: number[] = [];
+  for (let i = 0; i < samples.t.length; i += 1) {
+    const value = Math.abs(samples.v[i]!);
+    if (Number.isFinite(value)) {
+      t.push(samples.t[i]!);
+      v.push(value);
+    }
+  }
+
+  return t.length > 0
+    ? { series: seriesFromArrays(t, v), warning: null }
+    : {
+        series: null,
+        warning: "absolute value produced no finite samples.",
+      };
+}
+
+function scaleOffset(
+  source: TimeSeriesPlotSeries,
+  scale: number,
+  offset: number,
+): ComputedSeriesResult {
+  if (!hasSamples(source)) {
+    return {
+      series: null,
+      warning: "source series has no numeric samples.",
+    };
+  }
+
+  const samples = finiteSamples(source.series);
+  if (samples.t.length === 0) {
+    return {
+      series: null,
+      warning: "source series has no finite numeric samples.",
+    };
+  }
+
+  const t: number[] = [];
+  const v: number[] = [];
+  for (let i = 0; i < samples.t.length; i += 1) {
+    const value = scale * samples.v[i]! + offset;
+    if (Number.isFinite(value)) {
+      t.push(samples.t[i]!);
+      v.push(value);
+    }
+  }
+
+  return t.length > 0
+    ? { series: seriesFromArrays(t, v), warning: null }
+    : {
+        series: null,
+        warning: "scale-offset produced no finite samples.",
+      };
+}
+
 function applyBinaryOp(left: number, right: number, op: BinaryOp): number | null {
   switch (op) {
     case "add":
@@ -251,6 +363,17 @@ function labelForDef(
   if (def.kind === "derivative") {
     return `d/dt ${sourceLabel(left, def.sourceKeys[0])}`;
   }
+  if (def.kind === "integral") {
+    return `integral(${sourceLabel(left, def.sourceKeys[0])})`;
+  }
+  if (def.kind === "abs") {
+    return `abs(${sourceLabel(left, def.sourceKeys[0])})`;
+  }
+  if (def.kind === "scale-offset") {
+    const scale = Number.isFinite(def.scale) ? def.scale! : 1;
+    const offset = Number.isFinite(def.offset) ? def.offset! : 0;
+    return `${scale}*${sourceLabel(left, def.sourceKeys[0])} + ${offset}`;
+  }
 
   const op = def.op ?? "add";
   return `${sourceLabel(left, def.sourceKeys[0])} ${BINARY_OP_SYMBOL[op]} ${sourceLabel(right, def.sourceKeys[1])}`;
@@ -297,6 +420,15 @@ function computeDerivedSeries(
         return derivative(left);
       case "binary-op":
         return binaryOp(left, right!, def.op ?? "add");
+      case "integral":
+        return integral(left);
+      case "abs":
+        return absValue(left);
+      case "scale-offset": {
+        const scale = Number.isFinite(def.scale) ? def.scale! : 1;
+        const offset = Number.isFinite(def.offset) ? def.offset! : 0;
+        return scaleOffset(left, scale, offset);
+      }
     }
   })();
 

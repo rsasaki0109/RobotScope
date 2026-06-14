@@ -1,6 +1,6 @@
-# Action gateway (v1.3 beta)
+# Action gateway (v1.3 GA)
 
-Permission-gated **live action goal send** from the viewer to a local ROS 2 agent, with **Fibonacci feedback / outcome tracking** (v1.3 beta).
+Permission-gated **live action goal send** from the viewer to a local ROS 2 agent, with **Fibonacci feedback / outcome tracking** (v1.3 GA).
 
 ## Safety model
 
@@ -110,7 +110,7 @@ Final outcome (v1.3):
 - Python agent — `RobotScope/agent/robotscope_agent/bridge.py`
 - Viewer — command bar **Allow action goals** + **Send Fibonacci** + **sequence tracking badge**
 
-## Out of scope (v1.3 beta)
+## Out of scope (v1.3)
 
 - Cancel / preempt controls
 - Arbitrary action goal editor

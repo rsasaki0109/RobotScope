@@ -99,6 +99,27 @@ RobotScope/
 └── sample_data/             Sample MCAP fetch scripts
 ```
 
+## v1.3.0 (GA)
+
+Action feedback / outcome tracking on v1.2 action gateway. See [release notes](RobotScope/docs/release/v1.3.0.md) and [CHANGELOG.md](RobotScope/CHANGELOG.md).
+
+**Shipped**
+
+| Layer | Features |
+|-------|----------|
+| Live | **Action tracking** — Fibonacci feedback stream + outcome badge in command bar |
+| v1.2 carry-over | Action goal send · service gateway · 6-DOF Twist · OSM maps |
+
+**Docs**
+
+- [Action gateway guide](RobotScope/docs/action-gateway.md)
+- [Migration v1.3 beta → GA](RobotScope/docs/migration/v1.3-beta-to-ga.md)
+- [Known limitations](RobotScope/docs/known-limitations.md)
+
+**Out of scope (v1.3)**
+
+- Cancel / preempt · arbitrary action editor · dedicated action panel · native Lanelet2 boost bin
+
 ## v1.3.0-beta.0
 
 Action feedback / outcome tracking on v1.2 action gateway. See [release notes](RobotScope/docs/release/v1.3.0-beta.0.md) and [CHANGELOG.md](RobotScope/CHANGELOG.md).

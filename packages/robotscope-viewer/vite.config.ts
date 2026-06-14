@@ -16,6 +16,22 @@ export default defineConfig(({ mode }) => ({
   optimizeDeps: {
     exclude: ["sql.js/dist/sql-asm.js"],
   },
+  build: {
+    rollupOptions: {
+      output: {
+        // Split heavy vendors into separate, long-lived cacheable chunks so the
+        // initial demo load downloads them in parallel and keeps their hash
+        // stable across redeploys.
+        manualChunks(id) {
+          if (!id.includes("node_modules")) return undefined;
+          if (/[\\/]node_modules[\\/]three[\\/]/.test(id)) return "vendor-three";
+          if (/[\\/]node_modules[\\/](react|react-dom|scheduler)[\\/]/.test(id)) return "vendor-react";
+          if (/[\\/]node_modules[\\/]@?mcap[\\/]/.test(id)) return "vendor-mcap";
+          return undefined;
+        },
+      },
+    },
+  },
   resolve: {
     preserveSymlinks: true,
     alias: [

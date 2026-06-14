@@ -99,6 +99,27 @@ RobotScope/
 └── sample_data/             Sample MCAP fetch scripts
 ```
 
+## v1.6.0 (GA)
+
+Preempt controls on v1.5 action timeline. See [release notes](RobotScope/docs/release/v1.6.0.md) and [CHANGELOG.md](RobotScope/CHANGELOG.md).
+
+**Shipped**
+
+| Layer | Features |
+|-------|----------|
+| Live | **Preempt** — replace running Fibonacci goal via `preempt: true` |
+| v1.5 carry-over | Action timeline · cancel · tracking · goal send |
+
+**Docs**
+
+- [Action gateway guide](RobotScope/docs/action-gateway.md)
+- [Migration v1.6 beta → GA](RobotScope/docs/migration/v1.6-beta-to-ga.md)
+- [Known limitations](RobotScope/docs/known-limitations.md)
+
+**Out of scope (v1.6)**
+
+- Cross-action preempt · native Lanelet2 boost bin
+
 ## v1.6.0-beta.0
 
 Preempt controls on v1.5 action timeline. See [release notes](RobotScope/docs/release/v1.6.0-beta.0.md) and [CHANGELOG.md](RobotScope/CHANGELOG.md).

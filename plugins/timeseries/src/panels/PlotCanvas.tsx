@@ -16,6 +16,8 @@ export interface PlotCanvasProps {
   onXRangeChange: (range: TimeSeriesXRange | null) => void;
   onSeekTimeNs: (timeNs: number) => void;
   onDropFieldKey?: (key: string) => void;
+  timeFormat?: "relative" | "absolute";
+  yRange?: { min: number; max: number } | null;
   compact?: boolean;
   plotLabel?: {
     label: string;
@@ -56,6 +58,31 @@ function formatValue(value: number): string {
     return value.toExponential(2);
   }
   return value.toFixed(3).replace(/\.?0+$/, "");
+}
+
+function padClockPart(value: number): string {
+  return String(value).padStart(2, "0");
+}
+
+function formatAbsoluteTime(valueSeconds: number, startNs: number): string {
+  const absMs = (startNs + valueSeconds * 1e9) / 1e6;
+  if (!Number.isFinite(absMs)) {
+    return "";
+  }
+
+  const date = new Date(Math.round(absMs / 100) * 100);
+  return `${padClockPart(date.getHours())}:${padClockPart(date.getMinutes())}:${
+    padClockPart(date.getSeconds())
+  }.${Math.floor(date.getMilliseconds() / 100)}`;
+}
+
+function normalizeYRange(
+  range: PlotCanvasProps["yRange"],
+): { min: number; max: number } | null {
+  if (!range || !Number.isFinite(range.min) || !Number.isFinite(range.max)) {
+    return null;
+  }
+  return range.min < range.max ? range : null;
 }
 
 function buildPlotData(series: TimeSeriesPlotSeries[], startNs: number): PlotData {
@@ -185,6 +212,8 @@ export function PlotCanvas({
   onXRangeChange,
   onSeekTimeNs,
   onDropFieldKey,
+  timeFormat = "relative",
+  yRange = null,
   compact = false,
   plotLabel,
 }: PlotCanvasProps) {
@@ -196,6 +225,7 @@ export function PlotCanvas({
   const [size, setSize] = useState<Size>({ width: 0, height: 0 });
   const [dropActive, setDropActive] = useState(false);
   const plotData = useMemo(() => buildPlotData(series, startNs), [series, startNs]);
+  const fixedYRange = useMemo(() => normalizeYRange(yRange), [yRange?.max, yRange?.min]);
   const hasData = plotData.visibleSeries.length > 0;
   const hasPlotLabel = Boolean(plotLabel);
 
@@ -297,7 +327,9 @@ export function PlotCanvas({
       },
     };
     for (const assignment of axisAssignments) {
-      scales[assignment.scaleKey] = { auto: true };
+      scales[assignment.scaleKey] = fixedYRange
+        ? { auto: false, range: [fixedYRange.min, fixedYRange.max] }
+        : { auto: true };
     }
 
     const options: Options = {
@@ -324,7 +356,11 @@ export function PlotCanvas({
         {
           stroke: "#94a3b8",
           grid: { stroke: "rgba(148, 163, 184, 0.18)", width: 1 },
-          values: (_plot, values) => values.map((value) => `${value.toFixed(1)}s`),
+          values: (_plot, values) => values.map((value) =>
+            timeFormat === "absolute"
+              ? formatAbsoluteTime(value, startNs)
+              : `${value.toFixed(1)}s`
+          ),
         },
         ...axisAssignments
           .filter((assignment) => assignment.axisVisible)
@@ -479,6 +515,7 @@ export function PlotCanvas({
     applyXRange,
     commitXRange,
     endNs,
+    fixedYRange,
     hasPlotLabel,
     hasData,
     onSeekTimeNs,
@@ -486,6 +523,7 @@ export function PlotCanvas({
     size,
     startNs,
     syncCursorToCurrentTime,
+    timeFormat,
   ]);
 
   useEffect(() => {

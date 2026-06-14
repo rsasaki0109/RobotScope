@@ -32,6 +32,12 @@ function sampleCount(series: TimeSeriesPlotSeries[]): number {
 const MAX_VISIBLE_Y_AXES = 3;
 const EMPTY_PLOT_SERIES: TimeSeriesPlotSeries[] = [];
 type PlotDisplayMode = "overlay" | "stacked";
+type TimeAxisFormat = "relative" | "absolute";
+type YAxisMode = "auto" | "fixed";
+interface YAxisRange {
+  min: number;
+  max: number;
+}
 const BINARY_OP_OPTIONS: Array<{ value: BinaryOp; label: string }> = [
   { value: "add", label: "+" },
   { value: "subtract", label: "-" },
@@ -255,6 +261,8 @@ interface StackedSeriesPlotProps {
   onXRangeChange: (range: TimeSeriesXRange | null) => void;
   onSeekTimeNs: (timeNs: number) => void;
   onDropFieldKey: (key: string) => void;
+  timeFormat: TimeAxisFormat;
+  yRange: YAxisRange | null;
 }
 
 function StackedSeriesPlot({
@@ -266,6 +274,8 @@ function StackedSeriesPlot({
   onXRangeChange,
   onSeekTimeNs,
   onDropFieldKey,
+  timeFormat,
+  yRange,
 }: StackedSeriesPlotProps) {
   const singleSeries = useMemo(() => [series], [series]);
   return (
@@ -278,6 +288,8 @@ function StackedSeriesPlot({
       onXRangeChange={onXRangeChange}
       onSeekTimeNs={onSeekTimeNs}
       onDropFieldKey={onDropFieldKey}
+      timeFormat={timeFormat}
+      yRange={yRange}
       compact
       plotLabel={{
         label: series.candidate.label,
@@ -297,8 +309,20 @@ export function TimeSeriesDock({
   const [tab, setTab] = useState<"plot" | "inspector">("plot");
   const [displayMode, setDisplayMode] = useState<PlotDisplayMode>("overlay");
   const [localXRange, setLocalXRange] = useState<TimeSeriesXRange | null>(null);
+  const [timeFormat, setTimeFormat] = useState<TimeAxisFormat>("relative");
+  const [yAxisMode, setYAxisMode] = useState<YAxisMode>("auto");
+  const [yMinInput, setYMinInput] = useState("");
+  const [yMaxInput, setYMaxInput] = useState("");
   const xRangeControlled = controlledXRange !== undefined;
   const xRange = xRangeControlled ? controlledXRange : localXRange;
+  const yRange = useMemo<YAxisRange | null>(() => {
+    if (yAxisMode !== "fixed") {
+      return null;
+    }
+    const min = Number.parseFloat(yMinInput);
+    const max = Number.parseFloat(yMaxInput);
+    return Number.isFinite(min) && Number.isFinite(max) && min < max ? { min, max } : null;
+  }, [yAxisMode, yMaxInput, yMinInput]);
   const selectedKeys = useMemo(
     () => new Set(snapshot?.selectedSeries.map((series) => series.key) ?? []),
     [snapshot?.selectedSeries],
@@ -381,6 +405,89 @@ export function TimeSeriesDock({
                   </span>
                 </div>
               </div>
+
+              <section className={styles.axesPanel} aria-label="Axes">
+                <div className={styles.sectionHeader}>
+                  <h3>Axes</h3>
+                </div>
+                <div className={styles.axesControls}>
+                  <div className={styles.axisControlGroup}>
+                    <span className={styles.axisControlLabel}>Time axis</span>
+                    <div className={styles.modeToggle} role="group" aria-label="Time axis format">
+                      <button
+                        type="button"
+                        className={timeFormat === "relative"
+                          ? styles.modeToggleButtonActive
+                          : styles.modeToggleButton}
+                        onClick={() => setTimeFormat("relative")}
+                        aria-pressed={timeFormat === "relative"}
+                      >
+                        Relative (s)
+                      </button>
+                      <button
+                        type="button"
+                        className={timeFormat === "absolute"
+                          ? styles.modeToggleButtonActive
+                          : styles.modeToggleButton}
+                        onClick={() => setTimeFormat("absolute")}
+                        aria-pressed={timeFormat === "absolute"}
+                      >
+                        Clock
+                      </button>
+                    </div>
+                  </div>
+
+                  <div className={styles.axisControlGroup}>
+                    <span className={styles.axisControlLabel}>Y axis</span>
+                    <div className={styles.modeToggle} role="group" aria-label="Y axis range mode">
+                      <button
+                        type="button"
+                        className={yAxisMode === "auto"
+                          ? styles.modeToggleButtonActive
+                          : styles.modeToggleButton}
+                        onClick={() => setYAxisMode("auto")}
+                        aria-pressed={yAxisMode === "auto"}
+                      >
+                        Auto
+                      </button>
+                      <button
+                        type="button"
+                        className={yAxisMode === "fixed"
+                          ? styles.modeToggleButtonActive
+                          : styles.modeToggleButton}
+                        onClick={() => setYAxisMode("fixed")}
+                        aria-pressed={yAxisMode === "fixed"}
+                      >
+                        Fixed
+                      </button>
+                    </div>
+                  </div>
+
+                  <label className={styles.axisNumberLabel}>
+                    <span>Min</span>
+                    <input
+                      className={styles.controlInput}
+                      type="number"
+                      step="any"
+                      value={yMinInput}
+                      onChange={(event) => setYMinInput(event.target.value)}
+                      disabled={yAxisMode !== "fixed"}
+                    />
+                  </label>
+
+                  <label className={styles.axisNumberLabel}>
+                    <span>Max</span>
+                    <input
+                      className={styles.controlInput}
+                      type="number"
+                      step="any"
+                      value={yMaxInput}
+                      onChange={(event) => setYMaxInput(event.target.value)}
+                      disabled={yAxisMode !== "fixed"}
+                    />
+                  </label>
+                </div>
+              </section>
 
               <section className={styles.seriesPanel} aria-label="Selected time series">
                 <div className={styles.sectionHeader}>
@@ -509,6 +616,8 @@ export function TimeSeriesDock({
                         onXRangeChange={handleXRangeChange}
                         onSeekTimeNs={snapshot.seekToTimeNs}
                         onDropFieldKey={snapshot.addSeriesKey}
+                        timeFormat={timeFormat}
+                        yRange={yRange}
                       />
                     ))}
                   </div>
@@ -522,6 +631,8 @@ export function TimeSeriesDock({
                     onXRangeChange={handleXRangeChange}
                     onSeekTimeNs={snapshot.seekToTimeNs}
                     onDropFieldKey={snapshot.addSeriesKey}
+                    timeFormat={timeFormat}
+                    yRange={yRange}
                     compact
                   />
                 )
@@ -535,6 +646,8 @@ export function TimeSeriesDock({
                   onXRangeChange={handleXRangeChange}
                   onSeekTimeNs={snapshot.seekToTimeNs}
                   onDropFieldKey={snapshot.addSeriesKey}
+                  timeFormat={timeFormat}
+                  yRange={yRange}
                 />
               )}
 

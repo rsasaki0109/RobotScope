@@ -1,0 +1,42 @@
+.plotShell {
+  position: relative;
+  min-height: 320px;
+  height: min(52vh, 520px);
+  border: 1px solid var(--rs-border);
+  border-radius: 8px;
+  background: #081018;
+  overflow: hidden;
+}
+
+.plotRoot {
+  position: absolute;
+  inset: 0;
+}
+
+.plotRoot :global(.uplot) {
+  font-family: inherit;
+  background: transparent;
+}
+
+.plotRoot :global(.u-title) {
+  color: var(--rs-text);
+}
+
+.plotRoot :global(.u-axis) {
+  color: var(--rs-text-muted);
+}
+
+.plotRoot :global(.u-cursor-x) {
+  border-right: 2px solid #fbbf24;
+}
+
+.empty {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  padding: 1rem;
+  color: var(--rs-text-muted);
+  font-size: 0.78rem;
+  text-align: center;
+}

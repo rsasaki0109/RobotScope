@@ -6,6 +6,11 @@ import {
 } from "@robotscope/plugin-example";
 import { MoveItDock, MOVEIT_PLUGIN_MANIFEST, useMoveItSnapshot } from "@robotscope/plugin-moveit";
 import { Nav2Dock, NAV2_PLUGIN_MANIFEST, useNav2Snapshot } from "@robotscope/plugin-nav2";
+import {
+  TimeSeriesDock,
+  TIMESERIES_PLUGIN_MANIFEST,
+  useTimeSeries,
+} from "@robotscope/plugin-timeseries";
 import { layoutIdsFromManifest, type PluginManifest } from "@robotscope/core";
 
 import { registerPlugin } from "./create-plugin-column";
@@ -23,6 +28,7 @@ const LAYOUT_LABELS: Record<string, string> = {
   "nav2-daily-debug": "Nav2 Daily Debug",
   moveit: "MoveIt Debug",
   "moveit-manipulation-debug": "MoveIt Manipulation Debug",
+  timeseries: "Time Series",
   example: "Example Plugin",
   "example-starter": "Example Starter",
 };
@@ -45,6 +51,12 @@ const registeredPlugins: RegisteredPlugin[] = [
     layoutIdsFromManifest(MOVEIT_PLUGIN_MANIFEST),
     useMoveItSnapshot,
     MoveItDock,
+  ),
+  registerPlugin(
+    TIMESERIES_PLUGIN_MANIFEST,
+    layoutIdsFromManifest(TIMESERIES_PLUGIN_MANIFEST),
+    useTimeSeries,
+    TimeSeriesDock,
   ),
   registerPlugin(
     EXAMPLE_PLUGIN_MANIFEST,

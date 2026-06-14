@@ -11,10 +11,16 @@ import type {
   EntityQueryResult,
   IndexStatus,
   McapQueryEngine,
+  NumericSeries,
   RawMessage,
   SessionInfo,
   TimeRange,
 } from "../query.js";
+import {
+  downsampleNumericPoints,
+  numericValueAtPath,
+  type NumericPoint,
+} from "../numeric-series.js";
 import { decodeRos2Message, type SchemaInfo } from "../ros2/decoder.js";
 import {
   buildSceneSnapshot,
@@ -32,6 +38,7 @@ import { TfBuffer, type TfTreeSnapshot } from "../tf/tf-buffer.js";
 export class Rosbag2QueryEngineImpl implements McapQueryEngine {
   private readonly topicSchemas = new Map<string, SchemaInfo>();
   private rawMessageCache = new Map<string, RawMessage>();
+  private numericSeriesCache = new Map<string, NumericSeries>();
 
   private constructor(
     private readonly databases: Database[],
@@ -204,6 +211,62 @@ export class Rosbag2QueryEngineImpl implements McapQueryEngine {
     }
 
     return best;
+  }
+
+  async getNumericSeries(
+    topic: string,
+    fieldPath: string,
+    t0_ns: number,
+    t1_ns: number,
+    maxPoints = 2000,
+  ): Promise<NumericSeries> {
+    const startNs = Math.min(t0_ns, t1_ns);
+    const endNs = Math.max(t0_ns, t1_ns);
+    const pointLimit = Math.max(0, Math.floor(maxPoints));
+    const cacheKey = `${topic}|${fieldPath}|${startNs}|${endNs}|${pointLimit}`;
+    const cached = this.numericSeriesCache.get(cacheKey);
+    if (cached) {
+      return cached;
+    }
+
+    const schema = this.topicSchemas.get(topic);
+    const indexedTopic = this.topicIndex.exportTopics().find((entry) => entry.topic === topic);
+    if (!schema || !indexedTopic || !fieldPath) {
+      return this.cacheNumericSeries(cacheKey, downsampleNumericPoints([], pointLimit));
+    }
+
+    const points: NumericPoint[] = [];
+    for (const entry of indexedTopic.entries) {
+      if (entry.log_time_ns < startNs || entry.log_time_ns > endNs || entry.storage_id == null) {
+        continue;
+      }
+      const payload = this.messagePayloads.get(entry.storage_id);
+      if (!payload) {
+        continue;
+      }
+      const decoded = decodeRos2Message(schema, payload);
+      if (!decoded.value) {
+        continue;
+      }
+      const value = numericValueAtPath(decoded.value, fieldPath);
+      if (value == null) {
+        continue;
+      }
+      points.push({ t: entry.log_time_ns, v: value });
+    }
+
+    return this.cacheNumericSeries(cacheKey, downsampleNumericPoints(points, pointLimit));
+  }
+
+  private cacheNumericSeries(cacheKey: string, series: NumericSeries): NumericSeries {
+    this.numericSeriesCache.set(cacheKey, series);
+    if (this.numericSeriesCache.size > 32) {
+      const firstKey = this.numericSeriesCache.keys().next().value;
+      if (firstKey) {
+        this.numericSeriesCache.delete(firstKey);
+      }
+    }
+    return series;
   }
 
   close(): void {

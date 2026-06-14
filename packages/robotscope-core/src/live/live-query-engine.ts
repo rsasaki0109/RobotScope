@@ -8,10 +8,16 @@ import type {
   EntityQueryResult,
   IndexStatus,
   McapQueryEngine,
+  NumericSeries,
   RawMessage,
   SessionInfo,
   TimeRange,
 } from "../query.js";
+import {
+  downsampleNumericPoints,
+  numericValueAtPath,
+  type NumericPoint,
+} from "../numeric-series.js";
 import {
   buildSceneSnapshot,
   type SceneBuildOptions,
@@ -24,6 +30,7 @@ import type { LiveIngestBuffer } from "./ingest-buffer.js";
 
 export class LiveQueryEngineImpl implements McapQueryEngine {
   private rawMessageCache = new Map<string, RawMessage>();
+  private numericSeriesCache = new Map<string, NumericSeries>();
 
   constructor(private readonly buffer: LiveIngestBuffer) {}
 
@@ -121,5 +128,44 @@ export class LiveQueryEngineImpl implements McapQueryEngine {
       }
     }
     return nearest;
+  }
+
+  async getNumericSeries(
+    topic: string,
+    fieldPath: string,
+    t0_ns: number,
+    t1_ns: number,
+    maxPoints = 2000,
+  ): Promise<NumericSeries> {
+    const startNs = Math.min(t0_ns, t1_ns);
+    const endNs = Math.max(t0_ns, t1_ns);
+    const pointLimit = Math.max(0, Math.floor(maxPoints));
+    const cacheKey = `${topic}|${fieldPath}|${startNs}|${endNs}|${pointLimit}`;
+    const cached = this.numericSeriesCache.get(cacheKey);
+    if (cached) {
+      return cached;
+    }
+
+    const points: NumericPoint[] = [];
+    for (const message of this.buffer.messageStore.findRange(topic, startNs, endNs)) {
+      const value = message.decoded ? numericValueAtPath(message.decoded, fieldPath) : undefined;
+      if (value == null) {
+        continue;
+      }
+      points.push({ t: message.log_time_ns, v: value });
+    }
+
+    return this.cacheNumericSeries(cacheKey, downsampleNumericPoints(points, pointLimit));
+  }
+
+  private cacheNumericSeries(cacheKey: string, series: NumericSeries): NumericSeries {
+    this.numericSeriesCache.set(cacheKey, series);
+    if (this.numericSeriesCache.size > 32) {
+      const firstKey = this.numericSeriesCache.keys().next().value;
+      if (firstKey) {
+        this.numericSeriesCache.delete(firstKey);
+      }
+    }
+    return series;
   }
 }

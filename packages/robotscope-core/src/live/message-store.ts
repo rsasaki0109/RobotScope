@@ -61,6 +61,16 @@ export class LiveMessageStore {
       : after;
   }
 
+  findRange(topic: string, start_ns: number, end_ns: number): RawMessage[] {
+    const entries = this.byTopic.get(topic);
+    if (!entries || entries.length === 0) {
+      return [];
+    }
+    return entries.filter(
+      (entry) => entry.log_time_ns >= start_ns && entry.log_time_ns <= end_ns,
+    );
+  }
+
   messageCount(): number {
     let count = 0;
     for (const entries of this.byTopic.values()) {

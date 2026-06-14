@@ -13,10 +13,16 @@ import type {
   EntityQueryResult,
   IndexStatus,
   McapQueryEngine,
+  NumericSeries,
   RawMessage,
   SessionInfo,
   TimeRange,
 } from "../query.js";
+import {
+  downsampleNumericPoints,
+  numericValueAtPath,
+  type NumericPoint,
+} from "../numeric-series.js";
 import { decodeRos2Message, type SchemaInfo } from "../ros2/decoder.js";
 import {
   buildSceneSnapshot,
@@ -45,6 +51,7 @@ export class McapQueryEngineImpl implements McapQueryEngine {
   private readonly indexStatus: IndexStatus;
   private readonly sidecarManifest: SidecarManifest;
   private rawMessageCache = new Map<string, RawMessage>();
+  private numericSeriesCache = new Map<string, NumericSeries>();
 
   private constructor(
     private readonly reader: McapIndexedReader,
@@ -278,6 +285,68 @@ export class McapQueryEngineImpl implements McapQueryEngine {
     }
 
     return best;
+  }
+
+  async getNumericSeries(
+    topic: string,
+    fieldPath: string,
+    t0_ns: number,
+    t1_ns: number,
+    maxPoints = 2000,
+  ): Promise<NumericSeries> {
+    const startNs = Math.min(t0_ns, t1_ns);
+    const endNs = Math.max(t0_ns, t1_ns);
+    const pointLimit = Math.max(0, Math.floor(maxPoints));
+    const cacheKey = `${topic}|${fieldPath}|${startNs}|${endNs}|${pointLimit}`;
+    const cached = this.numericSeriesCache.get(cacheKey);
+    if (cached) {
+      return cached;
+    }
+
+    const channel = [...this.reader.channelsById.values()].find((c) => c.topic === topic);
+    const schemaRecord = channel ? this.reader.schemasById.get(channel.schemaId) : undefined;
+    if (!channel || !schemaRecord || !fieldPath) {
+      return this.cacheNumericSeries(cacheKey, downsampleNumericPoints([], pointLimit));
+    }
+
+    const schema: SchemaInfo = {
+      name: schemaRecord.name,
+      encoding: schemaRecord.encoding,
+      data: schemaRecord.data,
+    };
+
+    const points: NumericPoint[] = [];
+    for await (const message of this.reader.readMessages({
+      topics: [topic],
+      startTime: BigInt(Math.floor(startNs)),
+      endTime: BigInt(Math.ceil(endNs)),
+    })) {
+      const decoded = decodeRos2Message(schema, message.data);
+      if (!decoded.value) {
+        continue;
+      }
+      const value = numericValueAtPath(decoded.value, fieldPath);
+      if (value == null) {
+        continue;
+      }
+      points.push({
+        t: Number(message.logTime),
+        v: value,
+      });
+    }
+
+    return this.cacheNumericSeries(cacheKey, downsampleNumericPoints(points, pointLimit));
+  }
+
+  private cacheNumericSeries(cacheKey: string, series: NumericSeries): NumericSeries {
+    this.numericSeriesCache.set(cacheKey, series);
+    if (this.numericSeriesCache.size > 32) {
+      const firstKey = this.numericSeriesCache.keys().next().value;
+      if (firstKey) {
+        this.numericSeriesCache.delete(firstKey);
+      }
+    }
+    return series;
   }
 
   getReader(): McapIndexedReader {

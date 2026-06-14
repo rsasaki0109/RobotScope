@@ -27,6 +27,7 @@ export default defineConfig(({ mode }) => ({
           if (/[\\/]node_modules[\\/]three[\\/]/.test(id)) return "vendor-three";
           if (/[\\/]node_modules[\\/](react|react-dom|scheduler)[\\/]/.test(id)) return "vendor-react";
           if (/[\\/]node_modules[\\/]@?mcap[\\/]/.test(id)) return "vendor-mcap";
+          if (/[\\/]node_modules[\\/]uplot[\\/]/.test(id)) return "vendor-uplot";
           return undefined;
         },
       },
@@ -56,6 +57,10 @@ export default defineConfig(({ mode }) => ({
         replacement: path.resolve(rootDir, "../../plugins/moveit/src/manifest.ts"),
       },
       {
+        find: "@robotscope/plugin-timeseries/manifest",
+        replacement: path.resolve(rootDir, "../../plugins/timeseries/src/manifest.ts"),
+      },
+      {
         find: "@robotscope/plugin-example/manifest",
         replacement: path.resolve(rootDir, "../../plugins/example/src/manifest.ts"),
       },
@@ -70,6 +75,10 @@ export default defineConfig(({ mode }) => ({
       {
         find: "@robotscope/plugin-moveit",
         replacement: path.resolve(rootDir, "../../plugins/moveit/src/index.ts"),
+      },
+      {
+        find: "@robotscope/plugin-timeseries",
+        replacement: path.resolve(rootDir, "../../plugins/timeseries/src/index.ts"),
       },
       {
         find: "@robotscope/plugin-example",

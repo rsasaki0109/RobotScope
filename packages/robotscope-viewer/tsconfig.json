@@ -24,7 +24,9 @@
       "@robotscope/plugin-nav2": ["../../plugins/nav2/src/index.ts"],
       "@robotscope/plugin-nav2/manifest": ["../../plugins/nav2/src/manifest.ts"],
       "@robotscope/plugin-moveit": ["../../plugins/moveit/src/index.ts"],
-      "@robotscope/plugin-moveit/manifest": ["../../plugins/moveit/src/manifest.ts"]
+      "@robotscope/plugin-moveit/manifest": ["../../plugins/moveit/src/manifest.ts"],
+      "@robotscope/plugin-timeseries": ["../../plugins/timeseries/src/index.ts"],
+      "@robotscope/plugin-timeseries/manifest": ["../../plugins/timeseries/src/manifest.ts"]
     }
   },
   "include": ["src"]

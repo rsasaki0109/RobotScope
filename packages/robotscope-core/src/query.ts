@@ -64,6 +64,11 @@ export interface RawMessage {
   decode_error?: string;
 }
 
+export interface NumericSeries {
+  t: Float64Array;
+  v: Float64Array;
+}
+
 export interface IndexStatus {
   tf_indexed: boolean;
   tf_message_count: number;
@@ -80,6 +85,13 @@ export interface McapQueryEngine extends QueryEngine {
   getTfTree(time_ns: number, fixed_frame?: string): Promise<TfTreeSnapshot>;
   getSceneSnapshot(time_ns: number, options?: SceneBuildOptions): Promise<SceneSnapshot>;
   getRawMessageNearTime(topic: string, time_ns: number): Promise<RawMessage | null>;
+  getNumericSeries(
+    topic: string,
+    fieldPath: string,
+    t0_ns: number,
+    t1_ns: number,
+    maxPoints?: number,
+  ): Promise<NumericSeries>;
   getSidecarManifest(): import("./storage/sidecar.js").SidecarManifest;
 }
 
@@ -89,6 +101,7 @@ export function isMcapQueryEngine(engine: unknown): engine is McapQueryEngine {
   }
   return (
     typeof (engine as McapQueryEngine).getRawMessageNearTime === "function" &&
+    typeof (engine as McapQueryEngine).getNumericSeries === "function" &&
     typeof (engine as McapQueryEngine).getTfTree === "function" &&
     typeof (engine as McapQueryEngine).getSceneSnapshot === "function" &&
     typeof (engine as McapQueryEngine).getSidecarManifest === "function"

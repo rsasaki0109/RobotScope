@@ -4,6 +4,21 @@ All notable changes to RobotScope are documented in this file.
 
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and versioning follows [SemVer](https://semver.org/).
 
+## [1.5.0-alpha.0] - 2026-06-13
+
+Dedicated action timeline panel for live Fibonacci workflows.
+
+### Added
+
+- Sidebar **Action timeline** panel — goal / feedback / outcome / cancel event history
+- `LiveActionEvent` types + `appendLiveActionEvent()` / `shouldAppendLiveActionFeedbackEvent()` helpers
+- [docs/release/v1.5.0-alpha.0.md](RobotScope/docs/release/v1.5.0-alpha.0.md)
+
+### Changed
+
+- [docs/action-gateway.md](RobotScope/docs/action-gateway.md) updated for v1.5 alpha timeline panel
+- [known-limitations.md](RobotScope/docs/known-limitations.md) updated — sidebar timeline only; no cross-session persistence
+
 ## [1.4.0] - 2026-06-13
 
 Fourteenth GA release — action goal cancel on live gateways.

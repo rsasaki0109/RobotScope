@@ -60,6 +60,25 @@ export interface LiveActionTrackingState {
   message?: string;
 }
 
+export type LiveActionEventKind =
+  | "goal_sent"
+  | "goal_accepted"
+  | "goal_rejected"
+  | "feedback"
+  | "outcome"
+  | "cancel_requested"
+  | "cancel_result";
+
+export interface LiveActionEvent {
+  id: string;
+  time_ns: number;
+  action: string;
+  kind: LiveActionEventKind;
+  status?: LiveActionTrackingStatus;
+  sequence?: number[];
+  message?: string;
+}
+
 function assertFiniteOrder(value: number): number {
   if (!Number.isFinite(value)) {
     throw new Error("order must be a finite number");
@@ -114,4 +133,38 @@ export function applyLiveActionProgressUpdate(
     sequence: [...update.sequence],
     message: update.message,
   };
+}
+
+export function appendLiveActionEvent(
+  events: LiveActionEvent[],
+  event: Omit<LiveActionEvent, "id" | "time_ns"> & { time_ns?: number },
+  maxEvents = 32,
+): LiveActionEvent[] {
+  const next: LiveActionEvent = {
+    ...event,
+    id: `${event.kind}-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+    time_ns: event.time_ns ?? Date.now() * 1_000_000,
+  };
+  return [next, ...events].slice(0, maxEvents);
+}
+
+export function shouldAppendLiveActionFeedbackEvent(
+  events: LiveActionEvent[],
+  action: string,
+  sequence: number[],
+): boolean {
+  const latest = events.find((entry) => entry.kind === "feedback" && entry.action === action);
+  if (!latest) {
+    return true;
+  }
+  const previous = latest.sequence ?? [];
+  if (previous.length !== sequence.length) {
+    return true;
+  }
+  for (let index = 0; index < sequence.length; index += 1) {
+    if (previous[index] !== sequence[index]) {
+      return true;
+    }
+  }
+  return false;
 }

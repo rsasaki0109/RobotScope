@@ -1,0 +1,96 @@
+.section {
+  margin-top: 0.5rem;
+}
+
+.header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.header h2 {
+  margin: 0;
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--rs-text-muted);
+}
+
+.meta {
+  font-size: 0.68rem;
+  color: var(--rs-text-muted);
+}
+
+.empty {
+  margin: 0;
+  font-size: 0.78rem;
+  color: var(--rs-text-muted);
+}
+
+.events {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  max-height: 12rem;
+  overflow: auto;
+}
+
+.event {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 0.35rem 0.5rem;
+  padding: 0.35rem 0;
+  border-bottom: 1px solid var(--rs-border);
+  font-size: 0.72rem;
+}
+
+.event:last-child {
+  border-bottom: none;
+}
+
+.kind {
+  font-size: 0.66rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--rs-text-muted);
+}
+
+.kind[data-kind="outcome"][data-status="succeeded"] {
+  color: #16a34a;
+}
+
+.kind[data-kind="outcome"][data-status="canceled"],
+.kind[data-kind="outcome"][data-status="aborted"],
+.kind[data-kind="outcome"][data-status="failed"],
+.kind[data-kind="goal_rejected"] {
+  color: #dc2626;
+}
+
+.kind[data-kind="feedback"],
+.kind[data-kind="goal_accepted"],
+.kind[data-kind="goal_sent"] {
+  color: var(--rs-accent, #3b82f6);
+}
+
+.detail {
+  min-width: 0;
+  color: inherit;
+  line-height: 1.35;
+}
+
+.sequence {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  color: var(--rs-text-muted);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.message {
+  color: var(--rs-text-muted);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}

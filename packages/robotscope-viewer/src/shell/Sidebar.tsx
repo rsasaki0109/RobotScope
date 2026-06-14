@@ -3,6 +3,7 @@ import { useCallback } from "react";
 import { useViewerStore } from "../store/viewer-store";
 import styles from "./Sidebar.module.css";
 import { TfTreePanel } from "./TfTreePanel";
+import { ActionGatewayPanel } from "./ActionGatewayPanel";
 
 export function Sidebar() {
   const topics = useViewerStore((s) => s.topics);
@@ -61,6 +62,7 @@ export function Sidebar() {
       </section>
 
       <TfTreePanel />
+      <ActionGatewayPanel />
     </aside>
   );
 }

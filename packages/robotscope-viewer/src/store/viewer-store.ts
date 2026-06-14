@@ -1,6 +1,7 @@
 import type {
   IngestHandle,
   IngestProgress,
+  LiveActionEvent,
   LiveActionTrackingState,
   MappedTopic,
   ParsedLaneletOsmMap,
@@ -12,10 +13,12 @@ import type {
   TopicInfo,
 } from "@robotscope/core";
 import {
+  appendLiveActionEvent,
   applyLiveActionProgressUpdate,
   formatFibonacciSequence,
   isLiveIngestHandle,
   isMcapQueryEngine,
+  shouldAppendLiveActionFeedbackEvent,
   validateSidecarFingerprint,
 } from "@robotscope/core";
 import { create } from "zustand";
@@ -157,6 +160,7 @@ export interface ViewerState {
   liveActionSendGoalActions: string[];
   fibonacciActionOrder: number;
   liveActionTracking: LiveActionTrackingState | null;
+  liveActionEvents: LiveActionEvent[];
   cmdVelLinearX: number;
   cmdVelLinearY: number;
   cmdVelLinearZ: number;
@@ -232,6 +236,7 @@ const initialState = {
   liveActionSendGoalActions: [] as string[],
   fibonacciActionOrder: 3,
   liveActionTracking: null as LiveActionTrackingState | null,
+  liveActionEvents: [] as LiveActionEvent[],
   cmdVelLinearX: 0,
   cmdVelLinearY: 0,
   cmdVelLinearZ: 0,
@@ -587,7 +592,31 @@ export const useViewerStore = create<ViewerState>((set, get) => ({
         })();
       },
       onActionProgress: (update) => {
-        const nextTracking = applyLiveActionProgressUpdate(get().liveActionTracking, update);
+        const state = get();
+        const nextTracking = applyLiveActionProgressUpdate(state.liveActionTracking, update);
+        let nextEvents = state.liveActionEvents;
+
+        if (update.kind === "feedback") {
+          if (
+            shouldAppendLiveActionFeedbackEvent(nextEvents, update.action, update.sequence)
+          ) {
+            nextEvents = appendLiveActionEvent(nextEvents, {
+              action: update.action,
+              kind: "feedback",
+              status: "running",
+              sequence: [...update.sequence],
+            });
+          }
+        } else {
+          nextEvents = appendLiveActionEvent(nextEvents, {
+            action: update.action,
+            kind: "outcome",
+            status: update.status,
+            sequence: [...update.sequence],
+            message: update.message,
+          });
+        }
+
         const sequenceLabel = formatFibonacciSequence(nextTracking.sequence);
         const statusMessage =
           update.kind === "outcome"
@@ -596,6 +625,7 @@ export const useViewerStore = create<ViewerState>((set, get) => ({
             : `Action running on ${update.action} ${sequenceLabel}`;
         set({
           liveActionTracking: nextTracking,
+          liveActionEvents: nextEvents,
           statusMessage,
         });
       },
@@ -663,6 +693,7 @@ export const useViewerStore = create<ViewerState>((set, get) => ({
       liveServiceCallServices: [],
       liveActionSendGoalActions: [],
       liveActionTracking: null,
+      liveActionEvents: [],
       liveConnection: {
         phase: "disconnected",
         url: null,
@@ -847,6 +878,12 @@ export const useViewerStore = create<ViewerState>((set, get) => ({
           status: "running",
           sequence: [],
         },
+        liveActionEvents: appendLiveActionEvent(get().liveActionEvents, {
+          action,
+          kind: "goal_sent",
+          status: "running",
+          message: `Order n=${state.fibonacciActionOrder}`,
+        }),
       });
       const result = await ingest.sendActionGoal(
         buildFibonacciActionGoalRequest(state.fibonacciActionOrder, action),
@@ -863,6 +900,12 @@ export const useViewerStore = create<ViewerState>((set, get) => ({
               sequence: [],
               message: result.message,
             },
+        liveActionEvents: appendLiveActionEvent(get().liveActionEvents, {
+          action,
+          kind: result.ok && result.goal_accepted !== false ? "goal_accepted" : "goal_rejected",
+          status: result.ok && result.goal_accepted !== false ? "running" : "failed",
+          message: result.message,
+        }),
       });
     } catch (error) {
       set({
@@ -895,11 +938,24 @@ export const useViewerStore = create<ViewerState>((set, get) => ({
         "@robotscope/core"
       );
       const action = actionName ?? tracking.action ?? DEFAULT_FIBONACCI_ACTION;
+      set({
+        liveActionEvents: appendLiveActionEvent(get().liveActionEvents, {
+          action,
+          kind: "cancel_requested",
+          status: "running",
+        }),
+      });
       const result = await ingest.cancelActionGoal(buildFibonacciActionCancelRequest(action));
       set({
         statusMessage: result.ok
           ? `${result.message}${result.cancel_accepted === false ? " · cancel rejected" : ""}`
           : `Action cancel failed: ${result.message}`,
+        liveActionEvents: appendLiveActionEvent(get().liveActionEvents, {
+          action,
+          kind: "cancel_result",
+          status: result.ok && result.cancel_accepted !== false ? "running" : "failed",
+          message: result.message,
+        }),
       });
     } catch (error) {
       set({

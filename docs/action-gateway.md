@@ -1,6 +1,6 @@
-# Action gateway (v1.4 GA)
+# Action gateway (v1.5 alpha)
 
-Permission-gated **live action goal send and cancel** from the viewer to a local ROS 2 agent, with **Fibonacci feedback / outcome tracking** (v1.3 GA).
+Permission-gated **live action goal send and cancel** from the viewer to a local ROS 2 agent, with **Fibonacci feedback / outcome tracking** (v1.3 GA) and **Action timeline panel** (v1.5 alpha).
 
 ## Safety model
 
@@ -131,12 +131,13 @@ Cancel response (v1.4):
 - Live client — `LiveAgentClient.sendActionGoal()`
 - Python agent — `RobotScope/agent/robotscope_agent/bridge.py`
 - Viewer — command bar **Allow action goals** + **Send Fibonacci** + **Cancel goal** + **sequence tracking badge**
+- Sidebar — **Action timeline** panel (v1.5 alpha) with goal / feedback / outcome / cancel events
 
-## Out of scope (v1.4)
+## Out of scope (v1.5 alpha)
 
+- Cross-session action history persistence
 - Preempt controls (send new goal while running)
 - Arbitrary action goal editor
-- Dedicated action timeline panel
 - Plugin runtime permission enforcement
 
 See [known-limitations.md](RobotScope/docs/known-limitations.md).

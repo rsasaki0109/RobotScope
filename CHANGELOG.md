@@ -4,6 +4,24 @@ All notable changes to RobotScope are documented in this file.
 
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and versioning follows [SemVer](https://semver.org/).
 
+## [1.4.0-beta.0] - 2026-06-13
+
+First v1.4 beta — scope consolidation after alpha.0.
+
+### Summary
+
+Beta consolidates action goal cancel on v1.3 live gateways. Documentation and known-limitations boundaries updated for local live Fibonacci cancel workflows.
+
+### Added
+
+- [docs/release/v1.4.0-beta.0.md](RobotScope/docs/release/v1.4.0-beta.0.md)
+- [docs/migration/v1.4-alpha-to-beta.md](RobotScope/docs/migration/v1.4-alpha-to-beta.md)
+
+### Changed
+
+- README + [known-limitations.md](RobotScope/docs/known-limitations.md) updated for v1.4 beta boundaries
+- [docs/action-gateway.md](RobotScope/docs/action-gateway.md) — beta scope header
+
 ## [1.4.0-alpha.0] - 2026-06-13
 
 Permission-gated action goal cancel for live Fibonacci workflows.

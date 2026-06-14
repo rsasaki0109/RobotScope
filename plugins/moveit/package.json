@@ -1,6 +1,6 @@
 {
   "name": "@robotscope/plugin-moveit",
-  "version": "1.4.0-alpha.0",
+  "version": "1.4.0-beta.0",
   "private": true,
   "description": "MoveIt-native panels and topic profiles",
   "license": "Apache-2.0",

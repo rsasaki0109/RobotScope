@@ -2,6 +2,7 @@ export type {
   NumericFieldCandidate,
   TimeSeriesPlotSeries,
   TimeSeriesSnapshot,
+  TimeSeriesXRange,
 } from "./types.js";
 export {
   listNumericFieldCandidates,

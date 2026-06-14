@@ -6,14 +6,11 @@ import {
 } from "@robotscope/plugin-example";
 import { MoveItDock, MOVEIT_PLUGIN_MANIFEST, useMoveItSnapshot } from "@robotscope/plugin-moveit";
 import { Nav2Dock, NAV2_PLUGIN_MANIFEST, useNav2Snapshot } from "@robotscope/plugin-nav2";
-import {
-  TimeSeriesDock,
-  TIMESERIES_PLUGIN_MANIFEST,
-  useTimeSeries,
-} from "@robotscope/plugin-timeseries";
+import { TIMESERIES_PLUGIN_MANIFEST } from "@robotscope/plugin-timeseries";
 import { layoutIdsFromManifest, type PluginManifest } from "@robotscope/core";
 
 import { registerPlugin } from "./create-plugin-column";
+import { TimeSeriesRightColumn } from "./timeseries-column";
 import type { LayoutOption, RegisteredPlugin } from "./types";
 
 const BUILTIN_LAYOUTS: LayoutOption[] = [
@@ -52,12 +49,11 @@ const registeredPlugins: RegisteredPlugin[] = [
     useMoveItSnapshot,
     MoveItDock,
   ),
-  registerPlugin(
-    TIMESERIES_PLUGIN_MANIFEST,
-    layoutIdsFromManifest(TIMESERIES_PLUGIN_MANIFEST),
-    useTimeSeries,
-    TimeSeriesDock,
-  ),
+  {
+    manifest: TIMESERIES_PLUGIN_MANIFEST,
+    layoutIds: layoutIdsFromManifest(TIMESERIES_PLUGIN_MANIFEST),
+    RightColumn: TimeSeriesRightColumn,
+  },
   registerPlugin(
     EXAMPLE_PLUGIN_MANIFEST,
     layoutIdsFromManifest(EXAMPLE_PLUGIN_MANIFEST),

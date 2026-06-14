@@ -1,11 +1,16 @@
-import { isMcapQueryEngine, type QueryEngine, type SessionInfo } from "@robotscope/core";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import type { NumericSeries, QueryEngine, SessionInfo } from "@robotscope/core";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import {
   listNumericFieldCandidates,
   pickDefaultNumericField,
 } from "../field-catalog.js";
-import type { NumericFieldCandidate, TimeSeriesPlotSeries, TimeSeriesSnapshot } from "../types.js";
+import type {
+  NumericFieldCandidate,
+  TimeSeriesPlotSeries,
+  TimeSeriesSnapshot,
+  TimeSeriesXRange,
+} from "../types.js";
 
 export interface TimeSeriesDataState {
   snapshot: TimeSeriesSnapshot | null;
@@ -17,6 +22,7 @@ export interface TimeSeriesViewerSlice {
   session: SessionInfo | null;
   currentTimeNs: number;
   setCurrentTimeNs: (timeNs: number) => void;
+  xRange?: TimeSeriesXRange | null;
 }
 
 interface SeriesSelection {
@@ -28,6 +34,28 @@ interface SeriesSelection {
 interface SeriesState {
   seriesByKey: Map<string, TimeSeriesPlotSeries["series"]>;
   warnings: string[];
+  overviewSeriesByKey: Map<string, TimeSeriesPlotSeries["series"]>;
+  overviewWarnings: string[];
+  overviewRequestKey: string | null;
+  displayedRequestKey: string | null;
+}
+
+interface NumericSeriesQueryEngine extends QueryEngine {
+  getNumericSeries(
+    topic: string,
+    fieldPath: string,
+    t0_ns: number,
+    t1_ns: number,
+    maxPoints?: number,
+  ): Promise<NumericSeries>;
+}
+
+interface TimeSeriesFetchWindow {
+  startNs: number;
+  endNs: number;
+  maxPoints: number;
+  overview: boolean;
+  key: string;
 }
 
 const SERIES_COLORS = [
@@ -40,6 +68,12 @@ const SERIES_COLORS = [
   "#2dd4bf",
   "#fb7185",
 ];
+const MAX_SERIES_POINTS = 2000;
+const WINDOW_FETCH_DEBOUNCE_MS = 200;
+
+function hasNumericSeriesQueryEngine(engine: QueryEngine): engine is NumericSeriesQueryEngine {
+  return typeof (engine as Partial<NumericSeriesQueryEngine>).getNumericSeries === "function";
+}
 
 function nextSeriesColor(selections: SeriesSelection[]): string {
   const used = new Set(selections.map((selection) => selection.color));
@@ -55,12 +89,65 @@ function errorMessage(error: unknown): string {
   return error instanceof Error ? error.message : String(error);
 }
 
-export function useTimeSeries(slice: TimeSeriesViewerSlice): TimeSeriesDataState {
-  const [seriesSelections, setSeriesSelections] = useState<SeriesSelection[]>([]);
-  const [seriesState, setSeriesState] = useState<SeriesState>({
+function clampRangeTimeNs(timeNs: number, session: SessionInfo): number {
+  return Math.min(session.end_ns, Math.max(session.start_ns, Math.round(timeNs)));
+}
+
+function finiteSeconds(value: number, fallback: number): number {
+  return Number.isFinite(value) ? value : fallback;
+}
+
+function buildFetchWindow(
+  session: SessionInfo,
+  xRange: TimeSeriesXRange | null | undefined,
+): TimeSeriesFetchWindow {
+  if (!xRange) {
+    return {
+      startNs: session.start_ns,
+      endNs: session.end_ns,
+      maxPoints: MAX_SERIES_POINTS,
+      overview: true,
+      key: `${session.source}|${session.path ?? ""}|${session.start_ns}|${session.end_ns}|full|${MAX_SERIES_POINTS}`,
+    };
+  }
+
+  const fullSpanSec = Math.max((session.end_ns - session.start_ns) / 1e9, 0);
+  let minSec = finiteSeconds(xRange.minSec, 0);
+  let maxSec = finiteSeconds(xRange.maxSec, fullSpanSec);
+  if (minSec > maxSec) {
+    [minSec, maxSec] = [maxSec, minSec];
+  }
+  minSec = Math.min(fullSpanSec, Math.max(0, minSec));
+  maxSec = Math.min(fullSpanSec, Math.max(0, maxSec));
+
+  const startNs = clampRangeTimeNs(session.start_ns + minSec * 1e9, session);
+  const endNs = clampRangeTimeNs(session.start_ns + maxSec * 1e9, session);
+
+  return {
+    startNs,
+    endNs,
+    maxPoints: MAX_SERIES_POINTS,
+    overview: false,
+    key: `${session.source}|${session.path ?? ""}|${session.start_ns}|${session.end_ns}|${startNs}|${endNs}|${MAX_SERIES_POINTS}`,
+  };
+}
+
+function emptySeriesState(): SeriesState {
+  return {
     seriesByKey: new Map(),
     warnings: [],
-  });
+    overviewSeriesByKey: new Map(),
+    overviewWarnings: [],
+    overviewRequestKey: null,
+    displayedRequestKey: null,
+  };
+}
+
+export function useTimeSeries(slice: TimeSeriesViewerSlice): TimeSeriesDataState {
+  const [seriesSelections, setSeriesSelections] = useState<SeriesSelection[]>([]);
+  const [seriesState, setSeriesState] = useState<SeriesState>(emptySeriesState);
+  const [fetchWindow, setFetchWindow] = useState<TimeSeriesFetchWindow | null>(null);
+  const fetchWindowRef = useRef<TimeSeriesFetchWindow | null>(null);
   const [loading, setLoading] = useState(false);
 
   const candidates = useMemo(
@@ -149,11 +236,61 @@ export function useTimeSeries(slice: TimeSeriesViewerSlice): TimeSeriesDataState
     slice.setCurrentTimeNs(clampTimeNs(timeNs, slice.session));
   }, [slice.session, slice.setCurrentTimeNs]);
 
+  const desiredFetchWindow = useMemo(() => {
+    return slice.session ? buildFetchWindow(slice.session, slice.xRange) : null;
+  }, [slice.session, slice.xRange]);
+
+  useEffect(() => {
+    fetchWindowRef.current = fetchWindow;
+  }, [fetchWindow]);
+
+  useEffect(() => {
+    if (!desiredFetchWindow) {
+      setFetchWindow(null);
+      return undefined;
+    }
+
+    const applyWindow = () => {
+      setFetchWindow((current) =>
+        current?.key === desiredFetchWindow.key ? current : desiredFetchWindow,
+      );
+    };
+
+    if (!fetchWindowRef.current) {
+      applyWindow();
+      return undefined;
+    }
+
+    const timeout = setTimeout(applyWindow, WINDOW_FETCH_DEBOUNCE_MS);
+    return () => clearTimeout(timeout);
+  }, [desiredFetchWindow]);
+
+  useEffect(() => {
+    if (!desiredFetchWindow?.overview) {
+      return;
+    }
+    const requestKey = `${desiredFetchWindow.key}|${selectedKeysSignature}`;
+    setSeriesState((current) => {
+      if (
+        current.overviewRequestKey !== requestKey ||
+        current.displayedRequestKey === requestKey
+      ) {
+        return current;
+      }
+      return {
+        ...current,
+        seriesByKey: current.overviewSeriesByKey,
+        warnings: current.overviewWarnings,
+        displayedRequestKey: requestKey,
+      };
+    });
+  }, [desiredFetchWindow, selectedKeysSignature]);
+
   useEffect(() => {
     const engine = slice.ingest?.engine;
     const session = slice.session;
-    if (!engine || !session || !isMcapQueryEngine(engine)) {
-      setSeriesState({ seriesByKey: new Map(), warnings: [] });
+    if (!engine || !session || !hasNumericSeriesQueryEngine(engine)) {
+      setSeriesState(emptySeriesState());
       setLoading(false);
       return;
     }
@@ -162,19 +299,29 @@ export function useTimeSeries(slice: TimeSeriesViewerSlice): TimeSeriesDataState
       setSeriesState({
         seriesByKey: new Map(),
         warnings: ["No numeric field candidates were found in this session."],
+        overviewSeriesByKey: new Map(),
+        overviewWarnings: [],
+        overviewRequestKey: null,
+        displayedRequestKey: null,
       });
       setLoading(false);
       return;
     }
 
     if (selectedFetchCandidates.length === 0) {
-      setSeriesState({ seriesByKey: new Map(), warnings: [] });
+      setSeriesState(emptySeriesState());
+      setLoading(false);
+      return;
+    }
+
+    if (!fetchWindow) {
       setLoading(false);
       return;
     }
 
     let cancelled = false;
     setLoading(true);
+    const requestKey = `${fetchWindow.key}|${selectedKeysSignature}`;
 
     void Promise.all(
       selectedFetchCandidates.map(async (selection) => {
@@ -182,9 +329,9 @@ export function useTimeSeries(slice: TimeSeriesViewerSlice): TimeSeriesDataState
           const series = await engine.getNumericSeries(
             selection.candidate.topic,
             selection.candidate.fieldPath,
-            session.start_ns,
-            session.end_ns,
-            2000,
+            fetchWindow.startNs,
+            fetchWindow.endNs,
+            fetchWindow.maxPoints,
           );
           return { selection, series, warning: null as string | null };
         } catch (error: unknown) {
@@ -212,21 +359,48 @@ export function useTimeSeries(slice: TimeSeriesViewerSlice): TimeSeriesDataState
             );
           }
         }
-        setSeriesState({ seriesByKey, warnings });
+        setSeriesState((current) => {
+          if (!fetchWindow.overview) {
+            return {
+              ...current,
+              seriesByKey,
+              warnings,
+              displayedRequestKey: requestKey,
+            };
+          }
+          return {
+            seriesByKey,
+            warnings,
+            overviewSeriesByKey: seriesByKey,
+            overviewWarnings: warnings,
+            overviewRequestKey: requestKey,
+            displayedRequestKey: requestKey,
+          };
+        });
         setLoading(false);
       })
       .catch((error: unknown) => {
         if (cancelled) {
           return;
         }
-        setSeriesState({ seriesByKey: new Map(), warnings: [errorMessage(error)] });
+        setSeriesState((current) => ({
+          ...current,
+          warnings: [errorMessage(error)],
+        }));
         setLoading(false);
       });
 
     return () => {
       cancelled = true;
     };
-  }, [candidates.length, selectedFetchCandidates, slice.ingest, slice.session]);
+  }, [
+    candidates.length,
+    fetchWindow,
+    selectedFetchCandidates,
+    selectedKeysSignature,
+    slice.ingest,
+    slice.session,
+  ]);
 
   const selectedSeries = useMemo<TimeSeriesPlotSeries[]>(() => {
     return selectedCandidates.map((selection) => ({

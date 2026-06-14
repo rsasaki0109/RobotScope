@@ -14,6 +14,8 @@ export interface TimeSeriesDockProps {
   snapshot: TimeSeriesSnapshot | null;
   loading?: boolean;
   inspector?: ReactNode;
+  xRange?: TimeSeriesXRange | null;
+  onXRangeChange?: (range: TimeSeriesXRange | null) => void;
 }
 
 function formatSeconds(ns: number): string {
@@ -137,10 +139,18 @@ function StackedSeriesPlot({
   );
 }
 
-export function TimeSeriesDock({ snapshot, loading, inspector }: TimeSeriesDockProps) {
+export function TimeSeriesDock({
+  snapshot,
+  loading,
+  inspector,
+  xRange: controlledXRange,
+  onXRangeChange,
+}: TimeSeriesDockProps) {
   const [tab, setTab] = useState<"plot" | "inspector">("plot");
   const [displayMode, setDisplayMode] = useState<PlotDisplayMode>("overlay");
-  const [xRange, setXRange] = useState<TimeSeriesXRange | null>(null);
+  const [localXRange, setLocalXRange] = useState<TimeSeriesXRange | null>(null);
+  const xRangeControlled = controlledXRange !== undefined;
+  const xRange = xRangeControlled ? controlledXRange : localXRange;
   const selectedKeys = useMemo(
     () => new Set(snapshot?.selectedSeries.map((series) => series.key) ?? []),
     [snapshot?.selectedSeries],
@@ -170,10 +180,16 @@ export function TimeSeriesDock({ snapshot, loading, inspector }: TimeSeriesDockP
     downloadTimeSeriesCsv(snapshot.selectedSeries, snapshot.startNs);
   }, [exportableRows, snapshot]);
   const handleXRangeChange = useCallback((nextRange: TimeSeriesXRange | null) => {
-    setXRange((currentRange) =>
+    if (xRangeControlled) {
+      if (!xRangeEquals(xRange, nextRange)) {
+        onXRangeChange?.(nextRange);
+      }
+      return;
+    }
+    setLocalXRange((currentRange) =>
       xRangeEquals(currentRange, nextRange) ? currentRange : nextRange,
     );
-  }, []);
+  }, [onXRangeChange, xRange, xRangeControlled]);
 
   return (
     <aside className={styles.timeseriesDock}>

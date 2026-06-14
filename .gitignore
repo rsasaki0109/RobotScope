@@ -38,6 +38,7 @@ Thumbs.db
 sample_data/*.mcap
 sample_data/*.bag
 sample_data/**/*.mcap
+sample_data/demo-rosbag2/
 
 # Generated demo bundle for GitHub Pages builds
 packages/robotscope-viewer/public/demo/*.mcap

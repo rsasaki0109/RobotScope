@@ -17,6 +17,7 @@
     "demo:nav2": "npm run dev --workspace=@robotscope/viewer -- --open /?layout=nav2",
     "demo:moveit": "npm run dev --workspace=@robotscope/viewer -- --open /?layout=moveit",
     "demo:timeseries": "npm run dev --workspace=@robotscope/viewer -- --open /?layout=timeseries&demo=1",
+    "demo:rosbag2": "node scripts/create-rosbag2-demo.mjs",
     "demo:example": "npm run dev --workspace=@robotscope/viewer -- --open /?layout=example&demo=1",
     "demo:live-agent": "node scripts/live-agent-demo.mjs --allow-publish /cmd_vel --allow-service /robotscope/demo/trigger --allow-action /robotscope/demo/fibonacci",
     "demo:ros2-agent": "bash scripts/run-ros2-agent.sh",

@@ -90,7 +90,7 @@ Open an MCAP file from the viewer (drag & drop) or click **Connect Live** for a 
 
 ### Time-series plots (PlotJuggler-style)
 
-The `timeseries` layout turns any numeric ROS2 field into a live plot next to the 3D scene. Pick fields from the catalog (click or drag), overlay multiple series with per-series Y axes, or stack them one-per-plot. Add derived **analysis channels** — moving average, derivative (d/dt), or series math (A `+` `-` `*` `/` B) — computed live from the selected signals. Drag to zoom / wheel to pan with a shared time axis, click anywhere on a plot to seek the 3D scene and timeline, and export the visible series to CSV. Zooming refetches just the visible window at full resolution, so it stays responsive on large recordings. Works on MCAP, rosbag2, and live agents.
+The `timeseries` layout turns any numeric ROS2 field into a live plot next to the 3D scene. Pick fields from the catalog (click or drag), overlay multiple series with per-series Y axes, or stack them one-per-plot. Add derived **analysis channels** — moving average, derivative (d/dt), or series math (A `+` `-` `*` `/` B) — computed live from the selected signals. Drag to zoom / wheel to pan with a shared time axis, click anywhere on a plot to seek the 3D scene and timeline, and export the visible series to CSV. Switch the time axis between elapsed seconds and wall-clock, or pin the Y axis to a fixed range. Zooming refetches just the visible window at full resolution, so it stays responsive on large recordings. Works on MCAP, rosbag2, and live agents.
 
 <p align="center">
   <a href="https://rsasaki0109.github.io/RobotScope/?layout=timeseries&demo=1">

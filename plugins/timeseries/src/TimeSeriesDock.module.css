@@ -94,6 +94,37 @@
   display: flex;
   align-items: center;
   gap: 0.45rem;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+.modeToggle {
+  display: inline-flex;
+  overflow: hidden;
+  border: 1px solid var(--rs-border);
+  border-radius: 6px;
+  background: rgba(15, 23, 42, 0.62);
+}
+
+.modeToggleButton,
+.modeToggleButtonActive {
+  border: none;
+  border-right: 1px solid var(--rs-border);
+  background: transparent;
+  color: var(--rs-text-muted);
+  padding: 0.22rem 0.42rem;
+  font-size: 0.66rem;
+  font-weight: 650;
+}
+
+.modeToggleButton:last-child,
+.modeToggleButtonActive:last-child {
+  border-right: none;
+}
+
+.modeToggleButtonActive {
+  background: rgba(78, 161, 255, 0.16);
+  color: var(--rs-accent);
 }
 
 .exportButton {
@@ -273,6 +304,12 @@
   color: var(--rs-warning);
   font-size: 0.72rem;
   line-height: 1.45;
+}
+
+.stackedPlots {
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
 }
 
 .emptyState {

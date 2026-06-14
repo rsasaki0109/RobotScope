@@ -6,6 +6,7 @@ import type {
   NumericFieldCandidate,
   TimeSeriesPlotSeries,
   TimeSeriesSnapshot,
+  TimeSeriesXRange,
 } from "./types.js";
 import styles from "./TimeSeriesDock.module.css";
 
@@ -24,6 +25,22 @@ function sampleCount(series: TimeSeriesPlotSeries[]): number {
 }
 
 const MAX_VISIBLE_Y_AXES = 3;
+const EMPTY_PLOT_SERIES: TimeSeriesPlotSeries[] = [];
+type PlotDisplayMode = "overlay" | "stacked";
+
+function xRangeEquals(
+  left: TimeSeriesXRange | null,
+  right: TimeSeriesXRange | null,
+): boolean {
+  if (left === right) {
+    return true;
+  }
+  if (!left || !right) {
+    return false;
+  }
+  return Math.abs(left.minSec - right.minSec) < 1e-9 &&
+    Math.abs(left.maxSec - right.maxSec) < 1e-9;
+}
 
 function fieldMeta(candidate: NumericFieldCandidate): string {
   return `${candidate.schema} · ${candidate.fieldPath}`;
@@ -79,8 +96,51 @@ function onFieldDragStart(event: DragEvent<HTMLButtonElement>, candidate: Numeri
   event.dataTransfer.setData("text/plain", candidate.key);
 }
 
+interface StackedSeriesPlotProps {
+  series: TimeSeriesPlotSeries;
+  startNs: number;
+  endNs: number;
+  currentTimeNs: number;
+  xRange: TimeSeriesXRange | null;
+  onXRangeChange: (range: TimeSeriesXRange | null) => void;
+  onSeekTimeNs: (timeNs: number) => void;
+  onDropFieldKey: (key: string) => void;
+}
+
+function StackedSeriesPlot({
+  series,
+  startNs,
+  endNs,
+  currentTimeNs,
+  xRange,
+  onXRangeChange,
+  onSeekTimeNs,
+  onDropFieldKey,
+}: StackedSeriesPlotProps) {
+  const singleSeries = useMemo(() => [series], [series]);
+  return (
+    <PlotCanvas
+      series={singleSeries}
+      startNs={startNs}
+      endNs={endNs}
+      currentTimeNs={currentTimeNs}
+      xRange={xRange}
+      onXRangeChange={onXRangeChange}
+      onSeekTimeNs={onSeekTimeNs}
+      onDropFieldKey={onDropFieldKey}
+      compact
+      plotLabel={{
+        label: series.candidate.label,
+        color: series.color,
+      }}
+    />
+  );
+}
+
 export function TimeSeriesDock({ snapshot, loading, inspector }: TimeSeriesDockProps) {
   const [tab, setTab] = useState<"plot" | "inspector">("plot");
+  const [displayMode, setDisplayMode] = useState<PlotDisplayMode>("overlay");
+  const [xRange, setXRange] = useState<TimeSeriesXRange | null>(null);
   const selectedKeys = useMemo(
     () => new Set(snapshot?.selectedSeries.map((series) => series.key) ?? []),
     [snapshot?.selectedSeries],
@@ -109,6 +169,11 @@ export function TimeSeriesDock({ snapshot, loading, inspector }: TimeSeriesDockP
     }
     downloadTimeSeriesCsv(snapshot.selectedSeries, snapshot.startNs);
   }, [exportableRows, snapshot]);
+  const handleXRangeChange = useCallback((nextRange: TimeSeriesXRange | null) => {
+    setXRange((currentRange) =>
+      xRangeEquals(currentRange, nextRange) ? currentRange : nextRange,
+    );
+  }, []);
 
   return (
     <aside className={styles.timeseriesDock}>
@@ -153,6 +218,28 @@ export function TimeSeriesDock({ snapshot, loading, inspector }: TimeSeriesDockP
                 <div className={styles.sectionHeader}>
                   <h3>Series</h3>
                   <div className={styles.sectionActions}>
+                    <div className={styles.modeToggle} role="group" aria-label="Plot display mode">
+                      <button
+                        type="button"
+                        className={displayMode === "overlay"
+                          ? styles.modeToggleButtonActive
+                          : styles.modeToggleButton}
+                        onClick={() => setDisplayMode("overlay")}
+                        aria-pressed={displayMode === "overlay"}
+                      >
+                        Overlay
+                      </button>
+                      <button
+                        type="button"
+                        className={displayMode === "stacked"
+                          ? styles.modeToggleButtonActive
+                          : styles.modeToggleButton}
+                        onClick={() => setDisplayMode("stacked")}
+                        aria-pressed={displayMode === "stacked"}
+                      >
+                        Stacked
+                      </button>
+                    </div>
                     <button
                       type="button"
                       className={styles.exportButton}
@@ -171,6 +258,9 @@ export function TimeSeriesDock({ snapshot, loading, inspector }: TimeSeriesDockP
                       const axisIndex = series.visible
                         ? axisIndexByKey.get(series.key)
                         : undefined;
+                      const axisLabel = displayMode === "stacked" && series.visible
+                        ? "Y1"
+                        : yAxisLabel(axisIndex);
                       const currentValue = nearestValueAtTime(series, snapshot.currentTimeNs);
                       return (
                         <li
@@ -200,7 +290,7 @@ export function TimeSeriesDock({ snapshot, loading, inspector }: TimeSeriesDockP
                                       : undefined
                                   }
                                 >
-                                  {yAxisLabel(axisIndex)}
+                                  {axisLabel}
                                 </span>
                                 {currentValue != null ? (
                                   <span>now {formatSeriesValue(currentValue)}</span>
@@ -233,14 +323,48 @@ export function TimeSeriesDock({ snapshot, loading, inspector }: TimeSeriesDockP
                 </ul>
               ) : null}
 
-              <PlotCanvas
-                series={snapshot.selectedSeries}
-                startNs={snapshot.startNs}
-                endNs={snapshot.endNs}
-                currentTimeNs={snapshot.currentTimeNs}
-                onSeekTimeNs={snapshot.seekToTimeNs}
-                onDropFieldKey={snapshot.addSeriesKey}
-              />
+              {displayMode === "stacked" ? (
+                visibleSeries.length ? (
+                  <div className={styles.stackedPlots}>
+                    {visibleSeries.map((series) => (
+                      <StackedSeriesPlot
+                        key={series.key}
+                        series={series}
+                        startNs={snapshot.startNs}
+                        endNs={snapshot.endNs}
+                        currentTimeNs={snapshot.currentTimeNs}
+                        xRange={xRange}
+                        onXRangeChange={handleXRangeChange}
+                        onSeekTimeNs={snapshot.seekToTimeNs}
+                        onDropFieldKey={snapshot.addSeriesKey}
+                      />
+                    ))}
+                  </div>
+                ) : (
+                  <PlotCanvas
+                    series={EMPTY_PLOT_SERIES}
+                    startNs={snapshot.startNs}
+                    endNs={snapshot.endNs}
+                    currentTimeNs={snapshot.currentTimeNs}
+                    xRange={xRange}
+                    onXRangeChange={handleXRangeChange}
+                    onSeekTimeNs={snapshot.seekToTimeNs}
+                    onDropFieldKey={snapshot.addSeriesKey}
+                    compact
+                  />
+                )
+              ) : (
+                <PlotCanvas
+                  series={snapshot.selectedSeries}
+                  startNs={snapshot.startNs}
+                  endNs={snapshot.endNs}
+                  currentTimeNs={snapshot.currentTimeNs}
+                  xRange={xRange}
+                  onXRangeChange={handleXRangeChange}
+                  onSeekTimeNs={snapshot.seekToTimeNs}
+                  onDropFieldKey={snapshot.addSeriesKey}
+                />
+              )}
 
               <section className={styles.fieldPanel} aria-label="Numeric fields">
                 <div className={styles.sectionHeader}>

@@ -16,6 +16,11 @@ export interface TimeSeriesPlotSeries {
   series: NumericSeries | null;
 }
 
+export interface TimeSeriesXRange {
+  minSec: number;
+  maxSec: number;
+}
+
 export interface TimeSeriesSnapshot {
   session: SessionInfo;
   candidates: NumericFieldCandidate[];

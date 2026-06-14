@@ -4,7 +4,7 @@ import type { AlignedData, Options } from "uplot";
 import "uplot/dist/uPlot.min.css";
 
 import { buildAlignedTimeSeriesData } from "../series-align.js";
-import type { TimeSeriesPlotSeries } from "../types.js";
+import type { TimeSeriesPlotSeries, TimeSeriesXRange } from "../types.js";
 import styles from "./PlotCanvas.module.css";
 
 export interface PlotCanvasProps {
@@ -12,8 +12,15 @@ export interface PlotCanvasProps {
   startNs: number;
   endNs: number;
   currentTimeNs: number;
+  xRange: TimeSeriesXRange | null;
+  onXRangeChange: (range: TimeSeriesXRange | null) => void;
   onSeekTimeNs: (timeNs: number) => void;
   onDropFieldKey?: (key: string) => void;
+  compact?: boolean;
+  plotLabel?: {
+    label: string;
+    color: string;
+  };
 }
 
 interface Size {
@@ -24,11 +31,6 @@ interface Size {
 interface PlotData {
   data: AlignedData;
   visibleSeries: TimeSeriesPlotSeries[];
-}
-
-interface XRange {
-  min: number;
-  max: number;
 }
 
 interface AxisAssignment {
@@ -75,29 +77,34 @@ function clampSeconds(value: number, endNs: number, startNs: number): number {
   return Math.min(endSeconds, Math.max(0, value));
 }
 
-function fullXRange(startNs: number, endNs: number): XRange {
-  return { min: 0, max: Math.max((endNs - startNs) / 1e9, 0) };
+function fullXRange(startNs: number, endNs: number): TimeSeriesXRange {
+  return { minSec: 0, maxSec: Math.max((endNs - startNs) / 1e9, 0) };
 }
 
-function rangeEquals(left: XRange | null, right: XRange | null): boolean {
+function rangeEquals(left: TimeSeriesXRange | null, right: TimeSeriesXRange | null): boolean {
   if (left === right) {
     return true;
   }
   if (!left || !right) {
     return false;
   }
-  return Math.abs(left.min - right.min) < 1e-9 && Math.abs(left.max - right.max) < 1e-9;
+  return Math.abs(left.minSec - right.minSec) < 1e-9 &&
+    Math.abs(left.maxSec - right.maxSec) < 1e-9;
 }
 
-function normalizeXRange(range: XRange, startNs: number, endNs: number): XRange {
+function normalizeXRange(
+  range: TimeSeriesXRange,
+  startNs: number,
+  endNs: number,
+): TimeSeriesXRange {
   const full = fullXRange(startNs, endNs);
-  const fullSpan = full.max - full.min;
+  const fullSpan = full.maxSec - full.minSec;
   if (fullSpan <= 0) {
     return full;
   }
 
-  let min = Number.isFinite(range.min) ? range.min : full.min;
-  let max = Number.isFinite(range.max) ? range.max : full.max;
+  let min = Number.isFinite(range.minSec) ? range.minSec : full.minSec;
+  let max = Number.isFinite(range.maxSec) ? range.maxSec : full.maxSec;
   if (min > max) {
     [min, max] = [max, min];
   }
@@ -114,26 +121,50 @@ function normalizeXRange(range: XRange, startNs: number, endNs: number): XRange 
     max = center + minSpan / 2;
   }
 
-  if (min < full.min) {
-    max += full.min - min;
-    min = full.min;
+  if (min < full.minSec) {
+    max += full.minSec - min;
+    min = full.minSec;
   }
-  if (max > full.max) {
-    min -= max - full.max;
-    max = full.max;
+  if (max > full.maxSec) {
+    min -= max - full.maxSec;
+    max = full.maxSec;
   }
 
-  min = Math.max(full.min, min);
-  max = Math.min(full.max, max);
+  min = Math.max(full.minSec, min);
+  max = Math.min(full.maxSec, max);
   if (max - min >= fullSpan - 1e-9) {
     return full;
   }
 
-  return { min, max };
+  return { minSec: min, maxSec: max };
 }
 
-function isFullXRange(range: XRange, startNs: number, endNs: number): boolean {
+function normalizeControlledXRange(
+  range: TimeSeriesXRange | null,
+  startNs: number,
+  endNs: number,
+): TimeSeriesXRange | null {
+  if (!range) {
+    return null;
+  }
+  const normalized = normalizeXRange(range, startNs, endNs);
+  return isFullXRange(normalized, startNs, endNs) ? null : normalized;
+}
+
+function isFullXRange(range: TimeSeriesXRange, startNs: number, endNs: number): boolean {
   return rangeEquals(range, fullXRange(startNs, endNs));
+}
+
+function toUPlotXRange(range: TimeSeriesXRange): { min: number; max: number } {
+  return { min: range.minSec, max: range.maxSec };
+}
+
+function plotScaleMatches(plot: uPlot, range: TimeSeriesXRange): boolean {
+  const scale = plot.scales.x;
+  return typeof scale.min === "number" &&
+    typeof scale.max === "number" &&
+    Math.abs(scale.min - range.minSec) < 1e-9 &&
+    Math.abs(scale.max - range.maxSec) < 1e-9;
 }
 
 function buildAxisAssignments(visibleSeries: TimeSeriesPlotSeries[]): AxisAssignment[] {
@@ -150,26 +181,32 @@ export function PlotCanvas({
   startNs,
   endNs,
   currentTimeNs,
+  xRange,
+  onXRangeChange,
   onSeekTimeNs,
   onDropFieldKey,
+  compact = false,
+  plotLabel,
 }: PlotCanvasProps) {
   const shellRef = useRef<HTMLDivElement | null>(null);
   const plotRootRef = useRef<HTMLDivElement | null>(null);
   const plotRef = useRef<uPlot | null>(null);
-  const xRangeRef = useRef<XRange | null>(null);
+  const xRangeRef = useRef<TimeSeriesXRange | null>(null);
   const currentTimeNsRef = useRef(currentTimeNs);
   const [size, setSize] = useState<Size>({ width: 0, height: 0 });
   const [dropActive, setDropActive] = useState(false);
-  const [xRange, setXRange] = useState<XRange | null>(null);
   const plotData = useMemo(() => buildPlotData(series, startNs), [series, startNs]);
   const hasData = plotData.visibleSeries.length > 0;
+  const hasPlotLabel = Boolean(plotLabel);
 
-  const storeXRange = useCallback((range: XRange | null) => {
-    const normalized = range ? normalizeXRange(range, startNs, endNs) : null;
-    const next = normalized && !isFullXRange(normalized, startNs, endNs) ? normalized : null;
+  const commitXRange = useCallback((range: TimeSeriesXRange | null) => {
+    const next = normalizeControlledXRange(range, startNs, endNs);
+    if (rangeEquals(xRangeRef.current, next)) {
+      return;
+    }
     xRangeRef.current = next;
-    setXRange((current) => (rangeEquals(current, next) ? current : next));
-  }, [endNs, startNs]);
+    onXRangeChange(next);
+  }, [endNs, onXRangeChange, startNs]);
 
   const syncCursorToCurrentTime = useCallback((plot: uPlot) => {
     const xSeconds = (currentTimeNsRef.current - startNs) / 1e9;
@@ -185,13 +222,16 @@ export function PlotCanvas({
     plot.setCursor({ left: plot.valToPos(xSeconds, "x"), top: 0 }, false);
   }, [endNs, startNs]);
 
-  const applyXRange = useCallback((plot: uPlot, range: XRange | null) => {
+  const applyXRange = useCallback((plot: uPlot, range: TimeSeriesXRange | null) => {
     const full = fullXRange(startNs, endNs);
-    const normalized = range ? normalizeXRange(range, startNs, endNs) : full;
-    plot.setScale("x", normalized);
-    storeXRange(normalized);
+    const normalized = normalizeControlledXRange(range, startNs, endNs);
+    const nextScale = normalized ?? full;
+    if (!plotScaleMatches(plot, nextScale)) {
+      plot.setScale("x", toUPlotXRange(nextScale));
+    }
+    commitXRange(normalized);
     syncCursorToCurrentTime(plot);
-  }, [endNs, startNs, storeXRange, syncCursorToCurrentTime]);
+  }, [commitXRange, endNs, startNs, syncCursorToCurrentTime]);
 
   useEffect(() => {
     currentTimeNsRef.current = currentTimeNs;
@@ -218,18 +258,23 @@ export function PlotCanvas({
   }, []);
 
   useEffect(() => {
-    const storedRange = xRangeRef.current;
-    if (!storedRange) {
+    const normalized = normalizeControlledXRange(xRange, startNs, endNs);
+    xRangeRef.current = normalized;
+    if (!rangeEquals(xRange, normalized)) {
+      onXRangeChange(normalized);
+    }
+
+    const plot = plotRef.current;
+    if (!plot) {
       return;
     }
 
-    const normalized = normalizeXRange(storedRange, startNs, endNs);
-    storeXRange(normalized);
-    const plot = plotRef.current;
-    if (plot) {
-      plot.setScale("x", normalized);
+    const nextScale = normalized ?? fullXRange(startNs, endNs);
+    if (!plotScaleMatches(plot, nextScale)) {
+      plot.setScale("x", toUPlotXRange(nextScale));
     }
-  }, [endNs, startNs, storeXRange]);
+    syncCursorToCurrentTime(plot);
+  }, [endNs, onXRangeChange, startNs, syncCursorToCurrentTime, xRange]);
 
   useEffect(() => {
     const plotRoot = plotRootRef.current;
@@ -243,11 +288,12 @@ export function PlotCanvas({
     const axisAssignments = buildAxisAssignments(plotData.visibleSeries);
     const initialXRange = xRangeRef.current
       ? normalizeXRange(xRangeRef.current, startNs, endNs)
-      : null;
+      : fullXRange(startNs, endNs);
     const scales: NonNullable<Options["scales"]> = {
       x: {
         time: false,
-        ...(initialXRange ? { min: initialXRange.min, max: initialXRange.max } : {}),
+        min: initialXRange.minSec,
+        max: initialXRange.maxSec,
       },
     };
     for (const assignment of axisAssignments) {
@@ -257,7 +303,7 @@ export function PlotCanvas({
     const options: Options = {
       width: size.width,
       height: size.height,
-      padding: [12, 8, 0, 8],
+      padding: [hasPlotLabel ? 24 : 12, 8, 0, 8],
       cursor: {
         show: true,
         x: true,
@@ -316,7 +362,7 @@ export function PlotCanvas({
             if (typeof scale.min !== "number" || typeof scale.max !== "number") {
               return;
             }
-            storeXRange({ min: scale.min, max: scale.max });
+            commitXRange({ minSec: scale.min, maxSec: scale.max });
             queueMicrotask(() => {
               if (plotRef.current === plotInstance) {
                 syncCursorToCurrentTime(plotInstance);
@@ -330,10 +376,10 @@ export function PlotCanvas({
     const plot = new uPlot(options, plotData.data, plotRoot);
     plotRef.current = plot;
 
-    const currentScaleRange = (): XRange => {
+    const currentScaleRange = (): TimeSeriesXRange => {
       const scale = plot.scales.x;
       if (typeof scale.min === "number" && typeof scale.max === "number") {
-        return normalizeXRange({ min: scale.min, max: scale.max }, startNs, endNs);
+        return normalizeXRange({ minSec: scale.min, maxSec: scale.max }, startNs, endNs);
       }
       return fullXRange(startNs, endNs);
     };
@@ -381,7 +427,7 @@ export function PlotCanvas({
     };
     const onWheel = (event: WheelEvent) => {
       const current = currentScaleRange();
-      const currentSpan = current.max - current.min;
+      const currentSpan = current.maxSec - current.minSec;
       if (currentSpan <= 0) {
         return;
       }
@@ -393,19 +439,22 @@ export function PlotCanvas({
           ? event.deltaX
           : event.deltaY;
         const panSeconds = (rawDelta / Math.max(rect.width, 1)) * currentSpan;
-        applyXRange(plot, { min: current.min + panSeconds, max: current.max + panSeconds });
+        applyXRange(plot, {
+          minSec: current.minSec + panSeconds,
+          maxSec: current.maxSec + panSeconds,
+        });
         return;
       }
 
       const cursorLeft = event.clientX - rect.left;
       const anchor = clampSeconds(plot.posToVal(cursorLeft, "x"), endNs, startNs);
-      const anchorRatio = currentSpan > 0 ? (anchor - current.min) / currentSpan : 0.5;
+      const anchorRatio = currentSpan > 0 ? (anchor - current.minSec) / currentSpan : 0.5;
       const boundedAnchorRatio = Math.min(1, Math.max(0, anchorRatio));
       const zoomFactor = event.deltaY > 0 ? WHEEL_ZOOM_FACTOR : 1 / WHEEL_ZOOM_FACTOR;
       const nextSpan = currentSpan * zoomFactor;
       applyXRange(plot, {
-        min: anchor - nextSpan * boundedAnchorRatio,
-        max: anchor + nextSpan * (1 - boundedAnchorRatio),
+        minSec: anchor - nextSpan * boundedAnchorRatio,
+        maxSec: anchor + nextSpan * (1 - boundedAnchorRatio),
       });
     };
 
@@ -428,13 +477,14 @@ export function PlotCanvas({
     };
   }, [
     applyXRange,
+    commitXRange,
     endNs,
+    hasPlotLabel,
     hasData,
     onSeekTimeNs,
     plotData,
     size,
     startNs,
-    storeXRange,
     syncCursorToCurrentTime,
   ]);
 
@@ -470,10 +520,15 @@ export function PlotCanvas({
     }
   };
 
+  const shellClassName = [
+    dropActive ? styles.plotShellDropActive : styles.plotShell,
+    compact ? styles.plotShellCompact : "",
+  ].filter(Boolean).join(" ");
+
   return (
     <div
       ref={shellRef}
-      className={dropActive ? styles.plotShellDropActive : styles.plotShell}
+      className={shellClassName}
       data-visible-series={plotData.visibleSeries.length}
       data-x-zoomed={xRange ? "true" : "false"}
       onDragEnter={() => setDropActive(Boolean(onDropFieldKey))}
@@ -482,6 +537,16 @@ export function PlotCanvas({
       onDrop={handleDrop}
     >
       <div ref={plotRootRef} className={styles.plotRoot} />
+      {plotLabel ? (
+        <div className={styles.plotLabel}>
+          <span
+            className={styles.plotLabelSwatch}
+            style={{ backgroundColor: plotLabel.color }}
+            aria-hidden
+          />
+          <span>{plotLabel.label}</span>
+        </div>
+      ) : null}
       {!hasData ? <div className={styles.empty}>Add visible numeric fields to plot.</div> : null}
     </div>
   );

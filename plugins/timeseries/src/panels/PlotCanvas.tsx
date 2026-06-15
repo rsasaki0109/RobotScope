@@ -76,6 +76,101 @@ function formatAbsoluteTime(valueSeconds: number, startNs: number): string {
   }.${Math.floor(date.getMilliseconds() / 100)}`;
 }
 
+function hideTooltip(tooltip: HTMLDivElement | null): void {
+  if (tooltip) {
+    tooltip.style.display = "none";
+  }
+}
+
+function renderTooltipContent(
+  tooltip: HTMLDivElement,
+  timeLabel: string,
+  plotData: PlotData,
+  data: AlignedData,
+  index: number,
+): void {
+  tooltip.replaceChildren();
+
+  const time = document.createElement("div");
+  time.className = styles.tooltipTime;
+  time.textContent = timeLabel;
+  tooltip.append(time);
+
+  const rows = document.createElement("div");
+  rows.className = styles.tooltipRows;
+
+  plotData.visibleSeries.forEach((series, seriesIndex) => {
+    const value = data[seriesIndex + 1]?.[index];
+    const formattedValue = typeof value === "number" && Number.isFinite(value)
+      ? formatValue(value)
+      : "—";
+
+    const row = document.createElement("div");
+    row.className = styles.tooltipRow;
+
+    const swatch = document.createElement("span");
+    swatch.className = styles.tooltipSwatch;
+    swatch.style.backgroundColor = series.color;
+
+    const label = document.createElement("span");
+    label.className = styles.tooltipLabel;
+    label.textContent = series.candidate.label;
+
+    const valueNode = document.createElement("span");
+    valueNode.className = styles.tooltipValue;
+    valueNode.textContent = formattedValue;
+
+    row.append(swatch, label, valueNode);
+    rows.append(row);
+  });
+
+  tooltip.append(rows);
+}
+
+function clampTooltipPosition(value: number, min: number, max: number): number {
+  return Math.min(Math.max(value, min), Math.max(min, max));
+}
+
+function positionTooltip(
+  tooltip: HTMLDivElement,
+  shell: HTMLDivElement,
+  plot: uPlot,
+  cursorLeft: number,
+  cursorTop: number,
+): void {
+  const overRect = plot.over.getBoundingClientRect();
+  const shellRect = shell.getBoundingClientRect();
+  const overLeft = overRect.left - shellRect.left;
+  const overTop = overRect.top - shellRect.top;
+  const gap = 12;
+  const margin = 8;
+
+  tooltip.style.display = "block";
+  tooltip.style.left = "0px";
+  tooltip.style.top = "0px";
+
+  const tooltipWidth = tooltip.offsetWidth;
+  const tooltipHeight = tooltip.offsetHeight;
+  const overRight = overLeft + overRect.width;
+  const overBottom = overTop + overRect.height;
+  let left = overLeft + cursorLeft + gap;
+  let top = overTop + cursorTop + gap;
+
+  if (left + tooltipWidth > overRight - margin) {
+    left = overLeft + cursorLeft - tooltipWidth - gap;
+  }
+  if (top + tooltipHeight > overBottom - margin) {
+    top = overTop + cursorTop - tooltipHeight - gap;
+  }
+
+  tooltip.style.left = `${
+    clampTooltipPosition(left, overLeft + margin, overRight - tooltipWidth - margin)
+  }px`;
+  tooltip.style.top = `${
+    clampTooltipPosition(top, overTop + margin, overBottom - tooltipHeight - margin)
+  }px`;
+}
+
 function normalizeYRange(
   range: PlotCanvasProps["yRange"],
 ): { min: number; max: number } | null {
@@ -219,9 +314,11 @@ export function PlotCanvas({
 }: PlotCanvasProps) {
   const shellRef = useRef<HTMLDivElement | null>(null);
   const plotRootRef = useRef<HTMLDivElement | null>(null);
+  const tooltipRef = useRef<HTMLDivElement | null>(null);
   const plotRef = useRef<uPlot | null>(null);
   const xRangeRef = useRef<TimeSeriesXRange | null>(null);
   const currentTimeNsRef = useRef(currentTimeNs);
+  const programmaticCursorRef = useRef(false);
   const [size, setSize] = useState<Size>({ width: 0, height: 0 });
   const [dropActive, setDropActive] = useState(false);
   const plotData = useMemo(() => buildPlotData(series, startNs), [series, startNs]);
@@ -244,12 +341,21 @@ export function PlotCanvas({
     const endSeconds = typeof plot.scales.x.max === "number"
       ? plot.scales.x.max
       : Math.max((endNs - startNs) / 1e9, startSeconds);
+    programmaticCursorRef.current = true;
     if (xSeconds < startSeconds || xSeconds > endSeconds) {
-      plot.setCursor({ left: -10, top: 0 }, false);
+      try {
+        plot.setCursor({ left: -10, top: 0 }, false);
+      } finally {
+        programmaticCursorRef.current = false;
+      }
       return;
     }
 
-    plot.setCursor({ left: plot.valToPos(xSeconds, "x"), top: 0 }, false);
+    try {
+      plot.setCursor({ left: plot.valToPos(xSeconds, "x"), top: 0 }, false);
+    } finally {
+      programmaticCursorRef.current = false;
+    }
   }, [endNs, startNs]);
 
   const applyXRange = useCallback((plot: uPlot, range: TimeSeriesXRange | null) => {
@@ -309,11 +415,13 @@ export function PlotCanvas({
   useEffect(() => {
     const plotRoot = plotRootRef.current;
     if (!plotRoot || !hasData || size.width < 120 || size.height < 160) {
+      hideTooltip(tooltipRef.current);
       plotRef.current?.destroy();
       plotRef.current = null;
       return undefined;
     }
 
+    hideTooltip(tooltipRef.current);
     plotRoot.replaceChildren();
     const axisAssignments = buildAxisAssignments(plotData.visibleSeries);
     const initialXRange = xRangeRef.current
@@ -389,6 +497,47 @@ export function PlotCanvas({
         })),
       ],
       hooks: {
+        setCursor: [
+          (plotInstance) => {
+            if (programmaticCursorRef.current) {
+              return;
+            }
+
+            const tooltip = tooltipRef.current;
+            const shell = shellRef.current;
+            if (!tooltip || !shell) {
+              return;
+            }
+
+            const index = plotInstance.cursor.idx;
+            if (index == null || index < 0) {
+              hideTooltip(tooltip);
+              return;
+            }
+
+            const cursorLeft = plotInstance.cursor.left;
+            if (typeof cursorLeft !== "number" || cursorLeft < 0) {
+              hideTooltip(tooltip);
+              return;
+            }
+
+            const xValue = plotInstance.data[0]?.[index];
+            if (typeof xValue !== "number" || !Number.isFinite(xValue)) {
+              hideTooltip(tooltip);
+              return;
+            }
+
+            const cursorTop = typeof plotInstance.cursor.top === "number"
+              ? plotInstance.cursor.top
+              : 0;
+            const timeLabel = timeFormat === "absolute"
+              ? formatAbsoluteTime(xValue, startNs)
+              : `${xValue.toFixed(2)}s`;
+
+            renderTooltipContent(tooltip, timeLabel, plotData, plotInstance.data, index);
+            positionTooltip(tooltip, shell, plotInstance, cursorLeft, cursorTop);
+          },
+        ],
         setScale: [
           (plotInstance, scaleKey) => {
             if (scaleKey !== "x") {
@@ -461,6 +610,9 @@ export function PlotCanvas({
       event.preventDefault();
       event.stopPropagation();
     };
+    const onMouseLeave = () => {
+      hideTooltip(tooltipRef.current);
+    };
     const onWheel = (event: WheelEvent) => {
       const current = currentScaleRange();
       const currentSpan = current.maxSec - current.minSec;
@@ -494,6 +646,7 @@ export function PlotCanvas({
       });
     };
 
+    plot.over.addEventListener("mouseleave", onMouseLeave);
     plot.over.addEventListener("mousedown", onMouseDown);
     plot.over.addEventListener("mouseup", onMouseUp);
     plot.over.addEventListener("click", onClick);
@@ -501,11 +654,13 @@ export function PlotCanvas({
     plot.over.addEventListener("wheel", onWheel, { passive: false });
 
     return () => {
+      plot.over.removeEventListener("mouseleave", onMouseLeave);
       plot.over.removeEventListener("mousedown", onMouseDown);
       plot.over.removeEventListener("mouseup", onMouseUp);
       plot.over.removeEventListener("click", onClick);
       plot.over.removeEventListener("dblclick", onDoubleClick);
       plot.over.removeEventListener("wheel", onWheel);
+      hideTooltip(tooltipRef.current);
       plot.destroy();
       if (plotRef.current === plot) {
         plotRef.current = null;
@@ -575,6 +730,7 @@ export function PlotCanvas({
       onDrop={handleDrop}
     >
       <div ref={plotRootRef} className={styles.plotRoot} />
+      <div ref={tooltipRef} className={styles.tooltip} role="tooltip" />
       {plotLabel ? (
         <div className={styles.plotLabel}>
           <span

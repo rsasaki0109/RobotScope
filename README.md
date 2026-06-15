@@ -70,7 +70,7 @@ npm run dev                                                # → http://localhos
 
 Open an MCAP file from the viewer (drag & drop) or click **Connect Live** for a WebSocket agent.
 
-**Live demo (GitHub Pages):** [Autoware layout + bundled MCAP](https://rsasaki0109.github.io/RobotScope/?layout=autoware&demo=1) — the same MCAP works with `layout=nav2`, `layout=moveit`, or `layout=timeseries` (PlotJuggler-style plots).
+**Live demo (GitHub Pages):** [Autoware layout + bundled MCAP](https://rsasaki0109.github.io/RobotScope/?layout=autoware&demo=1) — the same MCAP works with `layout=nav2`, `layout=moveit`, or `layout=timeseries` (PlotJuggler-style plots). Swap `demo=1` for `demo=rosbag2` to load a bundled rosbag2 bag instead.
 
 | Layout | Scrub to | Failure recipe |
 |--------|----------|----------------|
@@ -101,6 +101,8 @@ The `timeseries` layout turns any numeric ROS2 field into a live plot next to th
 <p align="center">
   <em>Time-series demo (<code>layout=timeseries</code>): localization score and lateral / longitudinal error overlaid with per-series Y axes, plus a moving-average and a d/dt analysis channel computed from them; click a plot to seek the 3D scene, zoom for full-resolution detail, export to CSV.</em>
 </p>
+
+**rosbag2 demo:** swap `demo=1` for [`demo=rosbag2`](https://rsasaki0109.github.io/RobotScope/?layout=timeseries&demo=rosbag2) to load a bundled rosbag2 (`.db3`) bag instead of MCAP — the same time-series tools work on `std_msgs/Float64`, `geometry_msgs/Twist`, and `nav_msgs/Odometry` fields decoded straight from the SQLite store. (You can also drag & drop your own `.db3` or a rosbag2 folder.)
 
 The timeline footer shows **all stack recipes** at the playhead (amber = Autoware, blue = Nav2, purple = MoveIt). Click colored ticks to jump. When recipes are active, the **cross-layout banner** below the command bar lists all stacks — click a chip to switch layout.
 

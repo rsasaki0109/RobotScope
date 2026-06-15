@@ -15,7 +15,12 @@ export const MOVEIT_PLUGIN_MANIFEST: PluginManifest = {
     network: false,
   },
   contributes: {
-    panels: ["moveit.joint_states", "moveit.planning_scene", "moveit.trajectory"],
+    panels: [
+      "moveit.joint_states",
+      "moveit.joint_detail",
+      "moveit.planning_scene",
+      "moveit.trajectory",
+    ],
     layouts: ["moveit", "moveit-manipulation-debug"],
   },
 };

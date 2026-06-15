@@ -3,6 +3,7 @@ import { useState, type ReactNode } from "react";
 import { isPanelHighlighted, type MoveItPanelId } from "./failure-recipes.js";
 import type { MoveItSnapshot } from "./types.js";
 import styles from "./MoveItDock.module.css";
+import { JointDetailPanel } from "./panels/JointDetailPanel.js";
 import { JointStatePanel } from "./panels/JointStatePanel.js";
 import { PlanningScenePanel } from "./panels/PlanningScenePanel.js";
 import { TrajectoryPanel } from "./panels/TrajectoryPanel.js";
@@ -84,6 +85,9 @@ export function MoveItDock({ snapshot, loading, inspector }: MoveItDockProps) {
 
           <RecipePanel panelId="moveit.joint_states" snapshot={snapshot}>
             <JointStatePanel data={snapshot?.joint_states} />
+          </RecipePanel>
+          <RecipePanel panelId="moveit.joint_detail" snapshot={snapshot}>
+            <JointDetailPanel data={snapshot?.joint_states} />
           </RecipePanel>
           <RecipePanel panelId="moveit.planning_scene" snapshot={snapshot}>
             <PlanningScenePanel data={snapshot?.planning_scene} />

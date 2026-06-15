@@ -20,8 +20,21 @@ export function extractJointStateView(
 
   const names = msg.name ?? [];
   const positions = msg.position ?? [];
-  if (names.length === 0 && positions.length === 0) {
+  const velocities = msg.velocity ?? [];
+  const count = Math.max(names.length, positions.length, velocities.length);
+  if (count === 0) {
     return undefined;
+  }
+
+  const joints: MoveItJointStateView["joints"] = [];
+  for (let i = 0; i < count; i += 1) {
+    const position = positions[i];
+    const velocity = velocities[i];
+    joints.push({
+      name: names[i] ?? `joint${i}`,
+      position: typeof position === "number" && Number.isFinite(position) ? position : 0,
+      velocity: typeof velocity === "number" && Number.isFinite(velocity) ? velocity : 0,
+    });
   }
 
   let min = Number.POSITIVE_INFINITY;
@@ -35,7 +48,7 @@ export function extractJointStateView(
   }
 
   let maxVelocity = 0;
-  for (const value of msg.velocity ?? []) {
+  for (const value of velocities) {
     if (Number.isFinite(value)) {
       maxVelocity = Math.max(maxVelocity, Math.abs(value));
     }
@@ -43,11 +56,12 @@ export function extractJointStateView(
 
   return {
     topic,
-    joint_count: Math.max(names.length, positions.length),
+    joint_count: count,
     position_min: Number.isFinite(min) ? min : 0,
     position_max: Number.isFinite(max) ? max : 0,
     max_velocity_rps: maxVelocity,
     sample_joints: names.slice(0, 4),
+    joints,
   };
 }
 

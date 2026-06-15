@@ -11,6 +11,7 @@ export interface MoveItJointStateView {
   position_max: number;
   max_velocity_rps: number;
   sample_joints: string[];
+  joints: Array<{ name: string; position: number; velocity: number }>;
 }
 
 export interface MoveItPlanningSceneView {

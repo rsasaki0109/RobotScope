@@ -1,6 +1,10 @@
 import type { MoveItSnapshot } from "./types.js";
 
-export type MoveItPanelId = "moveit.joint_states" | "moveit.planning_scene" | "moveit.trajectory";
+export type MoveItPanelId =
+  | "moveit.joint_states"
+  | "moveit.joint_detail"
+  | "moveit.planning_scene"
+  | "moveit.trajectory";
 
 export interface FailureRecipeDefinition {
   id: string;
@@ -24,7 +28,7 @@ export const MOVEIT_FAILURE_RECIPES: FailureRecipeDefinition[] = [
     label: "MoveIt joint overspeed suspected",
     description: "Joint velocity spikes while a display trajectory is present.",
     symptoms: ["joint_velocity_high", "trajectory_active"],
-    panels: ["moveit.joint_states", "moveit.trajectory"],
+    panels: ["moveit.joint_states", "moveit.joint_detail", "moveit.trajectory"],
   },
   {
     id: "moveit_scene_collision",
@@ -40,7 +44,7 @@ const RECIPE_MIN_MATCHES: Record<string, number> = {
   moveit_scene_collision: 2,
 };
 
-const JOINT_VELOCITY_THRESHOLD_RPS = 2.5;
+export const JOINT_VELOCITY_THRESHOLD_RPS = 2.5;
 const JOINT_IDLE_THRESHOLD_RPS = 0.5;
 
 type SymptomEvaluator = (snapshot: MoveItSnapshot) => boolean;

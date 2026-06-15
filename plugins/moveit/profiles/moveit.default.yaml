@@ -17,6 +17,7 @@ failure_recipes:
       - trajectory_active
     panels:
       - moveit.joint_states
+      - moveit.joint_detail
       - moveit.trajectory
 
   moveit_scene_collision:

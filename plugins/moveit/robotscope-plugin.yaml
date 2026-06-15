@@ -15,6 +15,7 @@ permissions:
 contributes:
   panels:
     - moveit.joint_states
+    - moveit.joint_detail
     - moveit.planning_scene
     - moveit.trajectory
   layouts:

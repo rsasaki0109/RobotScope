@@ -11,6 +11,11 @@ import {
   derivedSeriesKey,
   isDerivedSeriesKey,
 } from "../derived-series.js";
+import {
+  decodeTimeSeriesState,
+  encodeTimeSeriesState,
+  TIMESERIES_URL_PARAM,
+} from "../url-state.js";
 import type {
   AddDerivedSeriesInput,
   BinaryOp,
@@ -21,6 +26,10 @@ import type {
   TimeSeriesSnapshot,
   TimeSeriesXRange,
 } from "../types.js";
+import type {
+  PersistedSeriesSelection,
+  TimeSeriesPersistedState,
+} from "../url-state.js";
 
 export interface TimeSeriesDataState {
   snapshot: TimeSeriesSnapshot | null;
@@ -35,11 +44,7 @@ export interface TimeSeriesViewerSlice {
   xRange?: TimeSeriesXRange | null;
 }
 
-interface SeriesSelection {
-  key: string;
-  color: string;
-  visible: boolean;
-}
+type SeriesSelection = PersistedSeriesSelection;
 
 interface SeriesState {
   seriesByKey: Map<string, TimeSeriesPlotSeries["series"]>;
@@ -185,13 +190,68 @@ function normalizeFiniteNumber(value: number | undefined, fallback: number): num
   return typeof value === "number" && Number.isFinite(value) ? value : fallback;
 }
 
+function readInitialTimeSeriesState(): TimeSeriesPersistedState | null {
+  if (typeof window === "undefined") {
+    return null;
+  }
+
+  const raw = new URLSearchParams(window.location.search).get(TIMESERIES_URL_PARAM);
+  return raw ? decodeTimeSeriesState(raw) : null;
+}
+
+function nextDerivedIdFromDefs(defs: DerivedSeriesDef[]): number {
+  let maxSuffix = 0;
+  for (const def of defs) {
+    const suffix = /(\d+)$/.exec(def.id)?.[1];
+    if (!suffix) {
+      continue;
+    }
+    const value = Number.parseInt(suffix, 10);
+    if (Number.isSafeInteger(value) && value > maxSuffix) {
+      maxSuffix = value;
+    }
+  }
+  return maxSuffix > 0 ? maxSuffix + 1 : defs.length + 1;
+}
+
+function writeTimeSeriesStateToUrl(
+  series: SeriesSelection[],
+  derived: DerivedSeriesDef[],
+): void {
+  if (typeof window === "undefined") {
+    return;
+  }
+
+  const params = new URLSearchParams(window.location.search);
+  if (series.length === 0 && derived.length === 0) {
+    params.delete(TIMESERIES_URL_PARAM);
+  } else {
+    params.set(TIMESERIES_URL_PARAM, encodeTimeSeriesState({ series, derived }));
+  }
+
+  const query = params.toString();
+  const nextUrl = `${window.location.pathname}${query ? `?${query}` : ""}${window.location.hash}`;
+  const currentUrl = `${window.location.pathname}${window.location.search}${window.location.hash}`;
+  if (nextUrl !== currentUrl) {
+    window.history.replaceState(null, "", nextUrl);
+  }
+}
+
 export function useTimeSeries(slice: TimeSeriesViewerSlice): TimeSeriesDataState {
-  const [seriesSelections, setSeriesSelections] = useState<SeriesSelection[]>([]);
-  const [derivedDefs, setDerivedDefs] = useState<DerivedSeriesDef[]>([]);
+  const [initialPersistedState] = useState(readInitialTimeSeriesState);
+  const restoredFromUrlRef = useRef(initialPersistedState != null);
+  const [seriesSelections, setSeriesSelections] = useState<SeriesSelection[]>(
+    () => initialPersistedState?.series ?? [],
+  );
+  const [derivedDefs, setDerivedDefs] = useState<DerivedSeriesDef[]>(
+    () => initialPersistedState?.derived ?? [],
+  );
   const [seriesState, setSeriesState] = useState<SeriesState>(emptySeriesState);
   const [fetchWindow, setFetchWindow] = useState<TimeSeriesFetchWindow | null>(null);
   const fetchWindowRef = useRef<TimeSeriesFetchWindow | null>(null);
-  const nextDerivedIdRef = useRef(1);
+  const nextDerivedIdRef = useRef(
+    nextDerivedIdFromDefs(initialPersistedState?.derived ?? []),
+  );
   const [loading, setLoading] = useState(false);
 
   const candidates = useMemo(
@@ -209,8 +269,12 @@ export function useTimeSeries(slice: TimeSeriesViewerSlice): TimeSeriesDataState
 
   useEffect(() => {
     setSeriesSelections((current) => {
+      if (restoredFromUrlRef.current && candidates.length === 0) {
+        return current;
+      }
+
       const valid = current.filter((selection) => candidateByKey.has(selection.key));
-      if (valid.length > 0 || candidates.length === 0) {
+      if (valid.length > 0 || candidates.length === 0 || restoredFromUrlRef.current) {
         return valid;
       }
 
@@ -317,6 +381,10 @@ export function useTimeSeries(slice: TimeSeriesViewerSlice): TimeSeriesDataState
     }
     setSeriesSelections((current) => current.filter((selection) => selection.key !== key));
   }, []);
+
+  useEffect(() => {
+    writeTimeSeriesStateToUrl(seriesSelections, derivedDefs);
+  }, [derivedDefs, seriesSelections]);
 
   const toggleSeriesVisible = useCallback((key: string) => {
     const derivedId = derivedSeriesIdFromKey(key);

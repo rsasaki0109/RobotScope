@@ -78,6 +78,8 @@ Open an MCAP file from the viewer (drag & drop) or click **Connect Live** for a 
 | `nav2` | ~0.5s / ~1.8s | Controller stuck / localization uncertainty |
 | `moveit` | ~0.7s / ~1.8s | Joint overspeed / scene collision |
 
+Each domain layout pins the stack's key panels to the timeline — Autoware (map, localization, **GNSS pose**, NDT, planning, perception, control), Nav2 (AMCL, costmap **with a 2D occupancy preview**, global/local plan, goal, controller), MoveIt (joint states, **per-joint detail with overspeed flagging**, planning scene, trajectory).
+
 <p align="center">
   <a href="https://rsasaki0109.github.io/RobotScope/?layout=nav2&demo=1">
     <img src="docs/assets/readme-nav2.png" alt="RobotScope Nav2 debug layout showing a controller stuck failure recipe with AMCL, costmap, global plan, local plan, goal, and controller panels" width="920" />
@@ -85,7 +87,7 @@ Open an MCAP file from the viewer (drag & drop) or click **Connect Live** for a 
 </p>
 
 <p align="center">
-  <em>Nav2 demo (<code>layout=nav2</code>): controller-stuck recipe at ~0.5s with plan, goal, costmap, and cmd_vel context on the same timeline.</em>
+  <em>Nav2 demo (<code>layout=nav2</code>): controller-stuck recipe at ~0.5s with plan, goal, a 2D costmap preview, and cmd_vel context on the same timeline.</em>
 </p>
 
 ### Time-series plots (PlotJuggler-style)

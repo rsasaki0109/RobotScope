@@ -2,6 +2,7 @@ import { useEffect, useRef } from "react";
 
 import type { Nav2CostmapView, Nav2GoalView, Nav2PlanView } from "../types.js";
 import styles from "./Nav2Panel.module.css";
+import { PanelShell } from "./PanelShell.js";
 
 interface EgoPose {
   frame_id: string;
@@ -238,16 +239,14 @@ export function CostmapPanel({
   const occupiedPct = total > 0 && data ? (data.occupied_cells / total) * 100 : 0;
 
   return (
-    <section className={styles.panel}>
-      <div className={styles.header}>
-        <h3 className={styles.title}>Costmap</h3>
-        <span className={data ? styles.badgeOk : styles.badgeMissing}>
-          {data ? "live" : "no data"}
-        </span>
-      </div>
-      {!data ? (
-        <p className={styles.empty}>Waiting for /local_costmap/costmap…</p>
-      ) : (
+    <PanelShell
+      title="Costmap"
+      tone={data ? "ok" : "missing"}
+      label={data ? "live" : "no data"}
+      empty={!data}
+      emptyMessage="Waiting for /local_costmap/costmap…"
+    >
+      {data ? (
         <>
           <dl className={styles.grid}>
             <dt>Topic</dt>
@@ -274,7 +273,7 @@ export function CostmapPanel({
             />
           ) : null}
         </>
-      )}
-    </section>
+      ) : null}
+    </PanelShell>
   );
 }

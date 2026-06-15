@@ -1,5 +1,6 @@
 import type { Nav2PlanView } from "../types.js";
 import styles from "./Nav2Panel.module.css";
+import { PanelShell } from "./PanelShell.js";
 
 export function PlanPanel({
   title,
@@ -11,16 +12,14 @@ export function PlanPanel({
   emptyHint: string;
 }) {
   return (
-    <section className={styles.panel}>
-      <div className={styles.header}>
-        <h3 className={styles.title}>{title}</h3>
-        <span className={data ? styles.badgeOk : styles.badgeMissing}>
-          {data ? "live" : "no data"}
-        </span>
-      </div>
-      {!data ? (
-        <p className={styles.empty}>{emptyHint}</p>
-      ) : (
+    <PanelShell
+      title={title}
+      tone={data ? "ok" : "missing"}
+      label={data ? "live" : "no data"}
+      empty={!data}
+      emptyMessage={emptyHint}
+    >
+      {data ? (
         <dl className={styles.grid}>
           <dt>Topic</dt>
           <dd className={styles.mono}>{data.topic}</dd>
@@ -33,7 +32,7 @@ export function PlanPanel({
             {data.end_point[0].toFixed(2)}, {data.end_point[1].toFixed(2)}
           </dd>
         </dl>
-      )}
-    </section>
+      ) : null}
+    </PanelShell>
   );
 }

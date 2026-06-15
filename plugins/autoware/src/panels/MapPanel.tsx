@@ -8,6 +8,7 @@ import type {
   LaneletOsmRegulatoryView,
 } from "../types.js";
 import styles from "./AutowarePanel.module.css";
+import { PanelShell } from "./PanelShell.js";
 
 interface EgoPose {
   frame_id: string;
@@ -510,19 +511,14 @@ export function MapPanel({
   const hasData = Boolean(lanelet || occupancy || osmSidecar);
 
   return (
-    <section className={styles.panel}>
-      <div className={styles.header}>
-        <h3 className={styles.title}>Map / Lanelet2</h3>
-        <span className={hasData ? styles.badgeOk : styles.badgeMissing}>
-          {hasData ? "live" : "no data"}
-        </span>
-      </div>
-
-      {!hasData ? (
-        <p className={styles.empty}>
-          Waiting for /map/vector_map, /map/map, or load an OSM sidecar…
-        </p>
-      ) : (
+    <PanelShell
+      title="Map / Lanelet2"
+      tone={hasData ? "ok" : "missing"}
+      label={hasData ? "live" : "no data"}
+      empty={!hasData}
+      emptyMessage="Waiting for /map/vector_map, /map/map, or load an OSM sidecar…"
+    >
+      {hasData ? (
         <>
           {osmSidecar ? (
             <>
@@ -620,7 +616,7 @@ export function MapPanel({
             <p className={styles.empty}>Occupancy / pointcloud map not in recording</p>
           )}
         </>
-      )}
-    </section>
+      ) : null}
+    </PanelShell>
   );
 }

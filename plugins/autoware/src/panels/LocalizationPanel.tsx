@@ -1,5 +1,6 @@
 import type { AutowareLocalizationView } from "../types.js";
 import styles from "./AutowarePanel.module.css";
+import { PanelShell } from "./PanelShell.js";
 
 export function LocalizationPanel({
   data,
@@ -7,17 +8,14 @@ export function LocalizationPanel({
   data?: AutowareLocalizationView;
 }) {
   return (
-    <section className={styles.panel}>
-      <div className={styles.header}>
-        <h3 className={styles.title}>Localization Health</h3>
-        <span className={data ? styles.badgeOk : styles.badgeMissing}>
-          {data ? "live" : "no data"}
-        </span>
-      </div>
-
-      {!data ? (
-        <p className={styles.empty}>Waiting for /localization/kinematic_state…</p>
-      ) : (
+    <PanelShell
+      title="Localization Health"
+      tone={data ? "ok" : "missing"}
+      label={data ? "live" : "no data"}
+      empty={!data}
+      emptyMessage="Waiting for /localization/kinematic_state…"
+    >
+      {data ? (
         <dl className={styles.grid}>
           <dt>Topic</dt>
           <dd className={styles.mono}>{data.topic}</dd>
@@ -40,7 +38,7 @@ export function LocalizationPanel({
             vx {data.linear_x_mps.toFixed(2)} m/s · ωz {data.angular_z_rps.toFixed(3)} rad/s
           </dd>
         </dl>
-      )}
-    </section>
+      ) : null}
+    </PanelShell>
   );
 }

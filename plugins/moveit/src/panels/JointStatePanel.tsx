@@ -1,20 +1,19 @@
 import type { MoveItJointStateView } from "../types.js";
 import styles from "./MoveItPanel.module.css";
+import { PanelShell } from "./PanelShell.js";
 
 export function JointStatePanel({ data }: { data?: MoveItJointStateView }) {
   const warn = data != null && data.max_velocity_rps > 2.5;
 
   return (
-    <section className={styles.panel}>
-      <div className={styles.header}>
-        <h3 className={styles.title}>Joint States</h3>
-        <span className={data ? (warn ? styles.badgeWarn : styles.badgeOk) : styles.badgeMissing}>
-          {data ? (warn ? "warn" : "ok") : "no data"}
-        </span>
-      </div>
-      {!data ? (
-        <p className={styles.empty}>Waiting for /joint_states…</p>
-      ) : (
+    <PanelShell
+      title="Joint States"
+      tone={data ? (warn ? "warn" : "ok") : "missing"}
+      label={data ? (warn ? "warn" : "ok") : "no data"}
+      empty={!data}
+      emptyMessage="Waiting for /joint_states…"
+    >
+      {data ? (
         <dl className={styles.grid}>
           <dt>Topic</dt>
           <dd className={styles.mono}>{data.topic}</dd>
@@ -29,7 +28,7 @@ export function JointStatePanel({ data }: { data?: MoveItJointStateView }) {
           <dt>Sample</dt>
           <dd>{data.sample_joints.join(", ") || "—"}</dd>
         </dl>
-      )}
-    </section>
+      ) : null}
+    </PanelShell>
   );
 }

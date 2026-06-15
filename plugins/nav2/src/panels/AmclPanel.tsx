@@ -1,20 +1,19 @@
 import type { Nav2AmclView } from "../types.js";
 import styles from "./Nav2Panel.module.css";
+import { PanelShell } from "./PanelShell.js";
 
 export function AmclPanel({ data }: { data?: Nav2AmclView }) {
   const warn = data != null && data.covariance_xy_m > 0.35;
 
   return (
-    <section className={styles.panel}>
-      <div className={styles.header}>
-        <h3 className={styles.title}>AMCL Pose</h3>
-        <span className={data ? (warn ? styles.badgeWarn : styles.badgeOk) : styles.badgeMissing}>
-          {data ? (warn ? "warn" : "ok") : "no data"}
-        </span>
-      </div>
-      {!data ? (
-        <p className={styles.empty}>Waiting for /amcl_pose…</p>
-      ) : (
+    <PanelShell
+      title="AMCL Pose"
+      tone={data ? (warn ? "warn" : "ok") : "missing"}
+      label={data ? (warn ? "warn" : "ok") : "no data"}
+      empty={!data}
+      emptyMessage="Waiting for /amcl_pose…"
+    >
+      {data ? (
         <dl className={styles.grid}>
           <dt>Topic</dt>
           <dd className={styles.mono}>{data.topic}</dd>
@@ -29,7 +28,7 @@ export function AmclPanel({ data }: { data?: Nav2AmclView }) {
           <dt>Covariance σ</dt>
           <dd>{data.covariance_xy_m.toFixed(3)} m</dd>
         </dl>
-      )}
-    </section>
+      ) : null}
+    </PanelShell>
   );
 }

@@ -1,18 +1,17 @@
 import type { MoveItTrajectoryView } from "../types.js";
 import styles from "./MoveItPanel.module.css";
+import { PanelShell } from "./PanelShell.js";
 
 export function TrajectoryPanel({ data }: { data?: MoveItTrajectoryView }) {
   return (
-    <section className={styles.panel}>
-      <div className={styles.header}>
-        <h3 className={styles.title}>Planned Trajectory</h3>
-        <span className={data ? styles.badgeOk : styles.badgeMissing}>
-          {data ? "live" : "no data"}
-        </span>
-      </div>
-      {!data ? (
-        <p className={styles.empty}>Waiting for /display_planned_path…</p>
-      ) : (
+    <PanelShell
+      title="Planned Trajectory"
+      tone={data ? "ok" : "missing"}
+      label={data ? "live" : "no data"}
+      empty={!data}
+      emptyMessage="Waiting for /display_planned_path…"
+    >
+      {data ? (
         <dl className={styles.grid}>
           <dt>Topic</dt>
           <dd className={styles.mono}>{data.topic}</dd>
@@ -23,7 +22,7 @@ export function TrajectoryPanel({ data }: { data?: MoveItTrajectoryView }) {
           <dt>Joints</dt>
           <dd>{data.joint_names.slice(0, 4).join(", ") || "—"}</dd>
         </dl>
-      )}
-    </section>
+      ) : null}
+    </PanelShell>
   );
 }

@@ -1,19 +1,19 @@
 import type { AutowarePerceptionView } from "../types.js";
 import styles from "./AutowarePanel.module.css";
+import { PanelShell } from "./PanelShell.js";
 
 export function PerceptionPanel({ data }: { data?: AutowarePerceptionView }) {
-  return (
-    <section className={styles.panel}>
-      <div className={styles.header}>
-        <h3 className={styles.title}>Perception Objects</h3>
-        <span className={data ? (data.low_confidence_count > 0 ? styles.badgeWarn : styles.badgeOk) : styles.badgeMissing}>
-          {data ? `${data.object_count} obj` : "no data"}
-        </span>
-      </div>
+  const warn = data != null && data.low_confidence_count > 0;
 
-      {!data ? (
-        <p className={styles.empty}>Waiting for /perception/object_recognition/objects…</p>
-      ) : data.object_count === 0 ? (
+  return (
+    <PanelShell
+      title="Perception Objects"
+      tone={data ? (warn ? "warn" : "ok") : "missing"}
+      label={data ? `${data.object_count} obj` : "no data"}
+      empty={!data}
+      emptyMessage="Waiting for /perception/object_recognition/objects…"
+    >
+      {data ? data.object_count === 0 ? (
         <p className={styles.empty}>No tracked objects at this time</p>
       ) : (
         <>
@@ -43,7 +43,7 @@ export function PerceptionPanel({ data }: { data?: AutowarePerceptionView }) {
             ))}
           </ul>
         </>
-      )}
-    </section>
+      ) : null}
+    </PanelShell>
   );
 }

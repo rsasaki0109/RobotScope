@@ -1,18 +1,17 @@
 import type { Nav2GoalView } from "../types.js";
 import styles from "./Nav2Panel.module.css";
+import { PanelShell } from "./PanelShell.js";
 
 export function GoalPanel({ data }: { data?: Nav2GoalView }) {
   return (
-    <section className={styles.panel}>
-      <div className={styles.header}>
-        <h3 className={styles.title}>Navigation Goal</h3>
-        <span className={data ? styles.badgeOk : styles.badgeMissing}>
-          {data ? "live" : "no data"}
-        </span>
-      </div>
-      {!data ? (
-        <p className={styles.empty}>Waiting for /goal_pose…</p>
-      ) : (
+    <PanelShell
+      title="Navigation Goal"
+      tone={data ? "ok" : "missing"}
+      label={data ? "live" : "no data"}
+      empty={!data}
+      emptyMessage="Waiting for /goal_pose…"
+    >
+      {data ? (
         <dl className={styles.grid}>
           <dt>Topic</dt>
           <dd className={styles.mono}>{data.topic}</dd>
@@ -25,7 +24,7 @@ export function GoalPanel({ data }: { data?: Nav2GoalView }) {
           <dt>Yaw</dt>
           <dd>{data.yaw_deg.toFixed(1)}°</dd>
         </dl>
-      )}
-    </section>
+      ) : null}
+    </PanelShell>
   );
 }

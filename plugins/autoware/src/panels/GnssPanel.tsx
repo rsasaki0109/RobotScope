@@ -1,5 +1,6 @@
 import type { AutowareGnssView } from "../types.js";
 import styles from "./AutowarePanel.module.css";
+import { PanelShell } from "./PanelShell.js";
 
 export function GnssPanel({
   data,
@@ -7,17 +8,14 @@ export function GnssPanel({
   data?: AutowareGnssView;
 }) {
   return (
-    <section className={styles.panel}>
-      <div className={styles.header}>
-        <h3 className={styles.title}>GNSS Pose</h3>
-        <span className={data ? styles.badgeOk : styles.badgeMissing}>
-          {data ? "live" : "no data"}
-        </span>
-      </div>
-
-      {!data ? (
-        <p className={styles.empty}>Waiting for /sensing/gnss/pose…</p>
-      ) : (
+    <PanelShell
+      title="GNSS Pose"
+      tone={data ? "ok" : "missing"}
+      label={data ? "live" : "no data"}
+      empty={!data}
+      emptyMessage="Waiting for /sensing/gnss/pose…"
+    >
+      {data ? (
         <dl className={styles.grid}>
           <dt>Topic</dt>
           <dd className={styles.mono}>{data.topic}</dd>
@@ -35,7 +33,7 @@ export function GnssPanel({
           <dt>Vertical σ</dt>
           <dd>{data.covariance_z_m.toFixed(3)} m</dd>
         </dl>
-      )}
-    </section>
+      ) : null}
+    </PanelShell>
   );
 }

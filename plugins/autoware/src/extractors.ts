@@ -2,6 +2,7 @@ import { extractPose, parseLaneletMapBin, extractTrajectory } from "@robotscope/
 
 import type {
   AutowareControlView,
+  AutowareGnssView,
   AutowareLanelet2View,
   AutowareLocalizationView,
   AutowareNdtView,
@@ -57,6 +58,35 @@ export function extractLocalizationView(
     covariance_yaw_deg: Math.sqrt(Math.max(0, covYaw)) * (180 / Math.PI),
     linear_x_mps: msg.twist?.twist?.linear?.x ?? 0,
     angular_z_rps: msg.twist?.twist?.angular?.z ?? 0,
+  };
+}
+
+export function extractGnssView(
+  topic: string,
+  decoded: unknown,
+): AutowareGnssView | undefined {
+  const pose = extractPose(decoded);
+  if (!pose) {
+    return undefined;
+  }
+
+  const covariance = (decoded as { pose?: { covariance?: number[] } }).pose?.covariance ?? [];
+  const covX = covariance[0] ?? 0;
+  const covY = covariance[7] ?? 0;
+  const covZ = covariance[14] ?? 0;
+
+  return {
+    topic,
+    header_frame: pose.frame_id,
+    position: pose.position,
+    yaw_deg: yawFromQuaternion(
+      pose.rotation[0],
+      pose.rotation[1],
+      pose.rotation[2],
+      pose.rotation[3],
+    ),
+    covariance_xy_m: Math.sqrt(Math.max(0, (covX + covY) / 2)),
+    covariance_z_m: Math.sqrt(Math.max(0, covZ)),
   };
 }
 

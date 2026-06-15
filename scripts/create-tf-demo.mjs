@@ -233,6 +233,13 @@ const amclChannelId = await writer.registerChannel({
   metadata: new Map(),
 });
 
+const gnssChannelId = await writer.registerChannel({
+  topic: "/sensing/gnss/pose",
+  messageEncoding: "cdr",
+  schemaId: poseCovSchemaId,
+  metadata: new Map(),
+});
+
 const costmapChannelId = await writer.registerChannel({
   topic: "/local_costmap/costmap",
   messageEncoding: "cdr",
@@ -415,6 +422,31 @@ function encodeAmclPose(x, timeNs, i = 0) {
         covXY, 0, 0, 0, covXY, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
         0, 0, 0, 0, 0, 0, 0, 0, covYaw,
       ],
+    },
+  });
+}
+
+function encodeGnssPose(egoX, timeNs) {
+  const t = timeNs / 1e9;
+  const covariance = Array(36).fill(0);
+  covariance[0] = 0.25;
+  covariance[7] = 0.25;
+  covariance[14] = 0.5;
+  covariance[35] = 0.02;
+
+  const yaw = Math.sin(t * 0.8) * 0.02;
+  return poseCov.writer.writeMessage({
+    header: { stamp: stamp(timeNs), frame_id: "map" },
+    pose: {
+      pose: {
+        position: {
+          x: egoX + 0.6 * Math.sin(t * 1.7),
+          y: 0.05 + 0.5 * Math.cos(t * 1.3),
+          z: 0.12 + 0.04 * Math.sin(t * 2.3),
+        },
+        orientation: { x: 0, y: 0, z: Math.sin(yaw / 2), w: Math.cos(yaw / 2) },
+      },
+      covariance,
     },
   });
 }
@@ -678,6 +710,7 @@ await writer.addMessage({
 for (let i = 0; i < 20; i += 1) {
   const t = BigInt(i * 100_000_000);
   const timeNs = Number(t);
+  const egoX = i * 0.1;
   const ndtScore = Math.max(0.4, 2.5 - i * 0.12);
   const trackingFailure = i >= 8 && i <= 12;
   const lateralError = trackingFailure ? 0.22 : Math.sin(i * 0.4) * 0.08;
@@ -687,14 +720,14 @@ for (let i = 0; i < 20; i += 1) {
     sequence: i,
     logTime: t,
     publishTime: t,
-    data: encodeTf("odom", "base_link", i * 0.1, timeNs),
+    data: encodeTf("odom", "base_link", egoX, timeNs),
   });
   await writer.addMessage({
     channelId: odomChannelId,
     sequence: i,
     logTime: t,
     publishTime: t,
-    data: encodeOdom(i * 0.1, timeNs),
+    data: encodeOdom(egoX, timeNs),
   });
   await writer.addMessage({
     channelId: ndtChannelId,
@@ -722,7 +755,14 @@ for (let i = 0; i < 20; i += 1) {
     sequence: i,
     logTime: t,
     publishTime: t,
-    data: encodeAmclPose(i * 0.1, timeNs, i),
+    data: encodeAmclPose(egoX, timeNs, i),
+  });
+  await writer.addMessage({
+    channelId: gnssChannelId,
+    sequence: i,
+    logTime: t,
+    publishTime: t,
+    data: encodeGnssPose(egoX, timeNs),
   });
   await writer.addMessage({
     channelId: costmapChannelId,

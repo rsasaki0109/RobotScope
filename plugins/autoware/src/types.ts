@@ -81,6 +81,15 @@ export interface AutowareLocalizationView {
   angular_z_rps: number;
 }
 
+export interface AutowareGnssView {
+  topic: string;
+  header_frame: string;
+  position: [number, number, number];
+  yaw_deg: number;
+  covariance_xy_m: number;
+  covariance_z_m: number;
+}
+
 export interface AutowareNdtView {
   topic: string;
   score: number;
@@ -125,6 +134,7 @@ export interface AutowareSnapshot {
   topics: ResolvedAutowareTopics;
   map?: AutowareMapView;
   localization?: AutowareLocalizationView;
+  gnss?: AutowareGnssView;
   ndt?: AutowareNdtView;
   planning?: AutowarePlanningView;
   control?: AutowareControlView;

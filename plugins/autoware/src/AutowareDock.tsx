@@ -4,6 +4,7 @@ import { isPanelHighlighted, type AutowarePanelId } from "./failure-recipes.js";
 import type { AutowareSnapshot } from "./types.js";
 import styles from "./AutowareDock.module.css";
 import { ControlErrorPanel } from "./panels/ControlErrorPanel.js";
+import { GnssPanel } from "./panels/GnssPanel.js";
 import { LocalizationPanel } from "./panels/LocalizationPanel.js";
 import { MapPanel } from "./panels/MapPanel.js";
 import { NdtScorePanel } from "./panels/NdtScorePanel.js";
@@ -103,6 +104,9 @@ export function AutowareDock({ snapshot, loading, inspector }: AutowareDockProps
           </RecipePanel>
           <RecipePanel panelId="autoware.localization" snapshot={snapshot}>
             <LocalizationPanel data={snapshot?.localization} />
+          </RecipePanel>
+          <RecipePanel panelId="autoware.gnss" snapshot={snapshot}>
+            <GnssPanel data={snapshot?.gnss} />
           </RecipePanel>
           <RecipePanel panelId="autoware.ndt_score" snapshot={snapshot}>
             <NdtScorePanel data={snapshot?.ndt} />

@@ -4,6 +4,7 @@ export type AutowarePanelId =
   | "autoware.map"
   | "autoware.ndt_score"
   | "autoware.localization"
+  | "autoware.gnss"
   | "autoware.planning"
   | "autoware.control_error"
   | "tf_health"

@@ -2,6 +2,7 @@ import type { McapQueryEngine, SessionInfo } from "@robotscope/core";
 
 import {
   extractControlView,
+  extractGnssView,
   extractLanelet2View,
   extractLaneletCenterlinesView,
   extractLocalizationView,
@@ -24,6 +25,7 @@ export async function buildAutowareSnapshot(
 
   const [
     localizationRaw,
+    gnssRaw,
     ndtRaw,
     planningRaw,
     lateralRaw,
@@ -37,6 +39,9 @@ export async function buildAutowareSnapshot(
   ] = await Promise.all([
     topics.localization_pose
       ? engine.getRawMessageNearTime(topics.localization_pose, time_ns)
+      : Promise.resolve(null),
+    topics.gnss_pose
+      ? engine.getRawMessageNearTime(topics.gnss_pose, time_ns)
       : Promise.resolve(null),
     topics.ndt_score
       ? engine.getRawMessageNearTime(topics.ndt_score, time_ns)
@@ -78,6 +83,11 @@ export async function buildAutowareSnapshot(
   if (!topics.localization_pose) {
     warnings.push("Localization pose topic not found (profile autoware.universe)");
   }
+
+  const gnss =
+    topics.gnss_pose && gnssRaw?.decoded
+      ? extractGnssView(topics.gnss_pose, gnssRaw.decoded)
+      : undefined;
 
   const ndt =
     topics.ndt_score && ndtRaw?.decoded
@@ -157,6 +167,7 @@ export async function buildAutowareSnapshot(
     topics,
     map: map.lanelet2 || map.occupancy ? map : undefined,
     localization,
+    gnss,
     ndt,
     planning,
     control,

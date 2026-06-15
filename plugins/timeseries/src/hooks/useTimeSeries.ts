@@ -382,6 +382,32 @@ export function useTimeSeries(slice: TimeSeriesViewerSlice): TimeSeriesDataState
     setSeriesSelections((current) => current.filter((selection) => selection.key !== key));
   }, []);
 
+  const setSeriesColor = useCallback((key: string, color: string) => {
+    if (!/^#[0-9a-fA-F]{6}$/.test(color)) {
+      return;
+    }
+
+    const derivedId = derivedSeriesIdFromKey(key);
+    if (derivedId != null) {
+      setDerivedDefs((current) =>
+        current.map((def) =>
+          def.id === derivedId
+            ? { ...def, color }
+            : def,
+        ),
+      );
+      return;
+    }
+
+    setSeriesSelections((current) =>
+      current.map((selection) =>
+        selection.key === key
+          ? { ...selection, color }
+          : selection,
+      ),
+    );
+  }, []);
+
   useEffect(() => {
     writeTimeSeriesStateToUrl(seriesSelections, derivedDefs);
   }, [derivedDefs, seriesSelections]);
@@ -618,6 +644,7 @@ export function useTimeSeries(slice: TimeSeriesViewerSlice): TimeSeriesDataState
       addSeriesKey,
       addDerivedSeries,
       removeSeriesKey,
+      setSeriesColor,
       toggleSeriesVisible,
       seekToTimeNs,
     };
@@ -628,6 +655,7 @@ export function useTimeSeries(slice: TimeSeriesViewerSlice): TimeSeriesDataState
     removeSeriesKey,
     seekToTimeNs,
     selectedSeries,
+    setSeriesColor,
     slice.currentTimeNs,
     slice.session,
     toggleSeriesVisible,

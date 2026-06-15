@@ -581,16 +581,21 @@ export function TimeSeriesDock({
                           key={series.key}
                           className={series.visible ? styles.seriesItem : styles.seriesItemMuted}
                         >
+                          <input
+                            type="color"
+                            className={styles.colorPicker}
+                            value={series.color}
+                            onChange={(event) => {
+                              snapshot.setSeriesColor(series.key, event.target.value);
+                            }}
+                            aria-label={`Color for ${series.candidate.label}`}
+                            title="Change series color"
+                          />
                           <label className={styles.visibilityToggle}>
                             <input
                               type="checkbox"
                               checked={series.visible}
                               onChange={() => snapshot.toggleSeriesVisible(series.key)}
-                            />
-                            <span
-                              className={styles.colorSwatch}
-                              style={{ backgroundColor: series.color }}
-                              aria-hidden
                             />
                             <span className={styles.seriesText}>
                               <span className={styles.seriesLabel}>{series.candidate.label}</span>

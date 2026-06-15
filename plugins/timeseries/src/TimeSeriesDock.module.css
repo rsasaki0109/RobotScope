@@ -282,7 +282,7 @@
 .seriesItem,
 .seriesItemMuted {
   display: grid;
-  grid-template-columns: 1fr auto;
+  grid-template-columns: auto 1fr auto;
   gap: 0.35rem;
   align-items: center;
   border: 1px solid var(--rs-border);
@@ -298,7 +298,7 @@
 .visibilityToggle {
   min-width: 0;
   display: grid;
-  grid-template-columns: auto auto 1fr;
+  grid-template-columns: auto 1fr;
   align-items: center;
   gap: 0.4rem;
   cursor: pointer;
@@ -308,11 +308,31 @@
   margin: 0;
 }
 
-.colorSwatch {
+.colorPicker {
   width: 0.65rem;
   height: 0.65rem;
+  appearance: none;
+  -webkit-appearance: none;
+  border: none;
   border-radius: 999px;
+  background: transparent;
   box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.16);
+  cursor: pointer;
+  padding: 0;
+}
+
+.colorPicker::-webkit-color-swatch-wrapper {
+  padding: 0;
+}
+
+.colorPicker::-webkit-color-swatch {
+  border: none;
+  border-radius: 999px;
+}
+
+.colorPicker::-moz-color-swatch {
+  border: none;
+  border-radius: 999px;
 }
 
 .seriesText,

@@ -14,7 +14,7 @@ export default defineConfig(({ mode }) => ({
     open: true,
   },
   optimizeDeps: {
-    exclude: ["sql.js/dist/sql-asm.js"],
+    include: ["sql.js/dist/sql-asm.js"],
   },
   build: {
     rollupOptions: {

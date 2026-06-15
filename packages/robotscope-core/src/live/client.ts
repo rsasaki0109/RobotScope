@@ -63,6 +63,7 @@ export class LiveAgentClient {
   private recorder: LiveMcapRecorder | null = null;
   private publishTopics: string[] = [];
   private serviceCallServices: string[] = [];
+  private serviceCallSchemas: Record<string, string> = {};
   private actionSendGoalActions: string[] = [];
   private publishResolver:
     | ((result: LiveCommandPublishResult) => void)
@@ -122,6 +123,7 @@ export class LiveAgentClient {
             }
             this.publishTopics = message.capabilities?.command_publish ?? [];
             this.serviceCallServices = message.capabilities?.command_service_call ?? [];
+            this.serviceCallSchemas = message.capabilities?.command_service_types ?? {};
             this.actionSendGoalActions = message.capabilities?.command_action_send_goal ?? [];
             this.buffer.resetSession(message.start_ns, message.topics);
             this.options.onProgress?.({
@@ -259,6 +261,7 @@ export class LiveAgentClient {
     this.socket = null;
     this.publishTopics = [];
     this.serviceCallServices = [];
+    this.serviceCallSchemas = {};
     this.actionSendGoalActions = [];
   }
 
@@ -268,6 +271,10 @@ export class LiveAgentClient {
 
   getCommandServiceCallServices(): string[] {
     return [...this.serviceCallServices];
+  }
+
+  getCommandServiceCallSchemas(): Record<string, string> {
+    return { ...this.serviceCallSchemas };
   }
 
   getCommandActionSendGoalActions(): string[] {
@@ -333,6 +340,7 @@ export class LiveAgentClient {
           service: request.service,
           schema: request.schema,
           trigger: request.trigger,
+          data: request.data,
         }),
       );
     });

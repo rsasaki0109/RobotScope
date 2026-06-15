@@ -1,6 +1,12 @@
 import { useCallback, useState } from "react";
 
-import { parseSidecarManifest, DEFAULT_FIBONACCI_ACTION, DEFAULT_TRIGGER_SERVICE, formatFibonacciSequence } from "@robotscope/core";
+import {
+  DEFAULT_FIBONACCI_ACTION,
+  DEFAULT_TRIGGER_SERVICE,
+  STD_SRVS_SETBOOL_SCHEMA,
+  formatFibonacciSequence,
+  parseSidecarManifest,
+} from "@robotscope/core";
 
 import { listLayoutOptions } from "../plugins/registry";
 import {
@@ -44,6 +50,7 @@ export function CommandBar() {
   const actionGatewayEnabled = useViewerStore((s) => s.actionGatewayEnabled);
   const livePublishTopics = useViewerStore((s) => s.livePublishTopics);
   const liveServiceCallServices = useViewerStore((s) => s.liveServiceCallServices);
+  const liveServiceCallSchemas = useViewerStore((s) => s.liveServiceCallSchemas);
   const liveActionSendGoalActions = useViewerStore((s) => s.liveActionSendGoalActions);
   const liveActionTracking = useViewerStore((s) => s.liveActionTracking);
   const fibonacciActionOrder = useViewerStore((s) => s.fibonacciActionOrder);
@@ -61,10 +68,12 @@ export function CommandBar() {
   const publishLiveCmdVel = useViewerStore((s) => s.publishLiveCmdVel);
   const publishLiveZeroCmdVel = useViewerStore((s) => s.publishLiveZeroCmdVel);
   const callLiveTriggerService = useViewerStore((s) => s.callLiveTriggerService);
+  const callLiveSetBoolService = useViewerStore((s) => s.callLiveSetBoolService);
   const sendLiveFibonacciGoal = useViewerStore((s) => s.sendLiveFibonacciGoal);
   const cancelLiveFibonacciGoal = useViewerStore((s) => s.cancelLiveFibonacciGoal);
   const [liveUrl, setLiveUrl] = useState(DEFAULT_LIVE_AGENT_URL);
   const [livePresetId, setLivePresetId] = useState(LIVE_AGENT_PRESETS[0]?.id ?? "custom");
+  const [setBoolValues, setSetBoolValues] = useState<Record<string, boolean>>({});
 
   const onFileChange = useCallback(
     async (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -148,6 +157,11 @@ export function CommandBar() {
   const isLive = session?.source === "live";
   const canPublishCmdVel = livePublishTopics.includes("/cmd_vel");
   const canCallTrigger = liveServiceCallServices.includes(DEFAULT_TRIGGER_SERVICE);
+  const setBoolServices = liveServiceCallServices.filter(
+    (service) => liveServiceCallSchemas[service] === STD_SRVS_SETBOOL_SCHEMA,
+  );
+  const hasSetBoolService = setBoolServices.length > 0;
+  const canCallService = canCallTrigger || hasSetBoolService;
   const canSendFibonacciGoal = liveActionSendGoalActions.includes(DEFAULT_FIBONACCI_ACTION);
   const connectionPhase = isLive ? liveConnection.phase : "idle";
   const connectionLabel = CONNECTION_LABELS[connectionPhase];
@@ -350,7 +364,7 @@ export function CommandBar() {
                 </button>
               </>
             ) : null}
-            {canCallTrigger ? (
+            {canCallService ? (
               <label className={styles.gatewayToggle}>
                 <input
                   type="checkbox"
@@ -369,6 +383,36 @@ export function CommandBar() {
                 Call trigger
               </button>
             ) : null}
+            {serviceGatewayEnabled && hasSetBoolService
+              ? setBoolServices.map((service) => {
+                  const value = setBoolValues[service] ?? false;
+                  const serviceLabel = service.split("/").filter(Boolean).pop() ?? service;
+                  return (
+                    <div key={service} className={styles.setBoolEditor}>
+                      <label className={styles.setBoolService} title={service}>
+                        <input
+                          type="checkbox"
+                          checked={value}
+                          onChange={(event) =>
+                            setSetBoolValues((current) => ({
+                              ...current,
+                              [service]: event.target.checked,
+                            }))
+                          }
+                        />
+                        <span className={styles.setBoolServiceName}>{serviceLabel}</span>
+                      </label>
+                      <button
+                        type="button"
+                        className={styles.buttonSecondary}
+                        onClick={() => void callLiveSetBoolService(service, value)}
+                      >
+                        Call SetBool
+                      </button>
+                    </div>
+                  );
+                })
+              : null}
             {canSendFibonacciGoal ? (
               <label className={styles.gatewayToggle}>
                 <input

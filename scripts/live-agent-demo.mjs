@@ -13,6 +13,7 @@ import { McapIndexedReader, TempBuffer } from "@mcap/core";
 import { WebSocketServer } from "ws";
 
 const LIVE_PROTOCOL_VERSION = "robotscope.live.v0.1";
+const STD_SRVS_SETBOOL_SCHEMA = "std_srvs/srv/SetBool";
 const repoRoot = join(dirname(fileURLToPath(import.meta.url)), "..");
 
 function fibonacciSequence(order) {
@@ -114,6 +115,7 @@ function parseArgs(argv) {
     loop: true,
     allowPublish: [],
     allowService: [],
+    allowSetBool: [],
     allowAction: [],
   };
 
@@ -132,6 +134,11 @@ function parseArgs(argv) {
       const service = argv[++i];
       if (service) {
         options.allowService.push(service);
+      }
+    } else if (arg === "--allow-set-bool") {
+      const service = argv[++i];
+      if (service) {
+        options.allowSetBool.push(service);
       }
     } else if (arg === "--allow-action") {
       const action = argv[++i];
@@ -193,13 +200,27 @@ async function loadRecording(mcapPath) {
   };
 }
 
-async function streamRecording(socket, recording, loop, allowPublish, allowService, allowAction) {
+async function streamRecording(
+  socket,
+  recording,
+  loop,
+  allowPublish,
+  allowService,
+  allowSetBool,
+  allowAction,
+) {
   const capabilities = {};
+  const serviceAllowlist = [...new Set([...allowService, ...allowSetBool])];
   if (allowPublish.length > 0) {
     capabilities.command_publish = allowPublish;
   }
-  if (allowService.length > 0) {
-    capabilities.command_service_call = allowService;
+  if (serviceAllowlist.length > 0) {
+    capabilities.command_service_call = serviceAllowlist;
+  }
+  if (allowSetBool.length > 0) {
+    capabilities.command_service_types = Object.fromEntries(
+      allowSetBool.map((service) => [service, STD_SRVS_SETBOOL_SCHEMA]),
+    );
   }
   if (allowAction.length > 0) {
     capabilities.command_action_send_goal = allowAction;
@@ -240,10 +261,13 @@ async function streamRecording(socket, recording, loop, allowPublish, allowServi
   );
 
   const durationNs = Math.max(recording.bounds.end_ns - recording.bounds.start_ns, 1);
-  const replayStartMs = Date.now();
+  let replayStartMs = Date.now();
 
   do {
     socket.send(JSON.stringify({ type: "status", phase: "streaming", message: "Replay started" }));
+    // Re-anchor the clock each loop so every pass replays in real time; otherwise
+    // subsequent loops fire all messages instantly and can exhaust memory.
+    replayStartMs = Date.now();
 
     for (const message of recording.messages) {
       if (socket.readyState !== socket.OPEN) {
@@ -280,9 +304,13 @@ if (options.allowPublish.length > 0) {
 if (options.allowService.length > 0) {
   console.log(`Service allowlist: ${options.allowService.join(", ")}`);
 }
+if (options.allowSetBool.length > 0) {
+  console.log(`SetBool service allowlist: ${options.allowSetBool.join(", ")}`);
+}
 if (options.allowAction.length > 0) {
   console.log(`Action allowlist: ${options.allowAction.join(", ")}`);
 }
+const serviceAllowlist = [...new Set([...options.allowService, ...options.allowSetBool])];
 
 server.on("connection", (socket) => {
   console.log("Viewer connected");
@@ -301,6 +329,7 @@ server.on("connection", (socket) => {
     options.loop,
     options.allowPublish,
     options.allowService,
+    options.allowSetBool,
     options.allowAction,
   ).catch((error) => {
     socket.send(JSON.stringify({ type: "error", message: String(error) }));
@@ -325,13 +354,28 @@ server.on("connection", (socket) => {
 
     if (payload?.type === "command.service_call") {
       const service = payload.service;
-      if (typeof service !== "string" || !options.allowService.includes(service)) {
+      if (typeof service !== "string" || !serviceAllowlist.includes(service)) {
         socket.send(
           JSON.stringify({
             type: "command.service_result",
             ok: false,
             service,
             message: `Service ${service ?? "?"} is not allowlisted for call`,
+          }),
+        );
+        return;
+      }
+
+      if (payload.schema === STD_SRVS_SETBOOL_SCHEMA || options.allowSetBool.includes(service)) {
+        const data = payload.data === true;
+        console.log(`SetBool service call: service=${service} data=${data}`);
+        socket.send(
+          JSON.stringify({
+            type: "command.service_result",
+            ok: true,
+            service,
+            success: data,
+            message: `Demo agent accepted SetBool(data=${data}) on ${service} (no ROS service call)`,
           }),
         );
         return;

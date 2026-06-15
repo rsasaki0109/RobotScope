@@ -22,8 +22,9 @@ except ImportError:  # pragma: no cover - optional at import time
     Twist = None  # type: ignore[misc, assignment]
 
 try:
-    from std_srvs.srv import Trigger
+    from std_srvs.srv import SetBool, Trigger
 except ImportError:  # pragma: no cover - optional at import time
+    SetBool = None  # type: ignore[misc, assignment]
     Trigger = None  # type: ignore[misc, assignment]
 
 try:
@@ -64,6 +65,7 @@ class LiveBridge(Node):
         topic_retry_sec: float = 2.0,
         publish_allowlist: list[str] | None = None,
         service_allowlist: list[str] | None = None,
+        service_type_map: dict[str, str] | None = None,
         action_allowlist: list[str] | None = None,
     ) -> None:
         super().__init__("robotscope_live_bridge")
@@ -81,6 +83,7 @@ class LiveBridge(Node):
         self._publish_allowlist = set(publish_allowlist or [])
         self._publishers: dict[str, tuple[object, object]] = {}
         self._service_allowlist = set(service_allowlist or [])
+        self._service_type_map = dict(service_type_map or {})
         self._service_clients: dict[str, object] = {}
         self._action_allowlist = set(action_allowlist or [])
         self._action_clients: dict[str, object] = {}
@@ -264,15 +267,47 @@ class LiveBridge(Node):
             if Trigger is None:
                 return False, "std_srvs is not available in this ROS environment", None
 
-            client = self._service_clients.get(service)
+            client_key = f"{schema}:{service}"
+            client = self._service_clients.get(client_key)
             if client is None:
                 client = self.create_client(Trigger, service)
                 if not client.wait_for_service(timeout_sec=2.0):
                     return False, f"Service {service} is not available", None
-                self._service_clients[service] = client
+                self._service_clients[client_key] = client
                 self.get_logger().info(f"Created service client for {service} ({schema})")
 
             request = Trigger.Request()
+            future = client.call_async(request)
+            rclpy.spin_until_future_complete(self, future, timeout_sec=5.0)
+            if not future.done():
+                return False, f"Service call to {service} timed out", None
+            result = future.result()
+            if result is None:
+                return False, f"Service call to {service} failed", None
+            return True, result.message or f"Called {service}", bool(result.success)
+
+        if (
+            schema == "std_srvs/srv/SetBool"
+            or self._service_type_map.get(service) == "std_srvs/srv/SetBool"
+        ):
+            if SetBool is None:
+                return False, "std_srvs is not available in this ROS environment", None
+
+            data = payload.get("data") is True
+            client_key = f"std_srvs/srv/SetBool:{service}"
+            client = self._service_clients.get(client_key)
+            if client is None:
+                client = self.create_client(SetBool, service)
+                if not client.wait_for_service(timeout_sec=2.0):
+                    return False, f"Service {service} is not available", None
+                self._service_clients[client_key] = client
+                self.get_logger().info(
+                    f"Created service client for {service} (std_srvs/srv/SetBool)"
+                )
+
+            self.get_logger().info(f"Calling SetBool service {service} data={data}")
+            request = SetBool.Request()
+            request.data = data
             future = client.call_async(request)
             rclpy.spin_until_future_complete(self, future, timeout_sec=5.0)
             if not future.done():

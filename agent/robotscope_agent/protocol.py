@@ -20,6 +20,7 @@ def session_message(
     *,
     publish_topics: list[str] | None = None,
     service_call_services: list[str] | None = None,
+    service_call_types: dict[str, str] | None = None,
     action_send_goal_actions: list[str] | None = None,
 ) -> str:
     payload: dict[str, Any] = {
@@ -34,6 +35,8 @@ def session_message(
         capabilities["command_publish"] = publish_topics
     if service_call_services:
         capabilities["command_service_call"] = service_call_services
+    if service_call_types:
+        capabilities["command_service_types"] = service_call_types
     if action_send_goal_actions:
         capabilities["command_action_send_goal"] = action_send_goal_actions
     if capabilities:

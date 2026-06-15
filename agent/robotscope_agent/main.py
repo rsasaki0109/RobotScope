@@ -59,6 +59,16 @@ def parse_args() -> argparse.Namespace:
         help="Allow command.service_call to this ROS service (repeatable). Example: --allow-service /robotscope/demo/trigger",
     )
     parser.add_argument(
+        "--allow-set-bool",
+        action="append",
+        default=[],
+        metavar="SERVICE",
+        help=(
+            "Allow command.service_call SetBool data to this ROS service (repeatable). "
+            "Example: --allow-set-bool /robotscope/demo/set_bool"
+        ),
+    )
+    parser.add_argument(
         "--allow-action",
         action="append",
         default=[],
@@ -80,6 +90,8 @@ def main() -> None:
     args = parse_args()
     rclpy.init()
     topics = resolve_topics(args)
+    service_allowlist = list(dict.fromkeys([*args.allow_service, *args.allow_set_bool]))
+    service_type_map = {service: "std_srvs/srv/SetBool" for service in args.allow_set_bool}
     gateway_holder: dict[str, LiveGateway] = {}
 
     def on_data(channel, log_time_ns, publish_time_ns, data):
@@ -94,7 +106,8 @@ def main() -> None:
         max_topics=args.max_topics,
         topic_retry_sec=args.topic_retry_sec,
         publish_allowlist=args.allow_publish,
-        service_allowlist=args.allow_service,
+        service_allowlist=service_allowlist,
+        service_type_map=service_type_map,
         action_allowlist=args.allow_action,
     )
     gateway = LiveGateway(
@@ -102,7 +115,8 @@ def main() -> None:
         args.port,
         bridge,
         publish_allowlist=args.allow_publish,
-        service_allowlist=args.allow_service,
+        service_allowlist=service_allowlist,
+        service_type_map=service_type_map,
         action_allowlist=args.allow_action,
     )
     gateway_holder["gateway"] = gateway

@@ -157,6 +157,7 @@ export interface ViewerState {
   actionGatewayEnabled: boolean;
   livePublishTopics: string[];
   liveServiceCallServices: string[];
+  liveServiceCallSchemas: Record<string, string>;
   liveActionSendGoalActions: string[];
   fibonacciActionOrder: number;
   liveActionTracking: LiveActionTrackingState | null;
@@ -196,6 +197,7 @@ export interface ViewerState {
   publishLiveCmdVel: () => Promise<void>;
   publishLiveZeroCmdVel: () => Promise<void>;
   callLiveTriggerService: (service?: string) => Promise<void>;
+  callLiveSetBoolService: (service: string, value: boolean) => Promise<void>;
   sendLiveFibonacciGoal: (action?: string) => Promise<void>;
   cancelLiveFibonacciGoal: (action?: string) => Promise<void>;
   refreshInspection: () => Promise<void>;
@@ -233,6 +235,7 @@ const initialState = {
   actionGatewayEnabled: false,
   livePublishTopics: [] as string[],
   liveServiceCallServices: [] as string[],
+  liveServiceCallSchemas: {} as Record<string, string>,
   liveActionSendGoalActions: [] as string[],
   fibonacciActionOrder: 3,
   liveActionTracking: null as LiveActionTrackingState | null,
@@ -665,6 +668,7 @@ export const useViewerStore = create<ViewerState>((set, get) => ({
       liveConnection: initialConnection,
       livePublishTopics: handle.getCommandPublishTopics(),
       liveServiceCallServices: handle.getCommandServiceCallServices(),
+      liveServiceCallSchemas: handle.getCommandServiceCallSchemas(),
       liveActionSendGoalActions: handle.getCommandActionSendGoalActions(),
       statusMessage: formatLiveStatusMessage(initialConnection),
     };
@@ -691,6 +695,7 @@ export const useViewerStore = create<ViewerState>((set, get) => ({
       liveFollowing: true,
       livePublishTopics: [],
       liveServiceCallServices: [],
+      liveServiceCallSchemas: {},
       liveActionSendGoalActions: [],
       liveActionTracking: null,
       liveActionEvents: [],
@@ -845,6 +850,34 @@ export const useViewerStore = create<ViewerState>((set, get) => ({
       set({
         statusMessage: result.ok
           ? `${result.message}${result.success === false ? " · success=false" : ""}`
+          : `Service call failed: ${result.message}`,
+      });
+    } catch (error) {
+      set({
+        statusMessage: error instanceof Error ? error.message : "Service call failed",
+      });
+    }
+  },
+
+  async callLiveSetBoolService(service, value) {
+    const state = get();
+    if (!state.serviceGatewayEnabled) {
+      set({ statusMessage: "Enable service gateway before calling" });
+      return;
+    }
+
+    const ingest = state.ingest;
+    if (!ingest || !isLiveIngestHandle(ingest)) {
+      set({ statusMessage: "Connect a live agent before calling a service" });
+      return;
+    }
+
+    try {
+      const { buildSetBoolServiceCallRequest } = await import("@robotscope/core");
+      const result = await ingest.callService(buildSetBoolServiceCallRequest(service, value));
+      set({
+        statusMessage: result.ok
+          ? `${result.message} · data=${value}${result.success === false ? " · success=false" : ""}`
           : `Service call failed: ${result.message}`,
       });
     } catch (error) {

@@ -143,6 +143,7 @@ export interface LiveIngestHandle extends IngestHandle {
   getRecordedMessageCount(): number;
   getCommandPublishTopics(): string[];
   getCommandServiceCallServices(): string[];
+  getCommandServiceCallSchemas(): Record<string, string>;
   getCommandActionSendGoalActions(): string[];
   publishCommand(request: import("./live/command-gateway.js").LiveCommandPublishRequest): Promise<import("./live/command-gateway.js").LiveCommandPublishResult>;
   callService(request: import("./live/service-gateway.js").LiveServiceCallRequest): Promise<import("./live/service-gateway.js").LiveServiceCallResult>;

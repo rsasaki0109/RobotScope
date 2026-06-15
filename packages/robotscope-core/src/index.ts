@@ -19,8 +19,10 @@ export type {
   TwistVelocityCommand,
 } from "./live/command-gateway.js";
 export {
+  buildSetBoolServiceCallRequest,
   buildTriggerServiceCallRequest,
   DEFAULT_TRIGGER_SERVICE,
+  STD_SRVS_SETBOOL_SCHEMA,
   STD_SRVS_TRIGGER_SCHEMA,
 } from "./live/service-gateway.js";
 export type {

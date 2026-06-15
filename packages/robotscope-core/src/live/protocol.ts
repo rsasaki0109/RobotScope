@@ -23,6 +23,7 @@ export interface LiveSessionMessage {
   capabilities?: {
     command_publish?: string[];
     command_service_call?: string[];
+    command_service_types?: Record<string, string>;
     command_action_send_goal?: string[];
   };
 }
@@ -132,6 +133,7 @@ export interface LiveCommandServiceCallClientMessage {
   service: string;
   schema: string;
   trigger?: boolean;
+  data?: boolean;
 }
 
 export interface LiveCommandActionSendGoalClientMessage {

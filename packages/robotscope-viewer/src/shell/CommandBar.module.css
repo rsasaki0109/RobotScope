@@ -247,6 +247,29 @@
   font-size: 0.78rem;
 }
 
+.setBoolEditor {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.setBoolService {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  min-width: 0;
+  font-size: 0.72rem;
+  color: var(--rs-text-muted);
+}
+
+.setBoolServiceName {
+  display: inline-block;
+  max-width: 8rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 .status {
   margin: 0;
   font-size: 0.78rem;

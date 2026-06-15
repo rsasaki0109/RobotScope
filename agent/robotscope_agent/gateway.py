@@ -33,6 +33,7 @@ class LiveGateway:
         *,
         publish_allowlist: list[str] | None = None,
         service_allowlist: list[str] | None = None,
+        service_type_map: dict[str, str] | None = None,
         action_allowlist: list[str] | None = None,
     ) -> None:
         self.host = host
@@ -40,6 +41,7 @@ class LiveGateway:
         self.bridge = bridge
         self.publish_allowlist = list(publish_allowlist or [])
         self.service_allowlist = list(service_allowlist or [])
+        self.service_type_map = dict(service_type_map or {})
         self.action_allowlist = list(action_allowlist or [])
         self._clients: set[WebSocketServerProtocol] = set()
         self._loop: asyncio.AbstractEventLoop | None = None
@@ -168,6 +170,7 @@ class LiveGateway:
                 self.bridge.session_topics,
                 publish_topics=self.publish_allowlist or None,
                 service_call_services=self.service_allowlist or None,
+                service_call_types=self.service_type_map or None,
                 action_send_goal_actions=self.action_allowlist or None,
             )
         )

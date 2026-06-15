@@ -85,6 +85,16 @@
   background: var(--rs-accent);
 }
 
+.costmapCanvas {
+  display: block;
+  width: 100%;
+  height: auto;
+  margin-top: 0.5rem;
+  border-radius: 6px;
+  border: 1px solid var(--rs-border);
+  image-rendering: pixelated;
+}
+
 .barFillWarn {
   composes: barFill;
   background: var(--rs-warning);

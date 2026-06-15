@@ -88,7 +88,14 @@ export function Nav2Dock({ snapshot, loading, inspector }: Nav2DockProps) {
             <AmclPanel data={snapshot?.amcl} />
           </RecipePanel>
           <RecipePanel panelId="nav2.costmap" snapshot={snapshot}>
-            <CostmapPanel data={snapshot?.costmap} />
+            <CostmapPanel
+              data={snapshot?.costmap}
+              ego={
+                snapshot?.amcl
+                  ? { frame_id: snapshot.amcl.frame_id, position: snapshot.amcl.position }
+                  : undefined
+              }
+            />
           </RecipePanel>
           <RecipePanel panelId="nav2.global_plan" snapshot={snapshot}>
             <PlanPanel

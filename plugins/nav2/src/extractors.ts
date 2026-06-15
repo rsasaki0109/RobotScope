@@ -48,7 +48,12 @@ export function extractAmclView(topic: string, decoded: unknown): Nav2AmclView |
 export function extractCostmapView(topic: string, decoded: unknown): Nav2CostmapView | undefined {
   const msg = decoded as {
     header?: { frame_id?: string };
-    info?: { width?: number; height?: number; resolution?: number };
+    info?: {
+      width?: number;
+      height?: number;
+      resolution?: number;
+      origin?: { position?: { x?: number; y?: number } };
+    };
     data?: number[];
   };
 
@@ -58,10 +63,11 @@ export function extractCostmapView(topic: string, decoded: unknown): Nav2Costmap
     return undefined;
   }
 
+  const cells = msg.data ?? [];
   let occupied = 0;
   let free = 0;
   let unknown = 0;
-  for (const cell of msg.data ?? []) {
+  for (const cell of cells) {
     if (cell < 0) {
       unknown += 1;
     } else if (cell > 50) {
@@ -77,9 +83,11 @@ export function extractCostmapView(topic: string, decoded: unknown): Nav2Costmap
     width,
     height,
     resolution_m: msg.info?.resolution ?? 0,
+    origin_xy: [msg.info?.origin?.position?.x ?? 0, msg.info?.origin?.position?.y ?? 0],
     occupied_cells: occupied,
     free_cells: free,
     unknown_cells: unknown,
+    cells,
   };
 }
 

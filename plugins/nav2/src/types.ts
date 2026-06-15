@@ -21,9 +21,11 @@ export interface Nav2CostmapView {
   width: number;
   height: number;
   resolution_m: number;
+  origin_xy: [number, number];
   occupied_cells: number;
   free_cells: number;
   unknown_cells: number;
+  cells: number[];
 }
 
 export interface Nav2PlanView {

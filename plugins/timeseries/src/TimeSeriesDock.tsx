@@ -30,6 +30,7 @@ function sampleCount(series: TimeSeriesPlotSeries[]): number {
 }
 
 const MAX_VISIBLE_Y_AXES = 3;
+const SERIES_REORDER_DND_TYPE = "application/x-robotscope-timeseries-reorder";
 const EMPTY_PLOT_SERIES: TimeSeriesPlotSeries[] = [];
 type PlotDisplayMode = "overlay" | "stacked";
 type TimeAxisFormat = "relative" | "absolute";
@@ -355,6 +356,7 @@ export function TimeSeriesDock({
   const [yAxisMode, setYAxisMode] = useState<YAxisMode>("auto");
   const [yMinInput, setYMinInput] = useState("");
   const [yMaxInput, setYMaxInput] = useState("");
+  const [dragOverSeriesKey, setDragOverSeriesKey] = useState<string | null>(null);
   const xRangeControlled = controlledXRange !== undefined;
   const xRange = xRangeControlled ? controlledXRange : localXRange;
   const yRange = useMemo<YAxisRange | null>(() => {
@@ -569,6 +571,7 @@ export function TimeSeriesDock({
                 {snapshot.selectedSeries.length ? (
                   <ul className={styles.seriesList}>
                     {snapshot.selectedSeries.map((series) => {
+                      const isDerived = isDerivedSeriesKey(series.key);
                       const axisIndex = series.visible
                         ? axisIndexByKey.get(series.key)
                         : undefined;
@@ -576,11 +579,67 @@ export function TimeSeriesDock({
                         ? "Y1"
                         : yAxisLabel(axisIndex);
                       const currentValue = nearestValueAtTime(series, snapshot.currentTimeNs);
+                      const seriesItemClasses = [
+                        series.visible ? styles.seriesItem : styles.seriesItemMuted,
+                        isDerived ? "" : styles.seriesItemReorderable,
+                        dragOverSeriesKey === series.key ? styles.seriesItemDragOver : "",
+                      ].filter(Boolean).join(" ");
                       return (
                         <li
                           key={series.key}
-                          className={series.visible ? styles.seriesItem : styles.seriesItemMuted}
+                          className={seriesItemClasses}
+                          onDragOver={isDerived
+                            ? undefined
+                            : (event) => {
+                              if (!event.dataTransfer.types.includes(SERIES_REORDER_DND_TYPE)) {
+                                return;
+                              }
+                              event.preventDefault();
+                              event.dataTransfer.dropEffect = "move";
+                              if (dragOverSeriesKey !== series.key) {
+                                setDragOverSeriesKey(series.key);
+                              }
+                            }}
+                          onDragLeave={isDerived
+                            ? undefined
+                            : () => {
+                              setDragOverSeriesKey((current) =>
+                                current === series.key ? null : current,
+                              );
+                            }}
+                          onDrop={isDerived
+                            ? undefined
+                            : (event) => {
+                              const draggedKey = event.dataTransfer.getData(
+                                SERIES_REORDER_DND_TYPE,
+                              );
+                              if (!draggedKey) {
+                                return;
+                              }
+                              event.preventDefault();
+                              setDragOverSeriesKey(null);
+                              snapshot.reorderSeries(draggedKey, series.key);
+                            }}
                         >
+                          {isDerived ? null : (
+                            <span
+                              className={styles.dragHandle}
+                              draggable
+                              onDragStart={(event) => {
+                                event.dataTransfer.effectAllowed = "move";
+                                event.dataTransfer.setData(
+                                  SERIES_REORDER_DND_TYPE,
+                                  series.key,
+                                );
+                                event.dataTransfer.setData("text/plain", series.key);
+                              }}
+                              onDragEnd={() => setDragOverSeriesKey(null)}
+                              aria-hidden
+                              title="Drag to reorder"
+                            >
+                              ⠿
+                            </span>
+                          )}
                           <input
                             type="color"
                             className={styles.colorPicker}
@@ -611,7 +670,7 @@ export function TimeSeriesDock({
                                 >
                                   {axisLabel}
                                 </span>
-                                {isDerivedSeriesKey(series.key) ? (
+                                {isDerived ? (
                                   <span className={styles.derivedBadge}>derived</span>
                                 ) : null}
                                 {currentValue != null ? (

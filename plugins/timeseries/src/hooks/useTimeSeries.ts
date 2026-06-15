@@ -382,6 +382,36 @@ export function useTimeSeries(slice: TimeSeriesViewerSlice): TimeSeriesDataState
     setSeriesSelections((current) => current.filter((selection) => selection.key !== key));
   }, []);
 
+  const reorderSeries = useCallback((draggedKey: string, targetKey: string) => {
+    if (
+      draggedKey === targetKey ||
+      isDerivedSeriesKey(draggedKey) ||
+      isDerivedSeriesKey(targetKey)
+    ) {
+      return;
+    }
+
+    setSeriesSelections((current) => {
+      const draggedIndex = current.findIndex((selection) => selection.key === draggedKey);
+      if (draggedIndex < 0) {
+        return current;
+      }
+
+      const dragged = current[draggedIndex]!;
+      const withoutDragged = [...current];
+      withoutDragged.splice(draggedIndex, 1);
+
+      const targetIndex = withoutDragged.findIndex((selection) => selection.key === targetKey);
+      if (targetIndex < 0) {
+        return current;
+      }
+
+      const next = [...withoutDragged];
+      next.splice(targetIndex, 0, dragged);
+      return next;
+    });
+  }, []);
+
   const setSeriesColor = useCallback((key: string, color: string) => {
     if (!/^#[0-9a-fA-F]{6}$/.test(color)) {
       return;
@@ -644,6 +674,7 @@ export function useTimeSeries(slice: TimeSeriesViewerSlice): TimeSeriesDataState
       addSeriesKey,
       addDerivedSeries,
       removeSeriesKey,
+      reorderSeries,
       setSeriesColor,
       toggleSeriesVisible,
       seekToTimeNs,
@@ -653,6 +684,7 @@ export function useTimeSeries(slice: TimeSeriesViewerSlice): TimeSeriesDataState
     addSeriesKey,
     candidates,
     removeSeriesKey,
+    reorderSeries,
     seekToTimeNs,
     selectedSeries,
     setSeriesColor,

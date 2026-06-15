@@ -58,6 +58,7 @@ export interface TimeSeriesSnapshot {
   addSeriesKey: (key: string) => void;
   addDerivedSeries: (def: AddDerivedSeriesInput) => void;
   removeSeriesKey: (key: string) => void;
+  reorderSeries: (draggedKey: string, targetKey: string) => void;
   setSeriesColor: (key: string, color: string) => void;
   toggleSeriesVisible: (key: string) => void;
   seekToTimeNs: (timeNs: number) => void;

@@ -684,6 +684,7 @@ export function TimeSeriesDock({
                   onXRangeChange={handleXRangeChange}
                   onSeekTimeNs={snapshot.seekToTimeNs}
                   onDropFieldKey={snapshot.addSeriesKey}
+                  onToggleSeriesVisible={snapshot.toggleSeriesVisible}
                   timeFormat={timeFormat}
                   yRange={yRange}
                 />

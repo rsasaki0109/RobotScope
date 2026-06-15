@@ -85,6 +85,73 @@
   box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.18);
 }
 
+.legend {
+  position: absolute;
+  top: 0.42rem;
+  left: 0.55rem;
+  right: 0.55rem;
+  z-index: 2;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.28rem;
+  max-height: 2.75rem;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.legendChip {
+  appearance: none;
+  min-width: 0;
+  max-width: min(16rem, 100%);
+  display: inline-flex;
+  align-items: center;
+  gap: 0.34rem;
+  border: 1px solid rgba(148, 163, 184, 0.24);
+  border-radius: 5px;
+  background: rgba(8, 16, 24, 0.86);
+  color: var(--rs-text);
+  padding: 0.16rem 0.4rem;
+  font: inherit;
+  font-size: 0.66rem;
+  font-weight: 650;
+  line-height: 1.2;
+  cursor: pointer;
+  pointer-events: auto;
+}
+
+.legendChip:hover {
+  border-color: rgba(148, 163, 184, 0.42);
+  background: rgba(15, 23, 42, 0.92);
+}
+
+.legendChip:focus-visible {
+  outline: 2px solid rgba(78, 161, 255, 0.82);
+  outline-offset: 2px;
+}
+
+.legendChipHidden {
+  opacity: 0.46;
+}
+
+.legendChipHidden .legendLabel {
+  text-decoration: line-through;
+}
+
+.legendSwatch {
+  width: 0.48rem;
+  height: 0.48rem;
+  flex: 0 0 auto;
+  border-radius: 999px;
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.2);
+}
+
+.legendLabel {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 .tooltip {
   position: absolute;
   z-index: 3;

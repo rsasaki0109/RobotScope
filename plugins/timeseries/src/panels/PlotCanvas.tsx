@@ -16,6 +16,7 @@ export interface PlotCanvasProps {
   onXRangeChange: (range: TimeSeriesXRange | null) => void;
   onSeekTimeNs: (timeNs: number) => void;
   onDropFieldKey?: (key: string) => void;
+  onToggleSeriesVisible?: (key: string) => void;
   timeFormat?: "relative" | "absolute";
   yRange?: { min: number; max: number } | null;
   compact?: boolean;
@@ -307,6 +308,7 @@ export function PlotCanvas({
   onXRangeChange,
   onSeekTimeNs,
   onDropFieldKey,
+  onToggleSeriesVisible,
   timeFormat = "relative",
   yRange = null,
   compact = false,
@@ -325,6 +327,7 @@ export function PlotCanvas({
   const fixedYRange = useMemo(() => normalizeYRange(yRange), [yRange?.max, yRange?.min]);
   const hasData = plotData.visibleSeries.length > 0;
   const hasPlotLabel = Boolean(plotLabel);
+  const hasLegend = !compact && series.length > 0 && Boolean(onToggleSeriesVisible);
 
   const commitXRange = useCallback((range: TimeSeriesXRange | null) => {
     const next = normalizeControlledXRange(range, startNs, endNs);
@@ -443,7 +446,7 @@ export function PlotCanvas({
     const options: Options = {
       width: size.width,
       height: size.height,
-      padding: [hasPlotLabel ? 24 : 12, 8, 0, 8],
+      padding: [hasLegend ? 30 : hasPlotLabel ? 24 : 12, 8, 0, 8],
       cursor: {
         show: true,
         x: true,
@@ -671,6 +674,7 @@ export function PlotCanvas({
     commitXRange,
     endNs,
     fixedYRange,
+    hasLegend,
     hasPlotLabel,
     hasData,
     onSeekTimeNs,
@@ -739,6 +743,30 @@ export function PlotCanvas({
             aria-hidden
           />
           <span>{plotLabel.label}</span>
+        </div>
+      ) : null}
+      {hasLegend && onToggleSeriesVisible ? (
+        <div className={styles.legend} aria-label="Plot series">
+          {series.map((item) => (
+            <button
+              key={item.key}
+              type="button"
+              className={[
+                styles.legendChip,
+                item.visible ? "" : styles.legendChipHidden,
+              ].filter(Boolean).join(" ")}
+              onClick={() => onToggleSeriesVisible(item.key)}
+              aria-pressed={item.visible}
+              title={item.candidate.label}
+            >
+              <span
+                className={styles.legendSwatch}
+                style={{ backgroundColor: item.color }}
+                aria-hidden
+              />
+              <span className={styles.legendLabel}>{item.candidate.label}</span>
+            </button>
+          ))}
         </div>
       ) : null}
       {!hasData ? <div className={styles.empty}>Add visible numeric fields to plot.</div> : null}

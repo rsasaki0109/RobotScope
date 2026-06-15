@@ -95,6 +95,47 @@
   image-rendering: pixelated;
 }
 
+.costmapLegend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem 0.65rem;
+  margin-top: 0.4rem;
+  color: var(--rs-text-muted);
+  font-size: 0.68rem;
+}
+
+.costmapLegend span {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.legendGlobal,
+.legendLocal,
+.legendGoal,
+.legendEgo {
+  width: 0.65rem;
+  height: 0.65rem;
+  border-radius: 999px;
+  flex: 0 0 auto;
+}
+
+.legendGlobal {
+  background: #38bdf8;
+}
+
+.legendLocal {
+  background: #facc15;
+}
+
+.legendGoal {
+  background: #e879f9;
+}
+
+.legendEgo {
+  background: #3dd68c;
+}
+
 .barFillWarn {
   composes: barFill;
   background: var(--rs-warning);

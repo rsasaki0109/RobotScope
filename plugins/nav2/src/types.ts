@@ -30,9 +30,11 @@ export interface Nav2CostmapView {
 
 export interface Nav2PlanView {
   topic: string;
+  frame_id: string;
   point_count: number;
   length_m: number;
   end_point: [number, number, number];
+  points: Array<[number, number]>;
 }
 
 export interface Nav2GoalView {

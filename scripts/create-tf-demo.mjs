@@ -473,15 +473,20 @@ function encodeCmdVel(i) {
 
 function encodeCostmap(timeNs, i = 0) {
   const locUncertainty = i >= 17;
-  const width = 10;
-  const height = 10;
+  const width = 100;
+  const height = 100;
   const data = [];
   for (let y = 0; y < height; y += 1) {
     for (let x = 0; x < width; x += 1) {
+      const obstacle =
+        (x >= 45 && x < 52 && y >= 40 && y < 70) ||
+        (x >= 60 && x < 80 && y >= 55 && y < 62) ||
+        (x >= 28 && x < 34 && y >= 8 && y < 14);
+      const cell = obstacle ? 100 : 0;
       if (locUncertainty) {
-        data.push(x < 3 && y < 3 ? 100 : -1);
+        data.push(x < 18 && y < 18 ? -1 : cell);
       } else {
-        data.push((x + y) % 3 === 0 ? 100 : 0);
+        data.push(cell);
       }
     }
   }
@@ -493,7 +498,7 @@ function encodeCostmap(timeNs, i = 0) {
       width,
       height,
       origin: {
-        position: { x: -0.25, y: -0.25, z: 0 },
+        position: { x: -1, y: -1, z: 0 },
         orientation: { x: 0, y: 0, z: 0, w: 1 },
       },
     },

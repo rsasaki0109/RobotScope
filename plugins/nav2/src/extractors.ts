@@ -96,6 +96,7 @@ export function extractPlanView(topic: string, decoded: unknown): Nav2PlanView |
   type PlanPoint = { pose?: { position?: Position } };
 
   const msg = decoded as {
+    header?: { frame_id?: string };
     points?: PlanPoint[];
     poses?: PlanPoint[];
   };
@@ -107,6 +108,7 @@ export function extractPlanView(topic: string, decoded: unknown): Nav2PlanView |
 
   let length = 0;
   let prev: [number, number, number] | undefined;
+  const pathPoints: Array<[number, number]> = [];
 
   for (const point of points) {
     const position = point.pose?.position;
@@ -121,15 +123,34 @@ export function extractPlanView(topic: string, decoded: unknown): Nav2PlanView |
     if (prev) {
       length += Math.hypot(current[0] - prev[0], current[1] - prev[1], current[2] - prev[2]);
     }
+    pathPoints.push([current[0], current[1]]);
     prev = current;
   }
 
-  const last = points[points.length - 1]?.pose?.position;
+  const maxPreviewPoints = 256;
+  const previewPoints: Array<[number, number]> = [];
+  if (pathPoints.length <= maxPreviewPoints) {
+    previewPoints.push(...pathPoints);
+  } else {
+    const stride = Math.max(1, Math.ceil(pathPoints.length / maxPreviewPoints));
+    for (
+      let index = 0;
+      index < pathPoints.length - 1 && previewPoints.length < maxPreviewPoints - 1;
+      index += stride
+    ) {
+      previewPoints.push(pathPoints[index]);
+    }
+    previewPoints.push(pathPoints[pathPoints.length - 1]);
+  }
+
+  const last = prev;
   return {
     topic,
+    frame_id: msg.header?.frame_id ?? "map",
     point_count: points.length,
     length_m: length,
-    end_point: [last?.x ?? 0, last?.y ?? 0, last?.z ?? 0],
+    end_point: [last?.[0] ?? 0, last?.[1] ?? 0, last?.[2] ?? 0],
+    points: previewPoints,
   };
 }
 

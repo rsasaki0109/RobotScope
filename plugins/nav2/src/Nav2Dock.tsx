@@ -95,6 +95,9 @@ export function Nav2Dock({ snapshot, loading, inspector }: Nav2DockProps) {
                   ? { frame_id: snapshot.amcl.frame_id, position: snapshot.amcl.position }
                   : undefined
               }
+              globalPlan={snapshot?.global_plan}
+              localPlan={snapshot?.local_plan}
+              goal={snapshot?.goal}
             />
           </RecipePanel>
           <RecipePanel panelId="nav2.global_plan" snapshot={snapshot}>

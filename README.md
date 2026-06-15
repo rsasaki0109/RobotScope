@@ -11,11 +11,13 @@
 </p>
 
 <p align="center">
-  <a href="https://rsasaki0109.github.io/RobotScope/?layout=autoware&demo=1"><img src="https://img.shields.io/badge/demo-live-22c55e?style=flat-square" alt="Live demo" /></a>
+  <a href="https://rsasaki0109.github.io/RobotScope/?layout=autoware&demo=1"><img src="https://img.shields.io/badge/demo-live-22c55e?style=flat-square&logo=googlechrome&logoColor=white" alt="Live demo" /></a>
+  <a href="https://github.com/rsasaki0109/RobotScope/stargazers"><img src="https://img.shields.io/github/stars/rsasaki0109/RobotScope?style=flat-square&color=f59e0b&logo=github" alt="GitHub stars" /></a>
   <a href="LICENSE"><img src="https://img.shields.io/badge/core-Apache--2.0-blue?style=flat-square" alt="Core license: Apache-2.0" /></a>
   <img src="https://img.shields.io/badge/version-1.7.0--beta.0-f59e0b?style=flat-square" alt="Version 1.7.0-beta.0" />
   <img src="https://img.shields.io/badge/node-%3E%3D20-339933?style=flat-square&logo=node.js&logoColor=white" alt="Node >= 20" />
-  <img src="https://img.shields.io/badge/PRs-welcome-8b5cf6?style=flat-square" alt="PRs welcome" />
+  <a href="https://github.com/rsasaki0109/RobotScope/commits/main"><img src="https://img.shields.io/github/last-commit/rsasaki0109/RobotScope?style=flat-square&color=8b5cf6" alt="Last commit" /></a>
+  <a href="docs/contributing.md"><img src="https://img.shields.io/badge/PRs-welcome-8b5cf6?style=flat-square" alt="PRs welcome" /></a>
 </p>
 
 <p align="center">
@@ -30,18 +32,26 @@ Debug ROS2, Autoware, Nav2, MoveIt, VLA policies, humanoids, world models, and 3
 
 > RobotScope is not a robot viewer. It is an OSS observability platform that explains what the robot **sensed**, **believed**, **planned**, **commanded**, **learned**, and **remembered** — on the same timeline, coordinate frame, and causality graph.
 
+<p align="center">
+  <strong>MCAP · rosbag2 · live WebSocket</strong>&nbsp;&nbsp;|&nbsp;&nbsp;
+  <strong>Autoware · Nav2 · MoveIt</strong> native panels&nbsp;&nbsp;|&nbsp;&nbsp;
+  <strong>PlotJuggler-style time-series</strong>&nbsp;&nbsp;|&nbsp;&nbsp;
+  <strong>cross-stack failure recipes</strong>&nbsp;&nbsp;|&nbsp;&nbsp;
+  <strong>plugin-first SDK</strong>
+</p>
+
 ## What it shows
 
 RobotScope reconstructs the full decision loop of an embodied agent on one timeline:
 
-| | Stage | Example entities | Status |
-|---|-------|------------------|--------|
-| 👁️ | **Sensed** | LiDAR, camera, IMU, raw `/sensing/*` topics | ✅ shipped |
-| 🧠 | **Believed** | Localization pose, TF tree, occupancy grid, perception objects | ✅ shipped |
-| 🗺️ | **Planned** | Trajectories, Nav2 paths, MoveIt motion plans, lanelet routes | ✅ shipped |
-| 🎮 | **Commanded** | `/cmd_vel`, action goals, service calls (opt-in command gateway) | ✅ shipped |
-| 📚 | **Learned** | VLA policy state, world-model rollouts | 🧪 schema-level |
-| 💾 | **Remembered** | Maps (Lanelet2 OSM / Boost bin), recorded MCAP, sidecar indexes | ✅ shipped |
+| Stage | Example entities | Status |
+|-------|------------------|--------|
+| **Sensed** | LiDAR, camera, IMU, raw `/sensing/*` topics | shipped |
+| **Believed** | Localization pose, TF tree, occupancy grid, perception objects | shipped |
+| **Planned** | Trajectories, Nav2 paths, MoveIt motion plans, lanelet routes | shipped |
+| **Commanded** | `/cmd_vel`, action goals, service calls (opt-in command gateway) | shipped |
+| **Learned** | VLA policy state, world-model rollouts | schema-level |
+| **Remembered** | Maps (Lanelet2 OSM / Boost bin), recorded MCAP, sidecar indexes | shipped |
 
 *Learned* entities are defined in the RDM data model (`/policy/*`) but don't have dedicated panels yet.
 
@@ -112,7 +122,7 @@ The timeline footer shows **all stack recipes** at the playhead (amber = Autowar
 
 See [docs/live-agent.md](docs/live-agent.md) — pick preset **Local demo :8765** in the command bar, or add `?live=1` to auto-connect.
 
-> ⚠️ **Safety:** the command / service / action gateways are **opt-in and allowlisted** — nothing is published unless you explicitly enable it. Use them against demo or controlled systems only.
+> **Safety:** the command / service / action gateways are **opt-in and allowlisted** — nothing is published unless you explicitly enable it. Use them against demo or controlled systems only.
 
 ```bash
 # Generate demo recording (TF + odometry + Autoware topics)

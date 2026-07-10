@@ -1,7 +1,8 @@
 import {
-  mappedTopicToEntity,
   type MappedTopic,
 } from "../mapping/entity-mapper.js";
+import { filterMappedTopics } from "../entity-filter.js";
+import { materializeMappedEntity } from "../entity-materializer.js";
 import type { Entity } from "../rdm.js";
 import type {
   EntityQuery,
@@ -48,24 +49,15 @@ export class LiveQueryEngineImpl implements McapQueryEngine {
 
   async queryEntities(query: EntityQuery): Promise<EntityQueryResult> {
     const mappedTopics = this.buffer.getMappedTopics();
-    const entities: Entity[] = mappedTopics.map(mappedTopicToEntity);
-
-    if (query.filter?.paths?.length) {
-      const allowed = new Set(query.filter.paths);
-      return {
-        entities: entities.filter((entity) => allowed.has(entity.path)),
-        cursor_time_ns: query.time_ns,
-      };
-    }
-
-    if (query.filter?.kinds?.length) {
-      const allowed = new Set(query.filter.kinds);
-      return {
-        entities: entities.filter((entity) => allowed.has(entity.kind)),
-        cursor_time_ns: query.time_ns,
-      };
-    }
-
+    const mappings = filterMappedTopics(mappedTopics, query.filter);
+    const entities: Entity[] = await Promise.all(
+      mappings.map(async (mapping) =>
+        materializeMappedEntity(
+          mapping,
+          await this.getRawMessageNearTime(mapping.topic, query.time_ns),
+        ),
+      ),
+    );
     return {
       entities,
       cursor_time_ns: query.time_ns,

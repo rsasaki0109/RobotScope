@@ -12,6 +12,7 @@
     "dev": "npm run dev --workspace=@robotscope/viewer",
     "build": "npm run build --workspaces --if-present",
     "typecheck": "npm run typecheck --workspaces --if-present",
+    "test": "npm run test --workspaces --if-present",
     "lint": "npm run lint --workspaces --if-present",
     "demo:autoware": "npm run dev --workspace=@robotscope/viewer -- --open /?layout=autoware",
     "demo:nav2": "npm run dev --workspace=@robotscope/viewer -- --open /?layout=nav2",

@@ -1,10 +1,11 @@
 import { indexMcapMessages } from "../ingest/mcap-indexer.js";
 import { indexTfFromMcap } from "../tf/mcap-tf-indexer.js";
 import type { McapIndexedReader } from "@mcap/core";
+import { filterMappedTopics } from "../entity-filter.js";
+import { materializeMappedEntity } from "../entity-materializer.js";
 
 import {
   mapTopics,
-  mappedTopicToEntity,
   type MappedTopic,
 } from "../mapping/entity-mapper.js";
 import type { Entity } from "../rdm.js";
@@ -171,24 +172,15 @@ export class McapQueryEngineImpl implements McapQueryEngine {
   }
 
   async queryEntities(query: EntityQuery): Promise<EntityQueryResult> {
-    const entities: Entity[] = this.mappedTopics.map(mappedTopicToEntity);
-
-    if (query.filter?.paths?.length) {
-      const allowed = new Set(query.filter.paths);
-      return {
-        entities: entities.filter((entity) => allowed.has(entity.path)),
-        cursor_time_ns: query.time_ns,
-      };
-    }
-
-    if (query.filter?.kinds?.length) {
-      const allowed = new Set(query.filter.kinds);
-      return {
-        entities: entities.filter((entity) => allowed.has(entity.kind)),
-        cursor_time_ns: query.time_ns,
-      };
-    }
-
+    const mappings = filterMappedTopics(this.mappedTopics, query.filter);
+    const entities: Entity[] = await Promise.all(
+      mappings.map(async (mapping) =>
+        materializeMappedEntity(
+          mapping,
+          await this.getRawMessageNearTime(mapping.topic, query.time_ns),
+        ),
+      ),
+    );
     return {
       entities,
       cursor_time_ns: query.time_ns,

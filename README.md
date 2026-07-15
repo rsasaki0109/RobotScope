@@ -1,17 +1,21 @@
 # RobotScope
 
 <p align="center">
-  <a href="https://rsasaki0109.github.io/RobotScope/?layout=autoware&demo=1">
-    <img src="docs/assets/readme-hero.gif" alt="RobotScope Autoware debug layout — MCAP replay, 3D scene, failure recipes, and cross-stack timeline" width="920" />
+  <a href="https://rsasaki0109.github.io/RobotScope/?showcase=phantom-stop">
+    <img src="docs/assets/readme-hero.gif" alt="RobotScope explains a phantom obstacle stop from MCAP by separating observed facts from heuristic inference" width="920" />
   </a>
 </p>
 
 <p align="center">
-  <strong>Open Observability for Robots and Physical AI</strong>
+  <strong>Drop an MCAP. RobotScope explains why the robot stopped.</strong>
 </p>
 
 <p align="center">
-  <a href="https://rsasaki0109.github.io/RobotScope/?layout=autoware&demo=1"><img src="https://img.shields.io/badge/demo-live-22c55e?style=flat-square&logo=googlechrome&logoColor=white" alt="Live demo" /></a>
+  Open-source incident explanation for ROS 2 and Autoware — facts, inference, 3D scene, and decision timeline in one local-first view.
+</p>
+
+<p align="center">
+  <a href="https://rsasaki0109.github.io/RobotScope/?showcase=phantom-stop"><img src="https://img.shields.io/badge/demo-watch_10s-22c55e?style=flat-square&logo=googlechrome&logoColor=white" alt="Watch the 10-second showcase" /></a>
   <a href="https://github.com/rsasaki0109/RobotScope/stargazers"><img src="https://img.shields.io/github/stars/rsasaki0109/RobotScope?style=flat-square&color=f59e0b&logo=github" alt="GitHub stars" /></a>
   <a href="LICENSE"><img src="https://img.shields.io/badge/core-Apache--2.0-blue?style=flat-square" alt="Core license: Apache-2.0" /></a>
   <img src="https://img.shields.io/badge/version-1.7.0--beta.0-f59e0b?style=flat-square" alt="Version 1.7.0-beta.0" />
@@ -22,13 +26,12 @@
 
 <p align="center">
   <a href="#quick-start">Quick start</a> ·
-  <a href="https://rsasaki0109.github.io/RobotScope/?layout=autoware&demo=1">Live demo</a> ·
+  <a href="https://rsasaki0109.github.io/RobotScope/?showcase=phantom-stop">10-second showcase</a> ·
+  <a href="docs/assets/readme-showcase.mp4">MP4</a> ·
   <a href="docs/architecture.md">Architecture</a> ·
   <a href="CHANGELOG.md">Changelog</a> ·
   <a href="docs/contributing.md">Contributing</a>
 </p>
-
-Debug ROS2, Autoware, Nav2, MoveIt, VLA policies, humanoids, world models, and 3D robot scenes from one open platform.
 
 > RobotScope is not a robot viewer. It is an OSS observability platform that explains what the robot **sensed**, **believed**, **planned**, **commanded**, **learned**, and **remembered** — on the same timeline, coordinate frame, and causality graph.
 
@@ -39,6 +42,16 @@ Debug ROS2, Autoware, Nav2, MoveIt, VLA policies, humanoids, world models, and 3
   <strong>cross-stack failure recipes</strong>&nbsp;&nbsp;|&nbsp;&nbsp;
   <strong>plugin-first SDK</strong>
 </p>
+
+## See why the robot stopped — in 30 seconds
+
+Open the [phantom-stop incident](https://rsasaki0109.github.io/RobotScope/?layout=autoware&demo=incident&incident=phantom-obstacle-stop). RobotScope loads the MCAP, finds the incident, seeks to it, and separates the result into:
+
+- **Facts** — observed trajectory length, perception count, thresholds, semantic entity paths, and source topics.
+- **Inference** — a deterministic debugging lead, explicitly labeled as heuristic rather than proven root cause.
+- **Next checks** — the exact Autoware panels to correlate at the same timestamp.
+
+Copy the incident deep link or export a local Markdown report; no robot data is uploaded. Try [localization drift](https://rsasaki0109.github.io/RobotScope/?layout=autoware&demo=incident&incident=localization-drift) or [control tracking failure](https://rsasaki0109.github.io/RobotScope/?layout=autoware&demo=incident&incident=control-tracking-failure) next.
 
 ## What it shows
 
@@ -80,7 +93,7 @@ npm run dev                                                # → http://localhos
 
 Open an MCAP file from the viewer (drag & drop) or click **Connect Live** for a WebSocket agent.
 
-**Live demo (GitHub Pages):** [Autoware layout + bundled MCAP](https://rsasaki0109.github.io/RobotScope/?layout=autoware&demo=1) — the same MCAP works with `layout=nav2`, `layout=moveit`, or `layout=timeseries` (PlotJuggler-style plots). Swap `demo=1` for `demo=rosbag2` to load a bundled rosbag2 bag instead.
+**Incident demo (GitHub Pages):** [explain a phantom obstacle stop](https://rsasaki0109.github.io/RobotScope/?layout=autoware&demo=incident&incident=phantom-obstacle-stop) — the explainer auto-seeks to the incident and shows facts separately from inference. The same MCAP works with `layout=nav2`, `layout=moveit`, or `layout=timeseries`. Use `demo=1` for normal playback or `demo=rosbag2` for the bundled rosbag2 bag.
 
 | Layout | Scrub to | Failure recipe |
 |--------|----------|----------------|
@@ -146,6 +159,7 @@ npm run demo:ros2-agent -- --profile autoware
 # Static GitHub Pages bundle (local preview)
 npm run build:pages
 npm run preview:pages                  # → http://127.0.0.1:4173/RobotScope/?layout=autoware&demo=1
+npm run capture:showcase                # → hero GIF + MP4 + social card
 ```
 
 ## Repository layout

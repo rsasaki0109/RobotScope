@@ -21,6 +21,9 @@ function markersFromSnapshots(
       stack: "autoware",
       recipe_id: autowareSnapshot.failure_recipe.recipe_id,
       label: autowareSnapshot.failure_recipe.label,
+      description: autowareSnapshot.failure_recipe.description,
+      matched_symptoms: autowareSnapshot.failure_recipe.matched_symptoms,
+      highlight_panels: autowareSnapshot.failure_recipe.highlight_panels,
     });
   }
   if (nav2Snapshot.failure_recipe) {
@@ -29,6 +32,9 @@ function markersFromSnapshots(
       stack: "nav2",
       recipe_id: nav2Snapshot.failure_recipe.recipe_id,
       label: nav2Snapshot.failure_recipe.label,
+      description: nav2Snapshot.failure_recipe.description,
+      matched_symptoms: nav2Snapshot.failure_recipe.matched_symptoms,
+      highlight_panels: nav2Snapshot.failure_recipe.highlight_panels,
     });
   }
   if (moveitSnapshot.failure_recipe) {
@@ -37,6 +43,9 @@ function markersFromSnapshots(
       stack: "moveit",
       recipe_id: moveitSnapshot.failure_recipe.recipe_id,
       label: moveitSnapshot.failure_recipe.label,
+      description: moveitSnapshot.failure_recipe.description,
+      matched_symptoms: moveitSnapshot.failure_recipe.matched_symptoms,
+      highlight_panels: moveitSnapshot.failure_recipe.highlight_panels,
     });
   }
 

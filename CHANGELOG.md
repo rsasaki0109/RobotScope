@@ -4,6 +4,21 @@ All notable changes to RobotScope are documented in this file.
 
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and versioning follows [SemVer](https://semver.org/).
 
+## [Unreleased]
+
+### Added
+
+- **Incident Explainer** — groups failure-recipe samples into incidents and shows recorded facts separately from heuristic inference.
+- Shareable `demo=incident&incident=…` deep links with automatic layout selection and timeline seek.
+- Local Markdown incident reports containing evidence values, thresholds, semantic entity paths, source topics, and next panels to correlate.
+- Viewer tests for incident grouping, deep-link resolution, and fact/inference report separation.
+- **Showcase Mode** — a self-playing ten-second phantom-stop story with real MCAP evidence and a capture-safe deterministic clock.
+- `npm run capture:showcase` — regenerates the sub-3 MiB README GIF, MP4, poster, and 1200×630 social card from the real Pages build.
+
+### Changed
+
+- README now opens with “Drop an MCAP. RobotScope explains why the robot stopped.” and the generated ten-second showcase.
+
 ## [1.7.0-beta.0] - 2026-06-13
 
 First v1.7 beta — scope consolidation after alpha.0.

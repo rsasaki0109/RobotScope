@@ -1,0 +1,253 @@
+.panel,
+.loadingBanner,
+.closedBar {
+  border-bottom: 1px solid rgba(245, 166, 35, 0.35);
+  background: linear-gradient(110deg, #171923 0%, #1c1920 100%);
+}
+
+.loadingBanner,
+.closedBar {
+  padding: 0.45rem 1rem;
+  color: var(--rs-text-muted);
+  font-size: 0.78rem;
+}
+
+.closedBar {
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+}
+
+.openButton {
+  color: #ffd28a;
+  background: rgba(245, 166, 35, 0.14);
+  border: 1px solid rgba(245, 166, 35, 0.5);
+  border-radius: 5px;
+  padding: 0.25rem 0.65rem;
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.55rem 1rem 0.45rem;
+  border-bottom: 1px solid var(--rs-border);
+}
+
+.header h2,
+.titleRow h3,
+.factColumn h4,
+.inferenceColumn h4 {
+  margin: 0;
+}
+
+.header h2 {
+  font-size: 1.05rem;
+}
+
+.eyebrow {
+  display: block;
+  color: var(--rs-warning);
+  font-size: 0.63rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+}
+
+.headerActions {
+  display: flex;
+  gap: 0.4rem;
+}
+
+.headerActions button,
+.titleRow button {
+  padding: 0.28rem 0.55rem;
+  color: #dbe4f3;
+  background: #202633;
+  border: 1px solid var(--rs-border);
+  border-radius: 5px;
+  font-size: 0.72rem;
+}
+
+.headerActions button:disabled {
+  cursor: wait;
+  opacity: 0.45;
+}
+
+.closeButton {
+  font-size: 1rem !important;
+  line-height: 1;
+}
+
+.body {
+  display: grid;
+  grid-template-columns: minmax(190px, 250px) 1fr;
+  min-height: 150px;
+  max-height: 285px;
+}
+
+.incidentList {
+  overflow: auto;
+  padding: 0.45rem;
+  border-right: 1px solid var(--rs-border);
+}
+
+.incidentButton,
+.incidentActive {
+  display: flex;
+  width: 100%;
+  flex-direction: column;
+  gap: 0.1rem;
+  padding: 0.42rem 0.5rem;
+  text-align: left;
+  color: #dbe4f3;
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 5px;
+  font-size: 0.72rem;
+}
+
+.incidentButton small,
+.incidentActive small,
+.muted,
+.inferenceColumn small,
+.evidenceCard small {
+  color: var(--rs-text-muted);
+  font-size: 0.65rem;
+}
+
+.incidentButton:hover {
+  background: rgba(78, 161, 255, 0.08);
+}
+
+.incidentActive {
+  background: rgba(245, 166, 35, 0.12);
+  border-color: rgba(245, 166, 35, 0.5);
+}
+
+.details {
+  min-width: 0;
+  overflow: auto;
+  padding: 0.55rem 0.75rem 0.7rem;
+}
+
+.titleRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 0.45rem;
+}
+
+.titleRow h3 {
+  font-size: 0.95rem;
+}
+
+.evidenceGrid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.6fr) minmax(210px, 1fr);
+  gap: 0.65rem;
+}
+
+.factColumn,
+.inferenceColumn {
+  min-width: 0;
+}
+
+.factColumn h4,
+.inferenceColumn h4 {
+  margin-bottom: 0.35rem;
+  color: #cbd5e1;
+  font-size: 0.7rem;
+  font-weight: 600;
+}
+
+.factBadge,
+.inferenceBadge {
+  display: inline-block;
+  margin-right: 0.3rem;
+  padding: 0.12rem 0.32rem;
+  border-radius: 4px;
+  font-size: 0.58rem;
+  letter-spacing: 0.08em;
+}
+
+.factBadge {
+  color: #6ee7b7;
+  background: rgba(61, 214, 140, 0.12);
+  border: 1px solid rgba(61, 214, 140, 0.35);
+}
+
+.inferenceBadge {
+  color: #ffd28a;
+  background: rgba(245, 166, 35, 0.12);
+  border: 1px solid rgba(245, 166, 35, 0.35);
+}
+
+.evidenceCard {
+  display: grid;
+  gap: 0.12rem;
+  margin-bottom: 0.3rem;
+  padding: 0.35rem 0.45rem;
+  background: rgba(12, 15, 22, 0.65);
+  border-left: 2px solid var(--rs-success);
+}
+
+.evidenceCard div {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  font-size: 0.71rem;
+}
+
+.evidenceCard code,
+.correlate code {
+  overflow: hidden;
+  color: #8ab4f8;
+  font-size: 0.62rem;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.inferenceColumn {
+  padding: 0.5rem;
+  background: rgba(245, 166, 35, 0.07);
+  border: 1px solid rgba(245, 166, 35, 0.25);
+  border-radius: 6px;
+}
+
+.inferenceColumn p {
+  margin: 0.35rem 0;
+  color: #f1f5f9;
+  font-size: 0.75rem;
+}
+
+.correlate {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem;
+  margin-top: 0.55rem;
+}
+
+.correlate span {
+  width: 100%;
+  color: var(--rs-text-muted);
+  font-size: 0.62rem;
+}
+
+.correlate code {
+  padding: 0.12rem 0.3rem;
+  background: #141821;
+  border-radius: 3px;
+}
+
+@media (max-width: 900px) {
+  .body {
+    grid-template-columns: 180px 1fr;
+  }
+
+  .evidenceGrid {
+    grid-template-columns: 1fr;
+  }
+}
+

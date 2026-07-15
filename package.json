@@ -27,10 +27,12 @@
     "preview:pages": "npm run preview:pages --workspace=@robotscope/viewer",
     "validate:plugins": "node scripts/validate-plugin-manifests.mjs",
     "convert:rosbag2": "bash scripts/rosbag2-to-mcap.sh",
-    "capture:readme-hero": "npm run build:pages && node scripts/capture-readme-hero.mjs",
+    "capture:readme-hero": "npm run capture:showcase",
+    "capture:showcase": "npm run build:pages && node scripts/capture-showcase.mjs",
     "demo:live": "npm run dev --workspace=@robotscope/viewer -- --open /?layout=autoware"
   },
   "devDependencies": {
+    "tsx": "^4.23.1",
     "ws": "^8.18.0"
   },
   "engines": {

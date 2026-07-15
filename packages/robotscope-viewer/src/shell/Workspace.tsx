@@ -4,8 +4,10 @@ import { resolveLiveAgentUrlFromSearch } from "../config/live-agent";
 import { useViewerStore } from "../store/viewer-store";
 import { CommandBar } from "./CommandBar";
 import { CrossLayoutRecipeBanner } from "./CrossLayoutRecipeBanner";
+import { IncidentExplainer } from "./IncidentExplainer";
 import { PluginRightColumn } from "./PluginRightColumn";
 import { SceneView3D } from "./SceneView3D";
+import { ShowcaseMode } from "./ShowcaseMode";
 import { Sidebar } from "./Sidebar";
 import { TimelineBar } from "./TimelineBar";
 import styles from "./Workspace.module.css";
@@ -20,13 +22,20 @@ type DemoSource = "mcap" | "rosbag2";
 function resolveDemoSource(): DemoSource | null {
   const params = new URLSearchParams(window.location.search);
   const demo = params.get("demo");
-  if (demo === "1" || demo === "true") {
+  if (demo === "1" || demo === "true" || demo === "incident") {
     return "mcap";
   }
   if (demo === "rosbag2") {
     return "rosbag2";
   }
+  if (new URLSearchParams(window.location.search).has("showcase")) {
+    return "mcap";
+  }
   return null;
+}
+
+function resolveShowcaseFromUrl(): string | null {
+  return new URLSearchParams(window.location.search).get("showcase");
 }
 
 export function Workspace() {
@@ -35,6 +44,7 @@ export function Workspace() {
   const connectLiveAgent = useViewerStore((s) => s.connectLiveAgent);
   const session = useViewerStore((s) => s.session);
   const layoutId = useViewerStore((s) => s.layoutId);
+  const showcase = resolveShowcaseFromUrl();
 
   useEffect(() => {
     setLayoutId(resolveLayoutFromUrl());
@@ -69,10 +79,15 @@ export function Workspace() {
     });
   }, [connectLiveAgent, session]);
 
+  if (showcase) {
+    return <ShowcaseMode incident={showcase} />;
+  }
+
   return (
     <div className={styles.workspace} data-layout={layoutId}>
       <CommandBar />
       <CrossLayoutRecipeBanner />
+      <IncidentExplainer />
       <div className={styles.main}>
         <Sidebar />
         <div className={styles.center}>

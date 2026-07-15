@@ -5,6 +5,9 @@ export interface RecipeTimelineMarker {
   stack: RecipeStack;
   recipe_id: string;
   label: string;
+  description?: string;
+  matched_symptoms?: string[];
+  highlight_panels?: string[];
 }
 
 export const RECIPE_SAMPLE_STEP_NS = 100_000_000;

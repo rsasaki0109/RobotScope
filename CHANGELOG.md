@@ -4,6 +4,19 @@ All notable changes to RobotScope are documented in this file.
 
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and versioning follows [SemVer](https://semver.org/).
 
+## [Unreleased]
+
+### Added
+
+- **Incident Explainer** — groups failure-recipe samples into incidents and shows recorded facts separately from heuristic inference.
+- Shareable `demo=incident&incident=…` deep links with automatic layout selection and timeline seek.
+- Local Markdown incident reports containing evidence values, thresholds, semantic entity paths, source topics, and next panels to correlate.
+- Viewer tests for incident grouping, deep-link resolution, and fact/inference report separation.
+
+### Changed
+
+- README now opens with a 30-second phantom-stop explanation instead of a generic viewer tour.
+
 ## [1.7.0-beta.0] - 2026-06-13
 
 First v1.7 beta — scope consolidation after alpha.0.

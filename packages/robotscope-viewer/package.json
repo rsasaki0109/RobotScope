@@ -11,7 +11,8 @@
     "build:pages": "tsc -p tsconfig.json --noEmit && vite build --mode pages && cp dist/index.html dist/404.html",
     "preview": "vite preview",
     "preview:pages": "vite preview --mode pages",
-    "typecheck": "tsc -p tsconfig.json --noEmit"
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test": "node --import tsx --test test/*.test.mjs"
   },
   "dependencies": {
     "@robotscope/core": "*",

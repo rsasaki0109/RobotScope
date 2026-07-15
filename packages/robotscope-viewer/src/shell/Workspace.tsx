@@ -4,6 +4,7 @@ import { resolveLiveAgentUrlFromSearch } from "../config/live-agent";
 import { useViewerStore } from "../store/viewer-store";
 import { CommandBar } from "./CommandBar";
 import { CrossLayoutRecipeBanner } from "./CrossLayoutRecipeBanner";
+import { IncidentExplainer } from "./IncidentExplainer";
 import { PluginRightColumn } from "./PluginRightColumn";
 import { SceneView3D } from "./SceneView3D";
 import { Sidebar } from "./Sidebar";
@@ -20,7 +21,7 @@ type DemoSource = "mcap" | "rosbag2";
 function resolveDemoSource(): DemoSource | null {
   const params = new URLSearchParams(window.location.search);
   const demo = params.get("demo");
-  if (demo === "1" || demo === "true") {
+  if (demo === "1" || demo === "true" || demo === "incident") {
     return "mcap";
   }
   if (demo === "rosbag2") {
@@ -73,6 +74,7 @@ export function Workspace() {
     <div className={styles.workspace} data-layout={layoutId}>
       <CommandBar />
       <CrossLayoutRecipeBanner />
+      <IncidentExplainer />
       <div className={styles.main}>
         <Sidebar />
         <div className={styles.center}>

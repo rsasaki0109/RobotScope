@@ -12,10 +12,12 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and ver
 - Shareable `demo=incident&incident=…` deep links with automatic layout selection and timeline seek.
 - Local Markdown incident reports containing evidence values, thresholds, semantic entity paths, source topics, and next panels to correlate.
 - Viewer tests for incident grouping, deep-link resolution, and fact/inference report separation.
+- **Showcase Mode** — a self-playing ten-second phantom-stop story with real MCAP evidence and a capture-safe deterministic clock.
+- `npm run capture:showcase` — regenerates the sub-3 MiB README GIF, MP4, poster, and 1200×630 social card from the real Pages build.
 
 ### Changed
 
-- README now opens with a 30-second phantom-stop explanation instead of a generic viewer tour.
+- README now opens with “Drop an MCAP. RobotScope explains why the robot stopped.” and the generated ten-second showcase.
 
 ## [1.7.0-beta.0] - 2026-06-13
 

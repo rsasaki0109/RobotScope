@@ -7,6 +7,7 @@ import {
   incidentSlug,
 } from "../src/incidents/model.ts";
 import { incidentReportMarkdown } from "../src/incidents/report.ts";
+import { resolveShowcaseStory } from "../src/showcase/story.ts";
 
 const marker = (time_ns, recipe_id = "phantom_obstacle_stop") => ({
   time_ns,
@@ -67,4 +68,13 @@ test("exports facts and inference as separate report sections", () => {
   assert.match(report, /## Inference \(heuristic\)/);
   assert.match(report, /not a proven root cause/);
   assert.match(report, /1\.40s–1\.40s \(elapsed\)/);
+});
+
+test("runs the ten-second showcase through four deterministic phases", () => {
+  assert.equal(resolveShowcaseStory(0).phase, "question");
+  assert.equal(resolveShowcaseStory(2_000).phase, "replay");
+  assert.equal(resolveShowcaseStory(5_000).phase, "facts");
+  assert.equal(resolveShowcaseStory(7_800).phase, "inference");
+  assert.equal(resolveShowcaseStory(9_999).incident_time_sec, 1.4);
+  assert.equal(resolveShowcaseStory(12_000).elapsed_ms, 9_999);
 });

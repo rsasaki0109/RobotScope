@@ -7,6 +7,7 @@ import { CrossLayoutRecipeBanner } from "./CrossLayoutRecipeBanner";
 import { IncidentExplainer } from "./IncidentExplainer";
 import { PluginRightColumn } from "./PluginRightColumn";
 import { SceneView3D } from "./SceneView3D";
+import { ShowcaseMode } from "./ShowcaseMode";
 import { Sidebar } from "./Sidebar";
 import { TimelineBar } from "./TimelineBar";
 import styles from "./Workspace.module.css";
@@ -27,7 +28,14 @@ function resolveDemoSource(): DemoSource | null {
   if (demo === "rosbag2") {
     return "rosbag2";
   }
+  if (new URLSearchParams(window.location.search).has("showcase")) {
+    return "mcap";
+  }
   return null;
+}
+
+function resolveShowcaseFromUrl(): string | null {
+  return new URLSearchParams(window.location.search).get("showcase");
 }
 
 export function Workspace() {
@@ -36,6 +44,7 @@ export function Workspace() {
   const connectLiveAgent = useViewerStore((s) => s.connectLiveAgent);
   const session = useViewerStore((s) => s.session);
   const layoutId = useViewerStore((s) => s.layoutId);
+  const showcase = resolveShowcaseFromUrl();
 
   useEffect(() => {
     setLayoutId(resolveLayoutFromUrl());
@@ -69,6 +78,10 @@ export function Workspace() {
       useViewerStore.setState({ statusMessage: `Live connect failed: ${message}` });
     });
   }, [connectLiveAgent, session]);
+
+  if (showcase) {
+    return <ShowcaseMode incident={showcase} />;
+  }
 
   return (
     <div className={styles.workspace} data-layout={layoutId}>

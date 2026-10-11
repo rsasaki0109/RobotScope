@@ -27,7 +27,7 @@ function sensorTimeFromDecoded(decoded: unknown): number | undefined {
 
 function frameFromDecoded(decoded: unknown): FrameRef | undefined {
   const header = asRecord(asRecord(decoded)?.header);
-  const frameId = header?.frame_id ?? header?.frameId;
+  const frameId = asRecord(decoded)?.frame_id ?? header?.frame_id ?? header?.frameId;
   return typeof frameId === "string" && frameId.length > 0
     ? { frame_id: frameId }
     : undefined;

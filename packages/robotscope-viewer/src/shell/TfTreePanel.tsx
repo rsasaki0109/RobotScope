@@ -13,7 +13,7 @@ export function TfTreePanel() {
   return (
     <section className={styles.section}>
       <div className={styles.header}>
-        <h2>TF tree</h2>
+        <h2>Frame tree</h2>
         <span className={styles.meta}>
           {tfTree?.frames.length ?? 0} frames · fixed: {fixedFrame}
         </span>
@@ -28,7 +28,7 @@ export function TfTreePanel() {
       ) : null}
 
       {!tfTree || tfTree.frames.length === 0 ? (
-        <p className={styles.empty}>No TF indexed — check /tf and /tf_static topics.</p>
+        <p className={styles.empty}>No frame transforms recorded.</p>
       ) : (
         <ul className={styles.tree}>
           {tfTree.frames.map((frame) => (

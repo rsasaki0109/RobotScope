@@ -49,6 +49,10 @@ docs/assets/readme-frames/
 
 # Test coverage
 coverage/
+test-results/
+playwright-report/
+*.egg-info/
+.venv/
 
 # Rust
 Cargo.lock

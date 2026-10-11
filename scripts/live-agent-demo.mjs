@@ -169,7 +169,9 @@ async function loadRecording(mcapPath) {
       id: channel.id,
       topic: channel.topic,
       schema: schema?.name ?? "unknown",
-      encoding: schema?.encoding ?? "ros2msg",
+      encoding: schema?.encoding ?? "",
+      message_encoding: channel.messageEncoding,
+      metadata: Object.fromEntries(channel.metadata),
       definition: schema?.data ? new TextDecoder().decode(schema.data) : "",
     };
   });
@@ -247,6 +249,8 @@ async function streamRecording(
           schema: channel.schema,
           encoding: channel.encoding,
           definition: channel.definition,
+          message_encoding: channel.message_encoding,
+          metadata: channel.metadata,
         },
       }),
     );

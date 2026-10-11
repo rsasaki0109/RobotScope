@@ -1,10 +1,13 @@
 export * from "./rdm.js";
+export * from "./data/json-recording.js";
+export * from "./data/message-decoder.js";
 export * from "./query.js";
 export * from "./entity-paths.js";
 export { openMcap, McapQueryEngineImpl } from "./ingest/mcap.js";
 export { isRosbag2Filename, isRosbag2MetadataFilename, isMcapFilename } from "./ingest/recording-format.js";
 export type { McapOpenOptions } from "./ingest/mcap.js";
 export { openLive } from "./live/open-live.js";
+export { decodeBase64Payload } from "./live/protocol.js";
 export {
   buildZeroTwistPublishRequest,
   buildTwistPublishRequest,

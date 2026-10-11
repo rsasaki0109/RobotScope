@@ -8,6 +8,12 @@ interface FieldRule {
 }
 
 const FIELD_RULES: FieldRule[] = [
+  { schema: "robotscope.Scalar.v1", fields: [{ path: "value", label: "value" }] },
+  { schema: "robotscope.Pose.v1", fields: [
+    { path: "position[0]", label: "position x" },
+    { path: "position[1]", label: "position y" },
+    { path: "position[2]", label: "position z" },
+  ] },
   {
     schema: "std_msgs/Float32",
     fields: [{ path: "data", label: "data" }],
@@ -119,6 +125,7 @@ function schemaRules(topic: TopicInfo): NumericFieldCandidate[] {
 }
 
 function topicFallback(topic: TopicInfo): NumericFieldCandidate[] {
+  if (topic.message_encoding === "json") return [];
   if (
     topic.name.includes("score") ||
     topic.name.includes("error") ||

@@ -12,6 +12,9 @@ export interface LiveChannelDefinition {
   encoding: "ros2msg" | "ros2idl" | string;
   /** ROS message definition text (ros2msg). */
   definition: string;
+  /** Omitted by older ROS 2 agents; defaults to CDR. */
+  message_encoding?: string;
+  metadata?: Record<string, string>;
 }
 
 export interface LiveSessionMessage {
@@ -158,14 +161,90 @@ export type LiveClientMessage =
 
 export function parseLiveServerMessage(raw: string): LiveServerMessage | null {
   try {
-    const value = JSON.parse(raw) as LiveServerMessage;
-    if (!value || typeof value !== "object" || !("type" in value)) {
-      return null;
+    const value = JSON.parse(raw) as Record<string, unknown>;
+    if (!record(value) || typeof value.type !== "string") return null;
+    switch (value.type) {
+      case "session": {
+        if (typeof value.protocol !== "string" || typeof value.agent !== "string" ||
+            !timestamp(value.start_ns) || !Array.isArray(value.topics) ||
+            !value.topics.every((topic) => record(topic) && typeof topic.name === "string" && typeof topic.schema === "string")) return null;
+        if (value.capabilities !== undefined) {
+          const caps = value.capabilities;
+          if (!record(caps)) return null;
+          for (const key of ["command_publish", "command_service_call", "command_action_send_goal"]) {
+            if (caps[key] !== undefined && !stringArray(caps[key])) return null;
+          }
+          if (caps.command_service_types !== undefined &&
+              (!record(caps.command_service_types) || !Object.values(caps.command_service_types).every((item) => typeof item === "string"))) return null;
+        }
+        break;
+      }
+      case "channel": {
+        const channel = value.channel;
+        if (!record(channel) || !integer(channel.id) ||
+            ![channel.topic, channel.schema, channel.encoding, channel.definition].every((item) => typeof item === "string")) return null;
+        if (!optionalString(channel.message_encoding) ||
+            (channel.metadata !== undefined && (!record(channel.metadata) ||
+              !Object.values(channel.metadata).every((item) => typeof item === "string")))) return null;
+        break;
+      }
+      case "message":
+        if (!integer(value.channel_id) || !timestamp(value.log_time_ns) ||
+            (value.publish_time_ns !== undefined && !timestamp(value.publish_time_ns)) ||
+            (value.sequence !== undefined && !integer(value.sequence)) ||
+            typeof value.data_b64 !== "string" ||
+            !/^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=)?$/.test(value.data_b64)) return null;
+        break;
+      case "status":
+        if (!["connecting", "waiting_for_topics", "ready", "streaming", "error"].includes(String(value.phase)) ||
+            !optionalString(value.message) ||
+            (value.topics_subscribed !== undefined && !integer(value.topics_subscribed)) ||
+            (value.topics_pending !== undefined && !integer(value.topics_pending))) return null;
+        break;
+      case "error":
+        if (typeof value.message !== "string") return null;
+        break;
+      case "command.publish_result":
+      case "command.service_result":
+      case "command.action_result":
+      case "command.action_cancel_result":
+        if (typeof value.ok !== "boolean" || typeof value.message !== "string" ||
+            ![value.topic, value.service, value.action].every(optionalString) ||
+            ![value.success, value.goal_accepted, value.cancel_accepted].every((item) => item === undefined || typeof item === "boolean")) return null;
+        break;
+      case "command.action_feedback":
+      case "command.action_outcome":
+        if (typeof value.action !== "string" || !Array.isArray(value.sequence) || !value.sequence.every((item) => typeof item === "number" && Number.isFinite(item))) return null;
+        if (value.type === "command.action_outcome" &&
+            (typeof value.ok !== "boolean" || !["succeeded", "aborted", "canceled", "failed"].includes(String(value.status)) || !optionalString(value.message))) return null;
+        break;
+      default:
+        return null;
     }
-    return value;
+    return value as unknown as LiveServerMessage;
   } catch {
     return null;
   }
+}
+
+function record(value: unknown): value is Record<string, unknown> {
+  return value !== null && typeof value === "object" && !Array.isArray(value);
+}
+
+function timestamp(value: unknown): value is number {
+  return typeof value === "number" && Number.isFinite(value) && value >= 0;
+}
+
+function integer(value: unknown): value is number {
+  return timestamp(value) && Number.isSafeInteger(value);
+}
+
+function optionalString(value: unknown): boolean {
+  return value === undefined || typeof value === "string";
+}
+
+function stringArray(value: unknown): value is string[] {
+  return Array.isArray(value) && value.every((item) => typeof item === "string");
 }
 
 export function encodeLiveClientMessage(message: LiveClientMessage): string {

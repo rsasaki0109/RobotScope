@@ -60,6 +60,21 @@ export class TopicTimeIndex {
     this.byTopic.get(topic)!.push(entry);
   }
 
+  /** Sorted, bounded live history; offline index construction keeps every entry. */
+  addBounded(topic: string, channel_id: number, schema: string, entry: MessageTimeEntry, maxEntries: number): void {
+    this.registerChannel(topic, channel_id, schema);
+    const entries = this.byTopic.get(topic)!;
+    let lo = 0;
+    let hi = entries.length;
+    while (lo < hi) {
+      const mid = (lo + hi) >> 1;
+      if (entries[mid]!.log_time_ns <= entry.log_time_ns) lo = mid + 1;
+      else hi = mid;
+    }
+    entries.splice(lo, 0, entry);
+    if (entries.length > maxEntries) entries.splice(0, entries.length - maxEntries);
+  }
+
   finalize(): void {
     for (const [topic, entries] of this.byTopic.entries()) {
       entries.sort((a, b) => a.log_time_ns - b.log_time_ns);

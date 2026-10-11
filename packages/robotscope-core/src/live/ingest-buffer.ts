@@ -1,11 +1,8 @@
+import { decodeMessage } from "../data/message-decoder.js";
+import { isTransformChannel, storedTransforms } from "../data/transforms.js";
 import { mapTopics, type MappedTopic } from "../mapping/entity-mapper.js";
 import type { RawMessage, SessionInfo, TimeRange, TopicInfo } from "../query.js";
-import {
-  decodeRos2Message,
-  isTfMessageSchema,
-  isTfTopic,
-  type SchemaInfo,
-} from "../ros2/decoder.js";
+import type { SchemaInfo } from "../ros2/decoder.js";
 import {
   sidecarFromTopicIndex,
   type SidecarManifest,
@@ -15,16 +12,7 @@ import { TfBuffer } from "../tf/tf-buffer.js";
 
 import type { LiveChannelDefinition, LiveDataMessage } from "./protocol.js";
 import { decodeBase64Payload } from "./protocol.js";
-import { LiveMessageStore } from "./message-store.js";
-
-interface DecodedTransform {
-  header: { stamp: { sec: number; nanosec?: number; nsec?: number }; frame_id: string };
-  child_frame_id: string;
-  transform: {
-    translation: { x: number; y: number; z: number };
-    rotation: { x: number; y: number; z: number; w: number };
-  };
-}
+import { LiveMessageStore, DEFAULT_MAX_MESSAGES_PER_TOPIC } from "./message-store.js";
 
 export interface LiveIngestStats {
   message_count: number;
@@ -34,7 +22,7 @@ export interface LiveIngestStats {
 }
 
 export class LiveIngestBuffer {
-  readonly tfBuffer = new TfBuffer();
+  readonly tfBuffer = new TfBuffer(4000);
   topicIndex = TopicTimeIndex.empty();
   readonly messageStore = new LiveMessageStore();
 
@@ -47,6 +35,8 @@ export class LiveIngestBuffer {
   private start_ns = 0;
   private end_ns = 0;
   private hasBounds = false;
+  private message_count = 0;
+  private revision = 0;
   private tf_message_count = 0;
   private tf_transform_count = 0;
   private mappedTopics: MappedTopic[] = [];
@@ -59,7 +49,9 @@ export class LiveIngestBuffer {
   }
 
   resetSession(start_ns: number, topics: Array<{ name: string; schema: string }>): void {
+    this.revision += 1;
     this.tfBuffer.clear();
+    this.messageStore.clear();
     this.topicIndex = TopicTimeIndex.empty();
     this.schemas.clear();
     this.channels.clear();
@@ -70,6 +62,7 @@ export class LiveIngestBuffer {
     this.start_ns = start_ns;
     this.end_ns = start_ns;
     this.hasBounds = false;
+    this.message_count = 0;
     this.tf_message_count = 0;
     this.tf_transform_count = 0;
 
@@ -83,6 +76,7 @@ export class LiveIngestBuffer {
   }
 
   registerChannel(channel: LiveChannelDefinition): void {
+    this.revision += 1;
     this.channelDefinitions.set(channel.id, channel);
     const schema: SchemaInfo = {
       name: channel.schema,
@@ -92,7 +86,7 @@ export class LiveIngestBuffer {
     this.schemas.set(channel.id, schema);
     this.channels.set(channel.id, { topic: channel.topic, schemaId: channel.id });
 
-    if (isTfTopic(channel.topic)) {
+    if (isTransformChannel(channel.topic, channel.schema)) {
       this.tfTopics.add(channel.topic);
     }
 
@@ -100,6 +94,8 @@ export class LiveIngestBuffer {
     this.topicStats.set(channel.topic, {
       name: channel.topic,
       schema: channel.schema,
+      message_encoding: channel.message_encoding ?? "cdr",
+      metadata: channel.metadata,
       message_count: existing?.message_count ?? 0,
     });
 
@@ -116,10 +112,12 @@ export class LiveIngestBuffer {
     }
 
     const payload = decodeBase64Payload(message.data_b64);
-    const decoded = decodeRos2Message(schema, payload);
+    const messageEncoding = this.channelDefinitions.get(message.channel_id)?.message_encoding ?? "cdr";
+    const decoded = decodeMessage(schema, payload, messageEncoding);
     const raw: RawMessage = {
       topic: channel.topic,
       schema: schema.name,
+      message_encoding: messageEncoding,
       log_time_ns: message.log_time_ns,
       publish_time_ns: message.publish_time_ns,
       sequence: message.sequence,
@@ -137,19 +135,25 @@ export class LiveIngestBuffer {
       this.end_ns = Math.max(this.end_ns, message.log_time_ns);
     }
 
-    this.topicIndex.add(channel.topic, message.channel_id, schema.name, {
+    this.topicIndex.addBounded(channel.topic, message.channel_id, schema.name, {
       log_time_ns: message.log_time_ns,
       sequence: message.sequence,
-    });
+    }, DEFAULT_MAX_MESSAGES_PER_TOPIC);
     this.messageStore.add(raw);
+    this.message_count += 1;
+    this.revision += 1;
 
     const topicInfo = this.topicStats.get(channel.topic);
     if (topicInfo) {
       topicInfo.message_count = (topicInfo.message_count ?? 0) + 1;
     }
 
-    if (isTfTopic(channel.topic) && isTfMessageSchema(schema.name) && decoded.value) {
-      this.ingestTf(channel.topic, decoded.value as { transforms?: DecodedTransform[] }, message.log_time_ns);
+    if (isTransformChannel(channel.topic, schema.name) && decoded.value) {
+      this.tf_message_count += 1;
+      for (const transform of storedTransforms(schema.name, decoded.value, message.log_time_ns, channel.topic)) {
+        this.tfBuffer.addTransform(transform);
+        this.tf_transform_count += 1;
+      }
     }
 
     this.notify();
@@ -188,11 +192,15 @@ export class LiveIngestBuffer {
 
   getStats(): LiveIngestStats {
     return {
-      message_count: this.messageStore.messageCount(),
+      message_count: this.message_count,
       topic_count: this.topicStats.size,
       tf_message_count: this.tf_message_count,
       tf_transform_count: this.tf_transform_count,
     };
+  }
+
+  getRevision(): number {
+    return this.revision;
   }
 
   getTfTopics(): string[] {
@@ -203,42 +211,9 @@ export class LiveIngestBuffer {
     return [...this.channelDefinitions.values()];
   }
 
-  private ingestTf(
-    topic: string,
-    tfMessage: { transforms?: DecodedTransform[] },
-    log_time_ns: number,
-  ): void {
-    this.tf_message_count += 1;
-    const isStatic = topic.includes("static");
-
-    for (const transform of tfMessage.transforms ?? []) {
-      this.tfBuffer.addTransform({
-        parent_frame_id: transform.header.frame_id,
-        child_frame_id: transform.child_frame_id,
-        translation: [
-          transform.transform.translation.x,
-          transform.transform.translation.y,
-          transform.transform.translation.z,
-        ],
-        rotation: [
-          transform.transform.rotation.x,
-          transform.transform.rotation.y,
-          transform.transform.rotation.z,
-          transform.transform.rotation.w,
-        ],
-        time_ns: isStatic ? 0 : log_time_ns,
-        is_static: isStatic,
-      });
-      this.tf_transform_count += 1;
-    }
-  }
-
   private remapTopics(): void {
     this.mappedTopics = mapTopics(
-      [...this.topicStats.values()].map((topic) => ({
-        name: topic.name,
-        schema: topic.schema,
-      })),
+      [...this.topicStats.values()],
     );
   }
 

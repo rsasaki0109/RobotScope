@@ -9,14 +9,32 @@ const rootDir = fileURLToPath(new URL(".", import.meta.url));
 export default defineConfig(({ mode }) => ({
   base: mode === "pages" ? "/RobotScope/" : "/",
   plugins: [react()],
+  // Emscripten codec wrappers require the binary as an asset URL.
+  assetsInclude: ["**/*.wasm"],
   server: {
     port: 5173,
     open: true,
   },
   optimizeDeps: {
     include: ["sql.js/dist/sql-asm.js"],
+    esbuildOptions: {
+      plugins: [{
+        name: "mcap-codec-wasm-urls",
+        setup(build) {
+          build.onLoad({ filter: /\.wasm$/ }, ({ path: wasmPath }) => ({
+            // Upstream Emscripten locateFile() uses require() and expects a URL,
+            // not WASM exports. Keep optimizer output equivalent to asset imports.
+            contents: `module.exports = ${JSON.stringify(`/@fs/${wasmPath}`)};`,
+            loader: "js",
+          }));
+        },
+      }],
+    },
   },
   build: {
+    // WASM asset modules export a default URL; require() in Emscripten must
+    // receive that string rather than an ES-module namespace object.
+    commonjsOptions: { requireReturnsDefault: "auto" },
     rollupOptions: {
       output: {
         // Split heavy vendors into separate, long-lived cacheable chunks so the

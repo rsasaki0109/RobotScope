@@ -7,6 +7,8 @@ import { parsePointCloud2, type DecodedPointCloud2 } from "../ros2/pointcloud2.j
 import { extractPose, transformPoseToFixed } from "../ros2/pose.js";
 import { extractTrajectory, transformTrajectoryToFixed } from "../ros2/trajectory.js";
 import type { TfBuffer } from "../tf/tf-buffer.js";
+import { applyTransform } from "../tf/transform-math.js";
+import { JSON_SCHEMAS, type JsonPose, type JsonPoints } from "../data/json-recording.js";
 
 export interface SceneTfFrame {
   frame_id: string;
@@ -127,6 +129,30 @@ export async function buildSceneSnapshot(
   for (const mapped of sceneTopics) {
     const raw = await getRawMessage(mapped.topic, time_ns);
     if (!raw?.decoded) {
+      continue;
+    }
+
+    if (raw.message_encoding === "json" && mapped.rule_id === "channel.metadata") {
+      if (raw.schema !== JSON_SCHEMAS.Pose && raw.schema !== JSON_SCHEMAS.PointCloud && raw.schema !== JSON_SCHEMAS.Trajectory) continue;
+      const data = raw.decoded as JsonPose | JsonPoints;
+      const transform = tfBuffer.lookupTransformToFixed(data.frame_id, fixed_frame, time_ns);
+      if (!transform) {
+        warnings.push(`Missing transform ${data.frame_id} → ${fixed_frame} for ${mapped.topic}`);
+        continue;
+      }
+      if (raw.schema === JSON_SCHEMAS.Pose) {
+        const pose = transformPoseToFixed(data as JsonPose, transform);
+        poses.push({ topic: mapped.topic, entity_path: mapped.entity_path,
+          label: mapped.entity_path.split("/").pop() ?? mapped.topic,
+          position: pose.position, rotation: pose.rotation });
+      } else {
+        const source = data as JsonPoints;
+        const points = new Float32Array(source.points.length * 3);
+        source.points.forEach((point, index) => points.set(applyTransform(transform, point), index * 3));
+        const common = { topic: mapped.topic, entity_path: mapped.entity_path, points, point_count: source.points.length };
+        if (raw.schema === JSON_SCHEMAS.PointCloud) point_clouds.push(common);
+        else trajectories.push({ ...common, archetype: "Trajectory" });
+      }
       continue;
     }
 

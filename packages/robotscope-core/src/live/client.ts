@@ -22,6 +22,8 @@ import type { LiveQueryEngineImpl } from "./live-query-engine.js";
 import { LiveMcapRecorder } from "./recorder.js";
 
 export interface LiveClientOptions {
+  signal?: AbortSignal;
+  connectTimeoutMs?: number;
   onProgress?: (progress: IngestProgress) => void;
   onSessionUpdate?: (
     bounds: TimeRange,
@@ -57,6 +59,9 @@ function statusToProgress(message: LiveStatusMessage): IngestProgress {
 export class LiveAgentClient {
   private socket: WebSocket | null = null;
   private closed = false;
+  private rejectConnection?: (error: Error) => void;
+  private connectTimer: ReturnType<typeof setTimeout> | undefined;
+  private removeAbortListener?: () => void;
   private unsubscribeBuffer?: () => void;
   private updateTimer: ReturnType<typeof setTimeout> | undefined;
   private pendingUpdate = false;
@@ -89,6 +94,14 @@ export class LiveAgentClient {
 
   connect(): Promise<void> {
     return new Promise((resolve, reject) => {
+      if (this.closed || this.socket) {
+        reject(new Error("Live client cannot be connected twice"));
+        return;
+      }
+      if (this.options.signal?.aborted) {
+        reject(new DOMException("Live connection aborted", "AbortError"));
+        return;
+      }
       this.options.onProgress?.({
         phase: "opening",
         message: `Connecting to ${this.url}`,
@@ -97,8 +110,26 @@ export class LiveAgentClient {
       const socket = new WebSocket(this.url);
       this.socket = socket;
       let settled = false;
+      const fail = (error: Error) => {
+        if (settled) return;
+        settled = true;
+        this.clearConnectionPending();
+        reject(error);
+        this.disconnect();
+      };
+      this.rejectConnection = fail;
+      const abort = () => {
+        if (!settled) fail(new DOMException("Live connection aborted", "AbortError"));
+        else this.disconnect();
+      };
+      this.options.signal?.addEventListener("abort", abort, { once: true });
+      this.removeAbortListener = () => this.options.signal?.removeEventListener("abort", abort);
+      this.connectTimer = setTimeout(() => {
+        fail(new Error("Timed out waiting for the live agent session handshake"));
+      }, this.options.connectTimeoutMs ?? 10_000);
 
       socket.addEventListener("open", () => {
+        if (this.closed) return;
         this.options.onProgress?.({
           phase: "opening",
           message: "WebSocket connected — waiting for agent…",
@@ -106,7 +137,7 @@ export class LiveAgentClient {
       });
 
       socket.addEventListener("message", (event) => {
-        if (typeof event.data !== "string") {
+        if (this.closed || typeof event.data !== "string") {
           return;
         }
 
@@ -118,7 +149,7 @@ export class LiveAgentClient {
         switch (message.type) {
           case "session":
             if (message.protocol !== LIVE_PROTOCOL_VERSION) {
-              reject(new Error(`Unsupported live protocol: ${message.protocol}`));
+              fail(new Error(`Unsupported live protocol: ${message.protocol}`));
               return;
             }
             this.publishTopics = message.capabilities?.command_publish ?? [];
@@ -133,16 +164,17 @@ export class LiveAgentClient {
             });
             if (!settled) {
               settled = true;
+              this.clearConnectionPending();
               resolve();
             }
             break;
           case "channel":
             this.buffer.registerChannel(message.channel);
-            void this.recordChannel(message.channel);
+            void this.recordChannel(message.channel).catch((error: unknown) => this.reportRecordingError(error));
             break;
           case "message":
-            this.buffer.ingest(message);
-            void this.recordMessage(message);
+            if (!this.buffer.ingest(message)) break;
+            void this.recordMessage(message).catch((error: unknown) => this.reportRecordingError(error));
             this.scheduleSessionUpdate();
             break;
           case "status":
@@ -150,8 +182,7 @@ export class LiveAgentClient {
             break;
           case "error":
             if (!settled) {
-              settled = true;
-              reject(new Error(message.message));
+              fail(new Error(message.message));
             } else {
               this.options.onProgress?.({ phase: "error", message: message.message });
             }
@@ -214,43 +245,47 @@ export class LiveAgentClient {
       });
 
       socket.addEventListener("error", () => {
-        if (!settled) {
-          settled = true;
-          reject(new Error(`WebSocket error connecting to ${this.url}`));
-        }
+        if (!settled) fail(new Error(`WebSocket error connecting to ${this.url}`));
+        else if (!this.closed) this.options.onProgress?.({ phase: "error", message: "Live WebSocket error" });
       });
 
       socket.addEventListener("close", () => {
         if (!settled) {
-          settled = true;
-          reject(new Error("Live agent closed before ready"));
+          fail(new Error("Live agent closed before ready"));
         }
         if (!this.closed) {
           this.options.onProgress?.({ phase: "disconnected", message: "Live agent disconnected" });
+          this.disconnect();
         }
       });
 
       this.unsubscribeBuffer = this.buffer.onUpdate(() => this.scheduleSessionUpdate());
 
-      setTimeout(() => {
-        if (!settled && socket.readyState === WebSocket.OPEN) {
-          settled = true;
-          this.options.onProgress?.({
-            phase: "ready",
-            percent: 100,
-            message: "Live stream connected",
-          });
-          resolve();
-        }
-      }, 3000);
+    });
+  }
+
+  private clearConnectionPending(): void {
+    clearTimeout(this.connectTimer);
+    this.connectTimer = undefined;
+    this.rejectConnection = undefined;
+  }
+
+  private reportRecordingError(error: unknown): void {
+    if (!this.closed) this.options.onProgress?.({
+      phase: "error", message: `Live recording failed: ${error instanceof Error ? error.message : String(error)}`,
     });
   }
 
   disconnect(): void {
+    if (this.closed) return;
     this.closed = true;
+    this.rejectConnection?.(new Error("Live agent disconnected before ready"));
+    this.clearConnectionPending();
+    this.removeAbortListener?.();
     if (this.updateTimer) {
       clearTimeout(this.updateTimer);
     }
+    this.pendingUpdate = false;
     this.clearPublishPending(new Error("Live agent disconnected"));
     this.clearServicePending(new Error("Live agent disconnected"));
     this.clearActionPending(new Error("Live agent disconnected"));
@@ -459,7 +494,7 @@ export class LiveAgentClient {
   }
 
   private scheduleSessionUpdate(): void {
-    if (this.pendingUpdate) {
+    if (this.closed || this.pendingUpdate) {
       return;
     }
     this.pendingUpdate = true;

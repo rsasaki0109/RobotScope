@@ -1,6 +1,6 @@
 import type { RawMessage } from "../query.js";
 
-const DEFAULT_MAX_MESSAGES_PER_TOPIC = 512;
+export const DEFAULT_MAX_MESSAGES_PER_TOPIC = 512;
 
 export class LiveMessageStore {
   private readonly byTopic = new Map<string, RawMessage[]>();
@@ -12,7 +12,16 @@ export class LiveMessageStore {
       this.byTopic.set(message.topic, entries);
     }
 
-    entries.push(message);
+    // Networks and replay loops can deliver messages out of timestamp order.
+    // findNearest uses binary search, so keep the bounded window sorted.
+    let lo = 0;
+    let hi = entries.length;
+    while (lo < hi) {
+      const mid = (lo + hi) >> 1;
+      if (entries[mid]!.log_time_ns <= message.log_time_ns) lo = mid + 1;
+      else hi = mid;
+    }
+    entries.splice(lo, 0, message);
 
     if (entries.length > maxPerTopic) {
       entries.splice(0, entries.length - maxPerTopic);
@@ -77,5 +86,9 @@ export class LiveMessageStore {
       count += entries.length;
     }
     return count;
+  }
+
+  clear(): void {
+    this.byTopic.clear();
   }
 }

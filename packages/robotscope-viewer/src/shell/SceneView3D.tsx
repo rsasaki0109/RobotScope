@@ -7,7 +7,7 @@ import { createRobotSceneController } from "../scene/robot-scene";
 import { useViewerStore } from "../store/viewer-store";
 import styles from "./SceneView3D.module.css";
 
-export function SceneView3D() {
+export function SceneView3D({ incident = false }: { incident?: boolean }) {
   const containerRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const controllerRef = useRef<ReturnType<typeof createRobotSceneController> | null>(null);
@@ -19,6 +19,18 @@ export function SceneView3D() {
   const sceneLoading = useViewerStore((s) => s.sceneLoading);
 
   const mergedSnapshot = useMemo(() => {
+    // Keep the incident replay focused on its planning context. Other demo
+    // stacks' occupancy maps and goals obscure this scene.
+    if (incident && sceneSnapshot) {
+      return {
+        ...sceneSnapshot,
+        occupancy_grids: [],
+        poses: sceneSnapshot.poses.filter((pose) => pose.topic.startsWith("/localization/")),
+        trajectories: sceneSnapshot.trajectories.filter((path) =>
+          path.topic.startsWith("/planning/") || path.archetype === "Lanelet2",
+        ),
+      };
+    }
     if (!sceneSnapshot || !laneletOsmOverlay) {
       return sceneSnapshot;
     }
@@ -29,7 +41,7 @@ export function SceneView3D() {
         ...laneletOsmToSceneTrajectories(laneletOsmOverlay),
       ],
     };
-  }, [sceneSnapshot, laneletOsmOverlay]);
+  }, [sceneSnapshot, laneletOsmOverlay, incident]);
 
   useEffect(() => {
     const container = containerRef.current;
@@ -39,7 +51,7 @@ export function SceneView3D() {
     const renderer = new WebGLRenderer({ canvas, antialias: true });
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
 
-    const controller = createRobotSceneController(canvas, renderer);
+    const controller = createRobotSceneController(canvas, renderer, { zUp: incident });
     controllerRef.current = controller;
 
     const resize = () => {
@@ -66,7 +78,7 @@ export function SceneView3D() {
       renderer.dispose();
       controllerRef.current = null;
     };
-  }, []);
+  }, [incident]);
 
   useEffect(() => {
     controllerRef.current?.updateScene(mergedSnapshot);
@@ -82,15 +94,15 @@ export function SceneView3D() {
   ];
 
   return (
-    <div className={styles.view} ref={containerRef}>
+    <div className={styles.view} ref={containerRef} data-scene-ready={Boolean(mergedSnapshot && !sceneLoading)}>
       <canvas ref={canvasRef} className={styles.canvas} />
-      <div className={styles.overlay}>
+      {!incident && <div className={styles.overlay}>
         <span>Fixed frame: {fixedFrame}</span>
         <span>{session ? "MCAP loaded" : "No data — open MCAP"}</span>
-      </div>
-      <div className={styles.hud}>
+      </div>}
+      {!incident && <div className={styles.hud}>
         {sceneLoading ? "Updating scene…" : hudParts.join(" · ")}
-      </div>
+      </div>}
     </div>
   );
 }

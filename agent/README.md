@@ -13,7 +13,18 @@ ROS2 live bridge for RobotScope. Streams topics to the viewer over WebSocket (`r
 
 ## Native ROS 2 agent
 
-Requires ROS 2 **Humble** or **Jazzy** with `rclpy` and `python3-websockets`.
+Requires ROS 2 **Humble** or **Jazzy** with `rclpy` and `websockets>=12.0` (see `setup.py`). Ubuntu 22.04's `python3-websockets` is 9.1 and is incompatible with Python 3.10; installing that distro package alone is insufficient.
+
+Use the ROS distro's system Python in a virtual environment that can see its ROS packages:
+
+```bash
+source /opt/ros/humble/setup.bash # or /opt/ros/jazzy/setup.bash
+/usr/bin/python3 -m venv --system-site-packages .cache/ros2-venv
+source .cache/ros2-venv/bin/activate
+python -m pip install 'websockets==12.0' # verified native integration version
+```
+
+The system Python must provide `venv` (Ubuntu package `python3-venv`). Keep this virtual environment active when running the commands below. The replay demo does not need it.
 
 ```bash
 cd RobotScope
@@ -98,3 +109,7 @@ node scripts/write-sidecar.mjs recording.mcap
 ## Security
 
 Publish / service / action gateways are **disabled** in v0.1 (read-only observability). v0.8 alpha adds opt-in **`--allow-publish`** for live agents — see [docs/command-gateway.md](RobotScope/docs/command-gateway.md).
+
+## Native integration test
+
+From the repository root, `npm run test:ros2` builds a pinned official ROS Humble image and tests actual `rclpy`/DDS topic discovery after connection, CDR payload delivery through the WebSocket gateway, and default denial of publish/service/action commands. The test container runs with external networking disabled and ROS domain 187; it does not connect to a robot. Building the image downloads signed Ubuntu packages and the pinned WebSocket package.

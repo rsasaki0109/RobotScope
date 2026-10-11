@@ -20,6 +20,15 @@ export class LiveMcapRecorder {
   private start_ns = 0;
   private end_ns = 0;
   private hasBounds = false;
+  private pendingWrite: Promise<void> = Promise.resolve();
+
+  private enqueue(operation: () => Promise<void>): Promise<void> {
+    this.pendingWrite = this.pendingWrite.then(operation);
+    // Preserve a failed queue for finish() while avoiding an unhandled rejection
+    // when a caller relies on finish() to report write failures.
+    void this.pendingWrite.catch(() => {});
+    return this.pendingWrite;
+  }
 
   constructor() {
     this.writer = new McapWriter({ writable: this.buffer });
@@ -44,68 +53,71 @@ export class LiveMcapRecorder {
     this.active = true;
   }
 
-  async registerChannel(channel: LiveChannelDefinition): Promise<void> {
+  registerChannel(channel: LiveChannelDefinition): Promise<void> {
     if (!this.active || this.finished || this.channelIds.has(channel.id)) {
-      return;
+      return Promise.resolve();
     }
+    return this.enqueue(async () => {
+      if (this.channelIds.has(channel.id)) return;
+      let schemaId = this.schemaIds.get(channel.id);
+      if (schemaId == null) {
+        schemaId = await this.writer.registerSchema({
+          name: channel.schema,
+          encoding: channel.encoding,
+          data: new TextEncoder().encode(channel.definition),
+        });
+        this.schemaIds.set(channel.id, schemaId);
+      }
 
-    let schemaId = this.schemaIds.get(channel.id);
-    if (schemaId == null) {
-      schemaId = await this.writer.registerSchema({
-        name: channel.schema,
-        encoding: channel.encoding,
-        data: new TextEncoder().encode(channel.definition),
+      const channelId = await this.writer.registerChannel({
+        topic: channel.topic,
+        messageEncoding: channel.message_encoding ?? "cdr",
+        schemaId,
+        metadata: new Map(Object.entries(channel.metadata ?? {})),
       });
-      this.schemaIds.set(channel.id, schemaId);
-    }
-
-    const channelId = await this.writer.registerChannel({
-      topic: channel.topic,
-      messageEncoding: "cdr",
-      schemaId,
-      metadata: new Map(),
+      this.channelIds.set(channel.id, channelId);
+      this.channelMeta.set(channel.id, { topic: channel.topic, schema: channel.schema });
+      this.topicIndex.registerChannel(channel.topic, channelId, channel.schema);
     });
-    this.channelIds.set(channel.id, channelId);
-    this.channelMeta.set(channel.id, { topic: channel.topic, schema: channel.schema });
-    this.topicIndex.registerChannel(channel.topic, channelId, channel.schema);
   }
 
-  async writeMessage(message: LiveDataMessage): Promise<void> {
+  writeMessage(message: LiveDataMessage): Promise<void> {
     if (!this.active || this.finished) {
-      return;
+      return Promise.resolve();
     }
+    return this.enqueue(async () => {
+      const channelId = this.channelIds.get(message.channel_id);
+      const meta = this.channelMeta.get(message.channel_id);
+      if (channelId == null || !meta) {
+        return;
+      }
 
-    const channelId = this.channelIds.get(message.channel_id);
-    const meta = this.channelMeta.get(message.channel_id);
-    if (channelId == null || !meta) {
-      return;
-    }
+      const sequence = message.sequence ?? this.sequences.get(message.channel_id) ?? 0;
+      this.sequences.set(message.channel_id, sequence + 1);
 
-    const sequence = message.sequence ?? this.sequences.get(message.channel_id) ?? 0;
-    this.sequences.set(message.channel_id, sequence + 1);
+      if (!this.hasBounds) {
+        this.start_ns = message.log_time_ns;
+        this.end_ns = message.log_time_ns;
+        this.hasBounds = true;
+      } else {
+        this.start_ns = Math.min(this.start_ns, message.log_time_ns);
+        this.end_ns = Math.max(this.end_ns, message.log_time_ns);
+      }
 
-    if (!this.hasBounds) {
-      this.start_ns = message.log_time_ns;
-      this.end_ns = message.log_time_ns;
-      this.hasBounds = true;
-    } else {
-      this.start_ns = Math.min(this.start_ns, message.log_time_ns);
-      this.end_ns = Math.max(this.end_ns, message.log_time_ns);
-    }
+      this.topicIndex.add(meta.topic, channelId, meta.schema, {
+        log_time_ns: message.log_time_ns,
+        sequence: message.sequence,
+      });
 
-    this.topicIndex.add(meta.topic, channelId, meta.schema, {
-      log_time_ns: message.log_time_ns,
-      sequence: message.sequence,
+      await this.writer.addMessage({
+        channelId,
+        sequence,
+        logTime: BigInt(message.log_time_ns),
+        publishTime: BigInt(message.publish_time_ns ?? message.log_time_ns),
+        data: decodeBase64Payload(message.data_b64),
+      });
+      this.recordedMessages += 1;
     });
-
-    await this.writer.addMessage({
-      channelId,
-      sequence,
-      logTime: BigInt(message.log_time_ns),
-      publishTime: BigInt(message.publish_time_ns ?? message.log_time_ns),
-      data: decodeBase64Payload(message.data_b64),
-    });
-    this.recordedMessages += 1;
   }
 
   async finish(filenamePrefix = "robotscope-live"): Promise<LiveRecordingResult> {
@@ -113,12 +125,14 @@ export class LiveMcapRecorder {
       throw new Error("Live recording already finalized");
     }
 
-    if (this.active) {
-      await this.writer.end();
-    }
-
+    const wasActive = this.active;
     this.active = false;
     this.finished = true;
+    // Drain all accepted messages before writing indexes and the MCAP footer.
+    await this.pendingWrite;
+    if (wasActive) {
+      await this.writer.end();
+    }
     this.topicIndex.finalize();
 
     const stamp = new Date().toISOString().replace(/[:.]/g, "-");

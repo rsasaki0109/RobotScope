@@ -44,7 +44,8 @@ export async function loadSidecarFromCache(
     return null;
   }
 
-  const db = await openDb();
+  let db: IDBDatabase;
+  try { db = await openDb(); } catch { return null; }
   try {
     return await new Promise<SidecarManifest | null>((resolve, reject) => {
       const tx = db.transaction(STORE_NAME, "readonly");
@@ -60,6 +61,9 @@ export async function loadSidecarFromCache(
       };
       request.onerror = () => reject(request.error);
     });
+  } catch {
+    // Browser storage is an optional acceleration, never a playback prerequisite.
+    return null;
   } finally {
     db.close();
   }
@@ -73,7 +77,8 @@ export async function saveSidecarToCache(
     return;
   }
 
-  const db = await openDb();
+  let db: IDBDatabase;
+  try { db = await openDb(); } catch { return; }
   try {
     await new Promise<void>((resolve, reject) => {
       const tx = db.transaction(STORE_NAME, "readwrite");
@@ -81,7 +86,10 @@ export async function saveSidecarToCache(
       store.put(serializeSidecarManifest(manifest), cacheKey(fingerprint));
       tx.oncomplete = () => resolve();
       tx.onerror = () => reject(tx.error);
+      tx.onabort = () => reject(tx.error ?? new Error("Sidecar cache write aborted"));
     });
+  } catch {
+    // Quota limits or private browsing must not prevent opening a recording.
   } finally {
     db.close();
   }

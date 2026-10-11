@@ -24,7 +24,8 @@ import {
   numericValueAtPath,
   type NumericPoint,
 } from "../numeric-series.js";
-import { decodeRos2Message, type SchemaInfo } from "../ros2/decoder.js";
+import type { SchemaInfo } from "../ros2/decoder.js";
+import { decodeMessage } from "../data/message-decoder.js";
 import {
   buildSceneSnapshot,
   type SceneBuildOptions,
@@ -76,12 +77,13 @@ export class McapQueryEngineImpl implements McapQueryEngine {
     options: McapEngineCreateOptions = {},
   ): Promise<McapQueryEngineImpl> {
     const mappedTopics = mapTopics(
-      session.topics.map((topic) => ({ name: topic.name, schema: topic.schema })),
+      session.topics,
     );
 
     const useCachedSidecar =
       options.sidecar &&
       options.fingerprint &&
+      (options.sidecar.recording_source === undefined || options.sidecar.recording_source === "mcap") &&
       validateSidecarFingerprint(options.sidecar, options.fingerprint);
 
     let tfBuffer: TfBuffer;
@@ -217,7 +219,7 @@ export class McapQueryEngineImpl implements McapQueryEngine {
   }
 
   async getRawMessageNearTime(topic: string, time_ns: number): Promise<RawMessage | null> {
-    const cacheKey = `${topic}@${Math.floor(time_ns / 1_000_000)}`;
+    const cacheKey = `${topic}@${time_ns}`;
     const cached = this.rawMessageCache.get(cacheKey);
     if (cached && cached.topic === topic) {
       return cached;
@@ -234,14 +236,10 @@ export class McapQueryEngineImpl implements McapQueryEngine {
     }
 
     const schemaRecord = this.reader.schemasById.get(channel.schemaId);
-    if (!schemaRecord) {
-      return null;
-    }
-
     const schema: SchemaInfo = {
-      name: schemaRecord.name,
-      encoding: schemaRecord.encoding,
-      data: schemaRecord.data,
+      name: schemaRecord?.name ?? "unknown",
+      encoding: schemaRecord?.encoding ?? "",
+      data: schemaRecord?.data ?? new Uint8Array(),
     };
 
     const target = BigInt(nearest.log_time_ns);
@@ -252,10 +250,11 @@ export class McapQueryEngineImpl implements McapQueryEngine {
       startTime: target,
       endTime: target + 1n,
     })) {
-      const decoded = decodeRos2Message(schema, message.data);
+      const decoded = decodeMessage(schema, message.data, channel.messageEncoding);
       best = {
         topic,
         schema: schema.name,
+        message_encoding: channel.messageEncoding,
         log_time_ns: Number(message.logTime),
         publish_time_ns: message.publishTime ? Number(message.publishTime) : undefined,
         sequence: message.sequence,
@@ -297,14 +296,14 @@ export class McapQueryEngineImpl implements McapQueryEngine {
 
     const channel = [...this.reader.channelsById.values()].find((c) => c.topic === topic);
     const schemaRecord = channel ? this.reader.schemasById.get(channel.schemaId) : undefined;
-    if (!channel || !schemaRecord || !fieldPath) {
+    if (!channel || !fieldPath) {
       return this.cacheNumericSeries(cacheKey, downsampleNumericPoints([], pointLimit));
     }
 
     const schema: SchemaInfo = {
-      name: schemaRecord.name,
-      encoding: schemaRecord.encoding,
-      data: schemaRecord.data,
+      name: schemaRecord?.name ?? "unknown",
+      encoding: schemaRecord?.encoding ?? "",
+      data: schemaRecord?.data ?? new Uint8Array(),
     };
 
     const points: NumericPoint[] = [];
@@ -313,7 +312,7 @@ export class McapQueryEngineImpl implements McapQueryEngine {
       startTime: BigInt(Math.floor(startNs)),
       endTime: BigInt(Math.ceil(endNs)),
     })) {
-      const decoded = decodeRos2Message(schema, message.data);
+      const decoded = decodeMessage(schema, message.data, channel.messageEncoding);
       if (!decoded.value) {
         continue;
       }

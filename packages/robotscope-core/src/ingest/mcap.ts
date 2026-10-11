@@ -1,4 +1,5 @@
 import { McapIndexedReader, TempBuffer } from "@mcap/core";
+import { loadDecompressHandlers } from "@mcap/support";
 
 import type {
   FileFingerprint,
@@ -25,6 +26,7 @@ export async function openMcap(
 
   const reader = await McapIndexedReader.Initialize({
     readable: new TempBuffer(buffer),
+    decompressHandlers: await loadDecompressHandlers(),
   });
 
   options.onProgress?.({ phase: "indexing", percent: 15, message: "Listing topics" });
@@ -83,6 +85,8 @@ function collectTopics(reader: McapIndexedReader): TopicInfo[] {
     byChannel.set(channel.id, {
       name: channel.topic,
       schema: schema?.name ?? "unknown",
+      message_encoding: channel.messageEncoding,
+      metadata: Object.fromEntries(channel.metadata),
       message_count: reader.statistics?.channelMessageCounts.get(channel.id)
         ? Number(reader.statistics.channelMessageCounts.get(channel.id))
         : undefined,

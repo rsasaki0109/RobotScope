@@ -14,7 +14,7 @@ const VIEWER = path.join(ROOT, "packages/robotscope-viewer");
 const OUT_DIR = path.join(ROOT, "docs/assets");
 const VIEWPORT = { width: 1280, height: 720 };
 const SOCIAL_VIEWPORT = { width: 1200, height: 630 };
-const FPS = 8;
+const FPS = 20;
 const DURATION_SECONDS = 10;
 const GIF_LIMIT_BYTES = 3 * 1024 * 1024;
 
@@ -143,6 +143,23 @@ async function setShowcaseTime(client, elapsedMs) {
   await client.send("Runtime.evaluate", {
     expression: `window.dispatchEvent(new CustomEvent("robotscope:showcase-time", { detail: ${elapsedMs} }))`,
   });
+  const startedAt = Date.now();
+  while (Date.now() - startedAt < 10_000) {
+    const result = await client.send("Runtime.evaluate", {
+      expression: `document.querySelector('[data-showcase-time="${elapsedMs}"][data-showcase-scene-ready="true"]') !== null && document.querySelector('[data-scene-ready="true"]') !== null`,
+      returnByValue: true,
+    });
+    if (result.result?.value === true) {
+      // Let the React effects and WebGL renderer paint the selected snapshot.
+      await client.send("Runtime.evaluate", {
+        expression: "new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)))",
+        awaitPromise: true,
+      });
+      return;
+    }
+    await delay(25);
+  }
+  throw new Error(`Scene did not settle at showcase time ${elapsedMs}ms`);
 }
 
 async function screenshot(client, outputPath) {
@@ -170,7 +187,7 @@ function encodeAssets(framesDir) {
     "-y", "-hide_banner", "-loglevel", "warning",
     "-framerate", String(FPS), "-i", input,
     "-filter_complex",
-    "scale=920:-2:flags=lanczos,split[s0][s1];[s0]palettegen=max_colors=96:stats_mode=diff[p];[s1][p]paletteuse=dither=bayer:bayer_scale=5:diff_mode=rectangle",
+    "scale=920:-2:flags=lanczos,split[s0][s1];[s0]palettegen=max_colors=192:stats_mode=diff[p];[s1][p]paletteuse=dither=bayer:bayer_scale=4:diff_mode=rectangle",
     gif,
   ], { stdio: "inherit" });
 
@@ -234,19 +251,22 @@ async function main() {
       url: `${baseUrl}?showcase=phantom-stop&capture=1`,
     });
     await waitForShowcase(client);
+    await client.send("Runtime.evaluate", {
+      expression: "document.fonts.ready",
+      awaitPromise: true,
+    });
 
     const frameCount = FPS * DURATION_SECONDS;
     for (let index = 0; index < frameCount; index += 1) {
       await setShowcaseTime(client, (index / FPS) * 1000);
-      await delay(180);
       await screenshot(client, path.join(framesDir, `frame-${String(index).padStart(3, "0")}.png`));
       if ((index + 1) % FPS === 0) process.stdout.write(`Captured ${(index + 1) / FPS}s / ${DURATION_SECONDS}s\n`);
     }
 
-    await setViewport(client, VIEWPORT);
-    await setShowcaseTime(client, 6_200);
-    await delay(350);
-    await screenshot(client, path.join(OUT_DIR, "readme-hero.png"));
+    fs.copyFileSync(
+      path.join(framesDir, `frame-${String(Math.round(FPS * 4.5)).padStart(3, "0")}.png`),
+      path.join(OUT_DIR, "readme-hero.png"),
+    );
 
     await setViewport(client, SOCIAL_VIEWPORT);
     await setShowcaseTime(client, 8_600);

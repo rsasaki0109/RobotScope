@@ -21,6 +21,7 @@
     "@robotscope/plugin-moveit": "*",
     "@robotscope/plugin-nav2": "*",
     "@robotscope/plugin-timeseries": "*",
+    "buffer": "^6.0.3",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "three": "^0.172.0",

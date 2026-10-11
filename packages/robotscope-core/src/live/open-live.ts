@@ -6,6 +6,9 @@ import type { LiveIngestStats } from "./ingest-buffer.js";
 import { LiveQueryEngineImpl } from "./live-query-engine.js";
 
 export interface LiveOpenOptions {
+  signal?: AbortSignal;
+  /** Maximum time to receive a valid session handshake (default: 10 seconds). */
+  connectTimeoutMs?: number;
   onProgress?: (progress: IngestProgress) => void;
   onSessionUpdate?: (
     bounds: TimeRange,
@@ -19,13 +22,20 @@ export async function openLive(url: string, options: LiveOpenOptions = {}): Prom
   const buffer = new LiveIngestBuffer();
   const engine = new LiveQueryEngineImpl(buffer);
   const client = new LiveAgentClient(url, buffer, engine, {
+    signal: options.signal,
+    connectTimeoutMs: options.connectTimeoutMs,
     onProgress: options.onProgress,
     onSessionUpdate: (bounds, stats, liveEngine) => {
       options.onSessionUpdate?.(bounds, stats, liveEngine);
     },
     onActionProgress: options.onActionProgress,
   });
-  await client.connect();
+  try {
+    await client.connect();
+  } catch (error) {
+    client.disconnect();
+    throw error;
+  }
 
   return {
     engine,

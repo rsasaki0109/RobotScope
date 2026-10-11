@@ -1,5 +1,6 @@
 import type { ArchetypeName, Entity, EntityKind } from "../rdm.js";
 import { EntityPaths } from "../entity-paths.js";
+import { JSON_SCHEMAS } from "../data/json-recording.js";
 
 export interface TopicMappingRule {
   id: string;
@@ -180,7 +181,22 @@ const RULES: TopicMappingRule[] = [
   },
 ];
 
-export function mapTopic(topic: string, schema: string): MappedTopic | undefined {
+export function mapTopic(topic: string, schema: string, metadata?: Record<string, string>): MappedTopic | undefined {
+  const path = metadata?.["robotscope.entity_path"];
+  const archetype = metadata?.["robotscope.archetype"];
+  const kind = metadata?.["robotscope.kind"];
+  const types: Record<string, ArchetypeName> = {
+    [JSON_SCHEMAS.Scalar]: "Observation", [JSON_SCHEMAS.Pose]: "Pose",
+    [JSON_SCHEMAS.Observation]: "Observation",
+    [JSON_SCHEMAS.Image]: "Image", [JSON_SCHEMAS.PointCloud]: "PointCloud",
+    [JSON_SCHEMAS.Trajectory]: "Trajectory", [JSON_SCHEMAS.Transform]: "TF",
+  };
+  if (path && /^\/(?:[A-Za-z0-9_.-]+\/)*[A-Za-z0-9_.-]+$/.test(path) &&
+      !path.split("/").some((part) => part === "." || part === "..") &&
+      types[schema] !== undefined && archetype === types[schema] && kind &&
+      ["world", "robot", "sensor", "policy", "world_model", "annotation", "system"].includes(kind)) {
+    return { topic, schema, entity_path: path, archetype: types[schema]!, kind: kind as EntityKind, rule_id: "channel.metadata" };
+  }
   for (const rule of RULES) {
     if (!rule.topicPattern.test(topic)) {
       continue;
@@ -206,10 +222,10 @@ export function mapTopic(topic: string, schema: string): MappedTopic | undefined
 }
 
 export function mapTopics(
-  topics: Array<{ name: string; schema: string }>,
+  topics: Array<{ name: string; schema: string; metadata?: Record<string, string> }>,
 ): MappedTopic[] {
   return topics
-    .map((t) => mapTopic(t.name, t.schema))
+    .map((t) => mapTopic(t.name, t.schema, t.metadata))
     .filter((m): m is MappedTopic => m != null)
     .sort((a, b) => a.entity_path.localeCompare(b.entity_path));
 }

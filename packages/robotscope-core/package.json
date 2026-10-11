@@ -23,6 +23,7 @@
     "@foxglove/rosmsg-msgs-common": "^3.2.3",
     "@foxglove/rosmsg2-serialization": "^3.1.2",
     "@mcap/core": "^2.1.7",
+    "@mcap/support": "^1.1.0",
     "sql.js": "^1.12.0"
   },
   "devDependencies": {

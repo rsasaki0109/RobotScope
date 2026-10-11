@@ -37,6 +37,7 @@ import {
   mergeRecipeMarkers,
 } from "../failure-recipes/index-recipes.js";
 import { RECIPE_SAMPLE_STEP_NS } from "../failure-recipes/types.js";
+import { SessionOperations } from "./session-operations";
 
 export type LiveConnectionPhase =
   | "idle"
@@ -255,6 +256,13 @@ const initialState = {
 
 let refreshTimer: ReturnType<typeof setTimeout> | undefined;
 let refreshRequestId = 0;
+const sessionOperations = new SessionOperations();
+
+function beginSessionOperation() {
+  clearTimeout(refreshTimer);
+  refreshRequestId += 1;
+  return sessionOperations.begin();
+}
 
 async function loadFailureRecipeIndex(
   ingest: IngestHandle,
@@ -331,163 +339,204 @@ export const useViewerStore = create<ViewerState>((set, get) => ({
   ...initialState,
 
   async openMcapFile(file, options) {
-    set({ statusMessage: `Opening ${file.name}…`, inspectLoading: true, sceneLoading: true });
+    const operation = beginSessionOperation();
+    try {
+      set({ statusMessage: `Opening ${file.name}…`, inspectLoading: true, sceneLoading: true });
 
-    const previous = get().ingest;
-    if (previous) {
-      await previous.close();
-    }
-
-    const buffer = await file.arrayBuffer();
-    const fingerprint = fileFingerprint(file);
-    const cached = options?.sidecar ?? (await loadSidecarFromCache(fingerprint));
-    const sidecar =
-      cached && validateSidecarFingerprint(cached, fingerprint) ? cached : undefined;
-
-    const { isRosbag2Filename, openMcap } = await import("@robotscope/core");
-    const isRosbag2 = isRosbag2Filename(file.name);
-    const handle = isRosbag2
-      ? await (
-          await import("@robotscope/core/ingest/rosbag2")
-        ).openRosbag2(buffer, {
-          sidecar,
-          fingerprint,
-          onProgress: (p: IngestProgress) =>
-            set({
-              statusMessage: p.message ?? `${p.phase}${p.percent != null ? ` (${p.percent}%)` : ""}`,
-            }),
-        })
-      : await openMcap(buffer, {
-          sidecar,
-          fingerprint,
-          onProgress: (p: IngestProgress) =>
-            set({
-              statusMessage: p.message ?? `${p.phase}${p.percent != null ? ` (${p.percent}%)` : ""}`,
-            }),
-        });
-
-    if (isMcapQueryEngine(handle.engine)) {
-      await saveSidecarToCache(fingerprint, handle.engine.getSidecarManifest());
-    }
-
-    const session = await handle.engine.getSessionInfo();
-    const bounds = await handle.engine.getTimelineBounds();
-    const mappedTopics = isMcapQueryEngine(handle.engine)
-      ? handle.engine.getMappedTopics()
-      : [];
-
-    const nextState = {
-      ingest: handle,
-      session,
-      topics: session.topics,
-      mappedTopics,
-      currentTimeNs: bounds.start_ns,
-      liveConnection: idleLiveConnection,
-      statusMessage: `Loaded ${file.name} (${session.source}) — ${session.topics.length} topics, ${mappedTopics.length} mapped entities, ${session.tf_transform_count ?? 0} TF transforms${session.sidecar_message_count ? " · sidecar" : ""}`,
-    };
-
-    set(nextState);
-    set(await loadViewerData({ ...get(), ...nextState }));
-
-    void (async () => {
-      set({ recipeMarkers: [], liveActiveRecipes: [], recipeIndexLoading: true });
-      try {
-        const markers = await loadFailureRecipeIndex(handle, session, (message) => {
-          set({ statusMessage: message });
-        });
-        set({
-          recipeMarkers: markers,
-          recipeIndexLoading: false,
-          statusMessage: `Loaded ${file.name} — ${session.topics.length} topics, ${markers.length} failure recipe markers${session.sidecar_message_count ? " · sidecar" : ""}`,
-        });
-      } catch {
-        set({ recipeIndexLoading: false });
+      const previous = get().ingest;
+      if (previous) {
+        await previous.close();
       }
-    })();
+      if (!operation.isCurrent()) return;
+
+      const buffer = await file.arrayBuffer();
+      const fingerprint = fileFingerprint(file);
+      const cached = options?.sidecar ?? (await loadSidecarFromCache(fingerprint));
+      if (!operation.isCurrent()) return;
+      const sidecar =
+        cached && validateSidecarFingerprint(cached, fingerprint) ? cached : undefined;
+
+      const { isRosbag2Filename, openMcap } = await import("@robotscope/core");
+      const isRosbag2 = isRosbag2Filename(file.name);
+      const handle = isRosbag2
+        ? await (
+            await import("@robotscope/core/ingest/rosbag2")
+          ).openRosbag2(buffer, {
+            sidecar,
+            fingerprint,
+            onProgress: (p: IngestProgress) => {
+              if (operation.isCurrent()) set({
+                statusMessage: p.message ?? `${p.phase}${p.percent != null ? ` (${p.percent}%)` : ""}`,
+              });
+            },
+          })
+        : await openMcap(buffer, {
+            sidecar,
+            fingerprint,
+            onProgress: (p: IngestProgress) => {
+              if (operation.isCurrent()) set({
+                statusMessage: p.message ?? `${p.phase}${p.percent != null ? ` (${p.percent}%)` : ""}`,
+              });
+            },
+          });
+
+      if (!operation.isCurrent()) { await handle.close(); return; }
+
+      if (isMcapQueryEngine(handle.engine)) {
+        await saveSidecarToCache(fingerprint, handle.engine.getSidecarManifest());
+      }
+
+      const session = await handle.engine.getSessionInfo();
+      const bounds = await handle.engine.getTimelineBounds();
+      const mappedTopics = isMcapQueryEngine(handle.engine)
+        ? handle.engine.getMappedTopics()
+        : [];
+      if (!operation.isCurrent()) { await handle.close(); return; }
+
+      const nextState = {
+        ingest: handle,
+        session,
+        topics: session.topics,
+        mappedTopics,
+        currentTimeNs: bounds.start_ns,
+        liveConnection: idleLiveConnection,
+        liveRecording: false,
+        isPlaying: false,
+        commandGatewayEnabled: false,
+        serviceGatewayEnabled: false,
+        actionGatewayEnabled: false,
+        statusMessage: `Loaded ${file.name} (${session.source}) — ${session.topics.length} topics, ${mappedTopics.length} mapped entities, ${session.tf_transform_count ?? 0} TF transforms${session.sidecar_message_count ? " · sidecar" : ""}`,
+      };
+
+      set(nextState);
+      const data = await loadViewerData({ ...get(), ...nextState });
+      if (!operation.isCurrent()) return;
+      set(data);
+
+      void (async () => {
+        set({ recipeMarkers: [], liveActiveRecipes: [], recipeIndexLoading: true });
+        try {
+          const markers = await loadFailureRecipeIndex(handle, session, (message) => {
+            if (operation.isCurrent()) set({ statusMessage: message });
+          });
+          if (!operation.isCurrent()) return;
+          set({
+            recipeMarkers: markers,
+            recipeIndexLoading: false,
+            statusMessage: `Loaded ${file.name} — ${session.topics.length} topics, ${markers.length} failure recipe markers${session.sidecar_message_count ? " · sidecar" : ""}`,
+          });
+        } catch {
+          if (operation.isCurrent()) set({ recipeIndexLoading: false });
+        }
+      })();
+    } catch (error) {
+      if (!operation.isCurrent()) return;
+      set({ inspectLoading: false, sceneLoading: false, statusMessage: `Recording load failed: ${error instanceof Error ? error.message : String(error)}` });
+      throw error;
+    }
   },
 
   async openRosbag2Folder(files) {
-    const fileArray = [...files];
-    const metadataFile = fileArray.find((file) => file.name.toLowerCase() === "metadata.yaml");
-    if (!metadataFile) {
-      throw new Error("Folder must contain metadata.yaml");
-    }
-
-    set({
-      statusMessage: `Opening rosbag2 folder (${metadataFile.webkitRelativePath || metadataFile.name})…`,
-      inspectLoading: true,
-      sceneLoading: true,
-    });
-
-    const previous = get().ingest;
-    if (previous) {
-      await previous.close();
-    }
-
-    const metadataYaml = await metadataFile.text();
-    const storageFiles = fileArray.filter((file) => file.name.toLowerCase().endsWith(".db3"));
-    const folderFiles = await Promise.all(
-      storageFiles.map(async (file) => ({
-        relativePath: file.webkitRelativePath || file.name,
-        data: new Uint8Array(await file.arrayBuffer()),
-      })),
-    );
-
-    const fingerprint = folderBagFingerprint(metadataFile, fileArray);
-    const cached = await loadSidecarFromCache(fingerprint);
-    const sidecar =
-      cached && validateSidecarFingerprint(cached, fingerprint) ? cached : undefined;
-
-    const handle = await (
-      await import("@robotscope/core/ingest/rosbag2")
-    ).openRosbag2Folder(metadataYaml, folderFiles, {
-      sidecar,
-      fingerprint,
-      onProgress: (p: IngestProgress) =>
-        set({
-          statusMessage: p.message ?? `${p.phase}${p.percent != null ? ` (${p.percent}%)` : ""}`,
-        }),
-    });
-
-    if (isMcapQueryEngine(handle.engine)) {
-      await saveSidecarToCache(fingerprint, handle.engine.getSidecarManifest());
-    }
-
-    const session = await handle.engine.getSessionInfo();
-    const bounds = await handle.engine.getTimelineBounds();
-    const mappedTopics = isMcapQueryEngine(handle.engine)
-      ? handle.engine.getMappedTopics()
-      : [];
-    const displayName = metadataFile.webkitRelativePath.split("/")[0] ?? metadataFile.name;
-
-    const nextState = {
-      ingest: handle,
-      session,
-      topics: session.topics,
-      mappedTopics,
-      currentTimeNs: bounds.start_ns,
-      liveConnection: idleLiveConnection,
-      statusMessage: `Loaded ${displayName} (${session.source}) — ${session.topics.length} topics, ${mappedTopics.length} mapped entities, ${session.tf_transform_count ?? 0} TF transforms${session.sidecar_message_count ? " · sidecar" : ""}`,
-    };
-
-    set(nextState);
-    set(await loadViewerData({ ...get(), ...nextState }));
-
-    void (async () => {
-      set({ recipeMarkers: [], liveActiveRecipes: [], recipeIndexLoading: true });
-      try {
-        const markers = await loadFailureRecipeIndex(handle, session, (message) => {
-          set({ statusMessage: message });
-        });
-        set({
-          recipeMarkers: markers,
-          recipeIndexLoading: false,
-          statusMessage: `Loaded ${displayName} — ${session.topics.length} topics, ${markers.length} failure recipe markers${session.sidecar_message_count ? " · sidecar" : ""}`,
-        });
-      } catch {
-        set({ recipeIndexLoading: false });
+    const operation = beginSessionOperation();
+    try {
+      const fileArray = [...files];
+      const metadataFile = fileArray.find((file) => file.name.toLowerCase() === "metadata.yaml");
+      if (!metadataFile) {
+        throw new Error("Folder must contain metadata.yaml");
       }
-    })();
+
+      set({
+        statusMessage: `Opening rosbag2 folder (${metadataFile.webkitRelativePath || metadataFile.name})…`,
+        inspectLoading: true,
+        sceneLoading: true,
+      });
+
+      const previous = get().ingest;
+      if (previous) {
+        await previous.close();
+      }
+
+      const metadataYaml = await metadataFile.text();
+      const storageFiles = fileArray.filter((file) => file.name.toLowerCase().endsWith(".db3"));
+      const folderFiles = await Promise.all(
+        storageFiles.map(async (file) => ({
+          relativePath: file.webkitRelativePath || file.name,
+          data: new Uint8Array(await file.arrayBuffer()),
+        })),
+      );
+
+      const fingerprint = folderBagFingerprint(metadataFile, fileArray);
+      const cached = await loadSidecarFromCache(fingerprint);
+      if (!operation.isCurrent()) return;
+      const sidecar =
+        cached && validateSidecarFingerprint(cached, fingerprint) ? cached : undefined;
+
+      const handle = await (
+        await import("@robotscope/core/ingest/rosbag2")
+      ).openRosbag2Folder(metadataYaml, folderFiles, {
+        sidecar,
+        fingerprint,
+        onProgress: (p: IngestProgress) => {
+          if (operation.isCurrent()) set({
+            statusMessage: p.message ?? `${p.phase}${p.percent != null ? ` (${p.percent}%)` : ""}`,
+          });
+        },
+      });
+      if (!operation.isCurrent()) { await handle.close(); return; }
+
+      if (isMcapQueryEngine(handle.engine)) {
+        await saveSidecarToCache(fingerprint, handle.engine.getSidecarManifest());
+      }
+
+      const session = await handle.engine.getSessionInfo();
+      const bounds = await handle.engine.getTimelineBounds();
+      const mappedTopics = isMcapQueryEngine(handle.engine)
+        ? handle.engine.getMappedTopics()
+        : [];
+      const displayName = metadataFile.webkitRelativePath.split("/")[0] ?? metadataFile.name;
+      if (!operation.isCurrent()) { await handle.close(); return; }
+
+      const nextState = {
+        ingest: handle,
+        session,
+        topics: session.topics,
+        mappedTopics,
+        currentTimeNs: bounds.start_ns,
+        liveConnection: idleLiveConnection,
+        liveRecording: false,
+        isPlaying: false,
+        commandGatewayEnabled: false,
+        serviceGatewayEnabled: false,
+        actionGatewayEnabled: false,
+        statusMessage: `Loaded ${displayName} (${session.source}) — ${session.topics.length} topics, ${mappedTopics.length} mapped entities, ${session.tf_transform_count ?? 0} TF transforms${session.sidecar_message_count ? " · sidecar" : ""}`,
+      };
+
+      set(nextState);
+      const data = await loadViewerData({ ...get(), ...nextState });
+      if (!operation.isCurrent()) return;
+      set(data);
+
+      void (async () => {
+        set({ recipeMarkers: [], liveActiveRecipes: [], recipeIndexLoading: true });
+        try {
+          const markers = await loadFailureRecipeIndex(handle, session, (message) => {
+            if (operation.isCurrent()) set({ statusMessage: message });
+          });
+          if (!operation.isCurrent()) return;
+          set({
+            recipeMarkers: markers,
+            recipeIndexLoading: false,
+            statusMessage: `Loaded ${displayName} — ${session.topics.length} topics, ${markers.length} failure recipe markers${session.sidecar_message_count ? " · sidecar" : ""}`,
+          });
+        } catch {
+          if (operation.isCurrent()) set({ recipeIndexLoading: false });
+        }
+      })();
+    } catch (error) {
+      if (!operation.isCurrent()) return;
+      set({ inspectLoading: false, sceneLoading: false, statusMessage: `Recording load failed: ${error instanceof Error ? error.message : String(error)}` });
+      throw error;
+    }
   },
 
   async openLaneletOsmFile(file) {
@@ -509,179 +558,211 @@ export const useViewerStore = create<ViewerState>((set, get) => ({
   },
 
   async openMcapUrl(url, options) {
+    const operation = beginSessionOperation();
     set({ statusMessage: `Fetching ${url}…` });
-    const response = await fetch(url);
-    if (!response.ok) {
-      throw new Error(`Failed to fetch MCAP (${response.status})`);
+    let buffer: ArrayBuffer;
+    try {
+      const response = await fetch(url, { signal: operation.signal });
+      if (!response.ok) throw new Error(`Failed to fetch MCAP (${response.status})`);
+      buffer = await response.arrayBuffer();
+    } catch (error) {
+      if (!operation.isCurrent()) return;
+      set({ statusMessage: `Recording fetch failed: ${error instanceof Error ? error.message : String(error)}` });
+      throw error;
     }
-    const buffer = await response.arrayBuffer();
+    if (!operation.isCurrent()) return;
     const name = url.split("/").pop() ?? "recording.mcap";
     const file = new File([buffer], name, { type: "application/octet-stream" });
     await get().openMcapFile(file, options);
   },
 
   async connectLiveAgent(url: string) {
-    const trimmedUrl = url.trim();
-    set({
-      statusMessage: `Connecting to ${trimmedUrl}…`,
-      inspectLoading: true,
-      sceneLoading: true,
-      liveConnection: {
-        phase: "connecting",
-        url: trimmedUrl,
-        topicsSubscribed: 0,
-        topicsPending: 0,
-        message: `Connecting to ${trimmedUrl}…`,
-      },
-    });
+    const operation = beginSessionOperation();
+    try {
+      const trimmedUrl = url.trim();
+      set({
+        statusMessage: `Connecting to ${trimmedUrl}…`,
+        inspectLoading: true,
+        sceneLoading: true,
+        commandGatewayEnabled: false,
+        serviceGatewayEnabled: false,
+        actionGatewayEnabled: false,
+        liveConnection: {
+          phase: "connecting",
+          url: trimmedUrl,
+          topicsSubscribed: 0,
+          topicsPending: 0,
+          message: `Connecting to ${trimmedUrl}…`,
+        },
+      });
 
-    const previous = get().ingest;
-    if (previous) {
-      await previous.close();
-    }
+      const previous = get().ingest;
+      if (previous) {
+        await previous.close();
+      }
+      if (!operation.isCurrent()) return;
 
-    set({ recipeMarkers: [], liveActiveRecipes: [], recipeIndexLoading: false });
+      set({ recipeMarkers: [], liveActiveRecipes: [], recipeIndexLoading: false });
 
-    const { openLive } = await import("@robotscope/core");
-    const handle = await openLive(trimmedUrl, {
-      onProgress: (p: IngestProgress) => {
-        const liveConnection = liveConnectionFromProgress(trimmedUrl, p);
-        set({
-          liveConnection,
-          statusMessage: formatLiveStatusMessage(liveConnection),
-        });
-      },
-      onSessionUpdate: (bounds, stats, engine) => {
-        if (!isMcapQueryEngine(engine)) {
-          return;
-        }
-
-        void (async () => {
-          const session = await engine.getSessionInfo();
-          const mappedTopics = engine.getMappedTopics();
-          const state = get();
-          const nextTimeNs = state.liveFollowing
-            ? bounds.end_ns
-            : Math.min(bounds.end_ns, Math.max(bounds.start_ns, state.currentTimeNs));
-
-          const ingest = get().ingest;
-          const recordingSuffix =
-            state.liveRecording && ingest && isLiveIngestHandle(ingest)
-              ? ` · REC ${ingest.getRecordedMessageCount()} msgs`
-              : "";
-
-          const liveConnection: LiveConnectionState = {
-            ...state.liveConnection,
-            phase:
-              stats.message_count > 0 || session.topics.length > 0
-                ? "streaming"
-                : state.liveConnection.phase,
-            topicsSubscribed: session.topics.length,
-            message:
-              stats.message_count > 0 || session.topics.length > 0
-                ? `Live · ${stats.message_count} msgs · ${stats.tf_transform_count} TF · ${session.topics.length} topics${recordingSuffix}`
-                : state.liveConnection.message,
-          };
-
+      const { openLive } = await import("@robotscope/core");
+      const handle = await openLive(trimmedUrl, {
+        signal: operation.signal,
+        onProgress: (p: IngestProgress) => {
+          if (!operation.isCurrent()) return;
+          const liveConnection = liveConnectionFromProgress(trimmedUrl, p);
           set({
-            session,
-            topics: session.topics,
-            mappedTopics,
-            currentTimeNs: nextTimeNs,
             liveConnection,
-            statusMessage: liveConnection.message,
+            statusMessage: formatLiveStatusMessage(liveConnection),
           });
-          set(await loadViewerData({ ...get() }));
-        })();
-      },
-      onActionProgress: (update) => {
-        const state = get();
-        const nextTracking = applyLiveActionProgressUpdate(state.liveActionTracking, update);
-        let nextEvents = state.liveActionEvents;
+        },
+        onSessionUpdate: (bounds, stats, engine) => {
+          if (!operation.isCurrent() || get().ingest?.engine !== engine || !isMcapQueryEngine(engine)) {
+            return;
+          }
 
-        if (update.kind === "feedback") {
-          if (
-            shouldAppendLiveActionFeedbackEvent(nextEvents, update.action, update.sequence)
-          ) {
+          void (async () => {
+            const session = await engine.getSessionInfo();
+            if (!operation.isCurrent() || get().ingest?.engine !== engine) return;
+            const mappedTopics = engine.getMappedTopics();
+            const state = get();
+            const nextTimeNs = state.liveFollowing
+              ? bounds.end_ns
+              : Math.min(bounds.end_ns, Math.max(bounds.start_ns, state.currentTimeNs));
+
+            const ingest = get().ingest;
+            const recordingSuffix =
+              state.liveRecording && ingest && isLiveIngestHandle(ingest)
+                ? ` · REC ${ingest.getRecordedMessageCount()} msgs`
+                : "";
+
+            const liveConnection: LiveConnectionState = {
+              ...state.liveConnection,
+              phase:
+                stats.message_count > 0 || session.topics.length > 0
+                  ? "streaming"
+                  : state.liveConnection.phase,
+              topicsSubscribed: session.topics.length,
+              message:
+                stats.message_count > 0 || session.topics.length > 0
+                  ? `Live · ${stats.message_count} msgs · ${stats.tf_transform_count} TF · ${session.topics.length} topics${recordingSuffix}`
+                  : state.liveConnection.message,
+            };
+
+            set({
+              session,
+              topics: session.topics,
+              mappedTopics,
+              currentTimeNs: nextTimeNs,
+              liveConnection,
+              statusMessage: liveConnection.message,
+            });
+            const data = await loadViewerData({ ...get() });
+            if (operation.isCurrent() && get().ingest?.engine === engine) set(data);
+          })();
+        },
+        onActionProgress: (update) => {
+          if (!operation.isCurrent()) return;
+          const state = get();
+          const nextTracking = applyLiveActionProgressUpdate(state.liveActionTracking, update);
+          let nextEvents = state.liveActionEvents;
+
+          if (update.kind === "feedback") {
+            if (
+              shouldAppendLiveActionFeedbackEvent(nextEvents, update.action, update.sequence)
+            ) {
+              nextEvents = appendLiveActionEvent(nextEvents, {
+                action: update.action,
+                kind: "feedback",
+                status: "running",
+                sequence: [...update.sequence],
+              });
+            }
+          } else {
             nextEvents = appendLiveActionEvent(nextEvents, {
               action: update.action,
-              kind: "feedback",
-              status: "running",
+              kind: "outcome",
+              status: update.status,
               sequence: [...update.sequence],
+              message: update.message,
             });
           }
-        } else {
-          nextEvents = appendLiveActionEvent(nextEvents, {
-            action: update.action,
-            kind: "outcome",
-            status: update.status,
-            sequence: [...update.sequence],
-            message: update.message,
+
+          const sequenceLabel = formatFibonacciSequence(nextTracking.sequence);
+          const statusMessage =
+            update.kind === "outcome"
+              ? update.message ??
+                `Action ${update.status} on ${update.action} ${sequenceLabel}`
+              : `Action running on ${update.action} ${sequenceLabel}`;
+          set({
+            liveActionTracking: nextTracking,
+            liveActionEvents: nextEvents,
+            statusMessage,
           });
-        }
+        },
+      });
 
-        const sequenceLabel = formatFibonacciSequence(nextTracking.sequence);
-        const statusMessage =
-          update.kind === "outcome"
-            ? update.message ??
-              `Action ${update.status} on ${update.action} ${sequenceLabel}`
-            : `Action running on ${update.action} ${sequenceLabel}`;
-        set({
-          liveActionTracking: nextTracking,
-          liveActionEvents: nextEvents,
-          statusMessage,
-        });
-      },
-    });
+      if (!operation.isCurrent()) { await handle.close(); return; }
 
-    const session = await handle.engine.getSessionInfo();
-    const bounds = await handle.engine.getTimelineBounds();
-    const mappedTopics = isMcapQueryEngine(handle.engine)
-      ? handle.engine.getMappedTopics()
-      : [];
+      const session = await handle.engine.getSessionInfo();
+      const bounds = await handle.engine.getTimelineBounds();
+      const mappedTopics = isMcapQueryEngine(handle.engine)
+        ? handle.engine.getMappedTopics()
+        : [];
+      if (!operation.isCurrent()) { await handle.close(); return; }
 
-    const connection = get().liveConnection;
-    const initialConnection: LiveConnectionState =
-      session.topics.length > 0
-        ? {
-            ...connection,
-            phase: "streaming",
-            topicsSubscribed: session.topics.length,
-            message: `Connected — live agent (${session.topics.length} topics)`,
-          }
-        : {
-            ...connection,
-            phase: "waiting_for_topics",
-            topicsSubscribed: 0,
-            message: connection.message || "Waiting for ROS topics…",
-          };
+      const connection = get().liveConnection;
+      const initialConnection: LiveConnectionState =
+        session.topics.length > 0
+          ? {
+              ...connection,
+              phase: "streaming",
+              topicsSubscribed: session.topics.length,
+              message: `Connected — live agent (${session.topics.length} topics)`,
+            }
+          : {
+              ...connection,
+              phase: "waiting_for_topics",
+              topicsSubscribed: 0,
+              message: connection.message || "Waiting for ROS topics…",
+            };
 
-    const nextState = {
-      ingest: handle,
-      session,
-      topics: session.topics,
-      mappedTopics,
-      currentTimeNs: bounds.end_ns,
-      liveFollowing: true,
-      liveRecording: false,
-      isPlaying: false,
-      liveConnection: initialConnection,
-      livePublishTopics: handle.getCommandPublishTopics(),
-      liveServiceCallServices: handle.getCommandServiceCallServices(),
-      liveServiceCallSchemas: handle.getCommandServiceCallSchemas(),
-      liveActionSendGoalActions: handle.getCommandActionSendGoalActions(),
-      statusMessage: formatLiveStatusMessage(initialConnection),
-    };
+      const nextState = {
+        ingest: handle,
+        session,
+        topics: session.topics,
+        mappedTopics,
+        currentTimeNs: bounds.end_ns,
+        liveFollowing: true,
+        liveRecording: false,
+        isPlaying: false,
+        liveConnection: initialConnection,
+        livePublishTopics: handle.getCommandPublishTopics(),
+        liveServiceCallServices: handle.getCommandServiceCallServices(),
+        liveServiceCallSchemas: handle.getCommandServiceCallSchemas(),
+        liveActionSendGoalActions: handle.getCommandActionSendGoalActions(),
+        statusMessage: formatLiveStatusMessage(initialConnection),
+      };
 
-    set(nextState);
-    set(await loadViewerData({ ...get(), ...nextState }));
+      set(nextState);
+      const data = await loadViewerData({ ...get(), ...nextState });
+      if (operation.isCurrent()) set(data);
+    } catch (error) {
+      if (!operation.isCurrent()) return;
+      const message = error instanceof Error ? error.message : String(error);
+      set({ inspectLoading: false, sceneLoading: false,
+        liveConnection: { ...get().liveConnection, phase: "error", message },
+        statusMessage: `Live connect failed: ${message}` });
+      throw error;
+    }
   },
 
   async disconnectLiveAgent() {
+    const operation = beginSessionOperation();
     const ingest = get().ingest;
     if (ingest) {
       await ingest.close();
     }
+    if (!operation.isCurrent()) return;
 
     set({
       ingest: null,
@@ -1016,6 +1097,7 @@ export const useViewerStore = create<ViewerState>((set, get) => ({
       return;
     }
     await ingest.startRecording();
+    if (get().ingest !== ingest) return;
     set({
       liveRecording: true,
       statusMessage: "Recording live stream to MCAP…",
@@ -1032,6 +1114,7 @@ export const useViewerStore = create<ViewerState>((set, get) => ({
 
     const result = await ingest.stopRecording();
     await downloadLiveRecordingBundle(result);
+    if (get().ingest !== ingest) return;
     set({ liveRecording: false });
 
     if (reload) {
@@ -1074,12 +1157,12 @@ export const useViewerStore = create<ViewerState>((set, get) => ({
 
     set({ inspectLoading: true, sceneLoading: true });
 
+    const requestId = ++refreshRequestId;
     refreshTimer = setTimeout(() => {
-      const requestId = ++refreshRequestId;
       void (async () => {
         const snapshot = get();
         const result = await loadViewerData(snapshot);
-        if (requestId === refreshRequestId) {
+        if (requestId === refreshRequestId && get().ingest === snapshot.ingest) {
           set(result);
         }
       })();
@@ -1120,5 +1203,10 @@ export const useViewerStore = create<ViewerState>((set, get) => ({
       }
     }
   },
-  reset: () => set({ ...initialState }),
+  reset: () => {
+    beginSessionOperation();
+    const ingest = get().ingest;
+    if (ingest) void ingest.close();
+    set({ ...initialState });
+  },
 }));

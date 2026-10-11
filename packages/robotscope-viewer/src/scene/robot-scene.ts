@@ -5,6 +5,7 @@ import {
   AxesHelper,
   BufferAttribute,
   BufferGeometry,
+  CatmullRomCurve3,
   CanvasTexture,
   Color,
   DirectionalLight,
@@ -16,6 +17,7 @@ import {
   LineLoop,
   Mesh,
   MeshBasicMaterial,
+  MeshStandardMaterial,
   Object3D,
   PerspectiveCamera,
   PlaneGeometry,
@@ -23,9 +25,12 @@ import {
   PointsMaterial,
   Quaternion,
   Scene,
+  SphereGeometry,
+  TubeGeometry,
   Vector3,
 } from "three";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
+import { createShowcaseRobot } from "../showcase/robot-model";
 
 export interface RobotSceneController {
   resize: (width: number, height: number) => void;
@@ -93,22 +98,40 @@ function addOccupancyGridMesh(group: Group, grid: SceneOccupancyGrid): void {
 export function createRobotSceneController(
   canvas: HTMLCanvasElement,
   renderer: WebGLRenderer,
+  options: { zUp?: boolean } = {},
 ): RobotSceneController {
   const scene = new Scene();
   scene.background = new Color(0x0f1117);
 
   const camera = new PerspectiveCamera(55, 1, 0.05, 500);
   camera.position.set(8, 6, 8);
+  if (options.zUp) {
+    camera.up.set(0, 0, 1);
+    camera.fov = 42;
+    camera.position.set(8, -9, 9);
+  }
 
   const controls = new OrbitControls(camera, canvas);
-  controls.enableDamping = true;
+  controls.enableDamping = !options.zUp;
   controls.target.set(0, 0, 0);
+  if (options.zUp) controls.target.set(4.4, 0, 0);
 
-  scene.add(new AmbientLight(0xffffff, 0.55));
-  const keyLight = new DirectionalLight(0xffffff, 0.85);
-  keyLight.position.set(5, 10, 7);
+  scene.add(new AmbientLight(0xffffff, options.zUp ? 0.9 : 0.55));
+  const keyLight = new DirectionalLight(0xffffff, options.zUp ? 1.4 : 0.85);
+  keyLight.position.set(5, options.zUp ? -5 : 10, 7);
   scene.add(keyLight);
-  scene.add(new GridHelper(20, 20, 0x3a4256, 0x252b3a));
+  const grid = new GridHelper(20, 20, 0x3a4256, 0x252b3a);
+  if (options.zUp) grid.rotation.x = Math.PI / 2;
+  scene.add(grid);
+
+  const robot = options.zUp ? createShowcaseRobot() : null;
+  if (robot) {
+    robot.group.visible = false;
+    scene.add(robot.group);
+  }
+  let previousTime = -1;
+  let previousPosition: Vector3 | null = null;
+  let wheelDistance = 0;
 
   const dynamicRoot = new Group();
   scene.add(dynamicRoot);
@@ -119,6 +142,7 @@ export function createRobotSceneController(
     poses: new Group(),
     clouds: new Group(),
     trajectories: new Group(),
+    history: new Group(),
   };
   dynamicRoot.add(
     layers.maps,
@@ -126,15 +150,17 @@ export function createRobotSceneController(
     layers.trajectories,
     layers.poses,
     layers.clouds,
+    layers.history,
   );
 
   let followPose: Vector3 | undefined;
+  let trailPoints: Vector3[] = [];
 
   const disposeObject = (object: Object3D) => {
     object.traverse((child) => {
       const mesh = child as Object3D & {
         geometry?: BufferGeometry;
-        material?: MeshBasicMaterial | LineBasicMaterial | PointsMaterial | MeshBasicMaterial[];
+        material?: MeshBasicMaterial | MeshStandardMaterial | LineBasicMaterial | PointsMaterial | MeshBasicMaterial[];
       };
       mesh.geometry?.dispose();
       const material = mesh.material;
@@ -165,17 +191,46 @@ export function createRobotSceneController(
     clearGroup(layers.poses);
     clearGroup(layers.clouds);
     clearGroup(layers.trajectories);
+    clearGroup(layers.history);
     followPose = undefined;
 
     if (!snapshot) {
+      if (robot) robot.group.visible = false;
       return;
+    }
+
+    if (robot) {
+      const pose = snapshot.poses.find((entry) => entry.entity_path === "/robot/ego/localization/pose") ?? snapshot.poses[0];
+      robot.group.visible = Boolean(pose);
+      if (pose) {
+        const position = new Vector3(...pose.position);
+        if (snapshot.time_ns < previousTime) {
+          wheelDistance = 0;
+          trailPoints = [];
+        }
+        else if (previousPosition) wheelDistance += position.distanceTo(previousPosition);
+        if (!trailPoints.length || position.distanceTo(trailPoints[trailPoints.length - 1]!) > 0.01) {
+          trailPoints.push(position.clone().add(new Vector3(0, 0, 0.035)));
+          if (trailPoints.length > 512) trailPoints.shift();
+        }
+        if (trailPoints.length > 1) {
+          const curve = new CatmullRomCurve3(trailPoints);
+          layers.history.add(new Mesh(new TubeGeometry(curve, trailPoints.length * 2, 0.025, 6, false),
+            new MeshBasicMaterial({ color: 0x68baff })));
+        }
+        robot.group.position.copy(position);
+        robot.group.quaternion.set(...pose.rotation);
+        robot.wheels.forEach((wheel) => { wheel.rotation.y = wheelDistance / 0.17; });
+        previousPosition = position;
+        previousTime = snapshot.time_ns;
+      }
     }
 
     snapshot.occupancy_grids.forEach((grid) => {
       addOccupancyGridMesh(layers.maps, grid);
     });
 
-    snapshot.tf_frames.forEach((frame) => {
+    (options.zUp ? [] : snapshot.tf_frames).forEach((frame) => {
       const axes = new AxesHelper(frame.frame_id === snapshot.fixed_frame ? 1.2 : 0.6);
       axes.position.set(frame.position[0], frame.position[1], frame.position[2]);
       axes.setRotationFromQuaternion(
@@ -190,7 +245,7 @@ export function createRobotSceneController(
       layers.tf.add(axes);
     });
 
-    snapshot.poses.forEach((pose, index) => {
+    (options.zUp ? [] : snapshot.poses).forEach((pose, index) => {
       const marker = new AxesHelper(0.9);
       marker.position.set(pose.position[0], pose.position[1], pose.position[2]);
       marker.setRotationFromQuaternion(
@@ -213,8 +268,8 @@ export function createRobotSceneController(
       const geometry = new BufferGeometry();
       geometry.setAttribute("position", new BufferAttribute(cloud.points, 3));
       const material = new PointsMaterial({
-        color: 0x7ec8ff,
-        size: 0.06,
+        color: cloud.topic.startsWith("/perception/") ? 0xffbd69 : 0x7ec8ff,
+        size: options.zUp ? 0.035 : 0.06,
         sizeAttenuation: true,
       });
       layers.clouds.add(new Points(geometry, material));
@@ -226,12 +281,33 @@ export function createRobotSceneController(
       const isBoundary = trajectory.archetype === "Lanelet2" && trajectory.closed;
       const color = isBoundary ? 0xc8820a : trajectory.archetype === "Lanelet2" ? 0xf5a623 : 0x3dd68c;
       const material = new LineBasicMaterial({ color, linewidth: 2 });
-      layers.trajectories.add(
-        isBoundary ? new LineLoop(geometry, material) : new Line(geometry, material),
-      );
+      if (options.zUp && trajectory.archetype === "Trajectory" && trajectory.point_count > 1) {
+        const points = Array.from({ length: trajectory.point_count }, (_, i) =>
+          new Vector3(trajectory.points[i * 3]!, trajectory.points[i * 3 + 1]!, trajectory.points[i * 3 + 2]! + 0.02),
+        );
+        const curve = new CatmullRomCurve3(points);
+        const tube = new Mesh(new TubeGeometry(curve, Math.max(8, points.length * 2), 0.035, 6, false),
+          new MeshBasicMaterial({ color }));
+        layers.trajectories.add(tube);
+        geometry.dispose();
+        material.dispose();
+      } else {
+        layers.trajectories.add(
+          isBoundary ? new LineLoop(geometry, material) : new Line(geometry, material),
+        );
+      }
+      if (options.zUp && trajectory.archetype === "Trajectory" && trajectory.points.length >= 3) {
+        const end = trajectory.points.length - 3;
+        const endpoint = new Mesh(new SphereGeometry(0.065, 12, 8), new MeshBasicMaterial({ color }));
+        endpoint.position.set(trajectory.points[end]!, trajectory.points[end + 1]!, trajectory.points[end + 2]!);
+        layers.trajectories.add(endpoint);
+      }
     });
 
-    if (followPose) {
+    if (options.zUp) {
+      // A fixed overview makes movement across the map visible.
+      controls.target.set(4.4, 0, 0);
+    } else if (followPose) {
       controls.target.copy(followPose);
     } else if (snapshot.occupancy_grids.length > 0) {
       const grid = snapshot.occupancy_grids[0]!;
@@ -267,7 +343,9 @@ export function createRobotSceneController(
       clearGroup(layers.poses);
       clearGroup(layers.clouds);
       clearGroup(layers.trajectories);
+      clearGroup(layers.history);
       controls.dispose();
+      if (robot) disposeObject(robot.group);
       scene.clear();
     },
   };

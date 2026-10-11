@@ -1,0 +1,70 @@
+name: Development checks
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  checks:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        node: [20, 22, 24]
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v6
+        with:
+          node-version: ${{ matrix.node }}
+          cache: npm
+      - run: npm ci
+      - run: npm run build
+      - run: npm run typecheck
+      - run: npm test
+      - run: npm run validate:plugins
+      - if: matrix.node == 20
+        uses: actions/setup-python@v6
+        with:
+          python-version: '3.12'
+      - if: matrix.node == 20
+        run: python -m pip install -c sdk/python/constraints.txt ./sdk/python
+      - if: matrix.node == 20
+        run: npx playwright install --with-deps chromium
+      - if: matrix.node == 20
+        run: npm run test:e2e
+      - uses: actions/upload-artifact@v4
+        if: failure() && matrix.node == 20
+        with:
+          name: browser-test-results
+          path: test-results/
+          if-no-files-found: ignore
+
+  python-sdk:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python: ['3.10', '3.12']
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 20
+          cache: npm
+      - uses: actions/setup-python@v6
+        with:
+          python-version: ${{ matrix.python }}
+      - run: npm ci
+      - run: python -m pip install -c sdk/python/constraints.txt ./sdk/python
+      - run: npm run test:python
+
+  native-ros2:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - run: docker build -f tests/ros2/Dockerfile -t robotscope-validation:humble .
+      - run: docker run --rm --network=none robotscope-validation:humble

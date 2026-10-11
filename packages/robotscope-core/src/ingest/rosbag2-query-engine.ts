@@ -167,7 +167,7 @@ export class Rosbag2QueryEngineImpl implements McapQueryEngine {
   }
 
   async getRawMessageNearTime(topic: string, time_ns: number): Promise<RawMessage | null> {
-    const cacheKey = `${topic}@${Math.floor(time_ns / 1_000_000)}`;
+    const cacheKey = `${topic}@${time_ns}`;
     const cached = this.rawMessageCache.get(cacheKey);
     if (cached && cached.topic === topic) {
       return cached;

@@ -97,7 +97,7 @@ export function CommandBar() {
         sidecar = parseSidecarManifest(raw) ?? undefined;
       }
 
-      await openMcapFile(mcapFile, { sidecar });
+      try { await openMcapFile(mcapFile, { sidecar }); } catch { /* store displays the load error */ }
       event.target.value = "";
     },
     [openMcapFile],
@@ -111,7 +111,7 @@ export function CommandBar() {
       }
 
       try {
-        await openRosbag2Folder(files);
+      try { await openRosbag2Folder(files); } catch { /* store displays the load error */ }
       } catch (error) {
         const message = error instanceof Error ? error.message : String(error);
         window.alert(message);
@@ -139,7 +139,7 @@ export function CommandBar() {
   );
 
   const onConnectLive = useCallback(async () => {
-    await connectLiveAgent(liveUrl.trim());
+    try { await connectLiveAgent(liveUrl.trim()); } catch { /* store displays the connection error */ }
   }, [connectLiveAgent, liveUrl]);
 
   const onDisconnectLive = useCallback(async () => {
@@ -147,10 +147,15 @@ export function CommandBar() {
   }, [disconnectLiveAgent]);
 
   const onToggleRecording = useCallback(async () => {
-    if (liveRecording) {
-      await stopLiveRecording({ reload: true });
-    } else {
-      await startLiveRecording();
+    try {
+      if (liveRecording) {
+        await stopLiveRecording({ reload: true });
+      } else {
+        await startLiveRecording();
+      }
+    } catch (error) {
+      useViewerStore.setState({ liveRecording: false,
+        statusMessage: `Live recording failed: ${error instanceof Error ? error.message : String(error)}` });
     }
   }, [liveRecording, startLiveRecording, stopLiveRecording]);
 

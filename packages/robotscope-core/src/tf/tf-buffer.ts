@@ -48,6 +48,10 @@ const STALE_MS = 5000;
 export class TfBuffer {
   private readonly edges = new Map<string, EdgeHistory>();
 
+  // Offline recordings need their complete history. Live callers can choose a
+  // bounded window without silently truncating playback's early transforms.
+  constructor(private readonly maxSamplesPerEdge = Infinity) {}
+
   clear(): void {
     this.edges.clear();
   }
@@ -63,7 +67,7 @@ export class TfBuffer {
   listTransforms(): StoredTransform[] {
     const transforms: StoredTransform[] = [];
     for (const edge of this.edges.values()) {
-      transforms.push(...edge.samples);
+      for (const sample of edge.samples) transforms.push(sample);
     }
     return transforms;
   }
@@ -94,11 +98,17 @@ export class TfBuffer {
       return;
     }
 
-    edge.samples.push(transform);
-    edge.samples.sort((a, b) => a.time_ns - b.time_ns);
+    let lo = 0;
+    let hi = edge.samples.length;
+    while (lo < hi) {
+      const mid = (lo + hi) >> 1;
+      if (edge.samples[mid]!.time_ns <= transform.time_ns) lo = mid + 1;
+      else hi = mid;
+    }
+    edge.samples.splice(lo, 0, transform);
 
-    if (edge.samples.length > 4000) {
-      edge.samples.splice(0, edge.samples.length - 4000);
+    if (edge.samples.length > this.maxSamplesPerEdge) {
+      edge.samples.splice(0, edge.samples.length - this.maxSamplesPerEdge);
     }
   }
 
@@ -265,16 +275,14 @@ export class TfBuffer {
       return edge.samples[0];
     }
 
-    let best: StoredTransform | undefined;
-    for (const sample of edge.samples) {
-      if (sample.time_ns <= time_ns) {
-        best = sample;
-      } else {
-        break;
-      }
+    let lo = 0;
+    let hi = edge.samples.length;
+    while (lo < hi) {
+      const mid = (lo + hi) >> 1;
+      if (edge.samples[mid]!.time_ns <= time_ns) lo = mid + 1;
+      else hi = mid;
     }
-
-    return best ?? edge.samples[0];
+    return edge.samples[lo - 1];
   }
 
   private detectIssues(frames: TfTreeNode[], fixedFrame: string): TfHealthIssue[] {

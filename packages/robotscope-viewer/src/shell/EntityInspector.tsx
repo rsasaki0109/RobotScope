@@ -1,4 +1,5 @@
-import type { MappedTopic, RawMessage, TopicInfo } from "@robotscope/core";
+import { JSON_SCHEMAS, type JsonImage, type MappedTopic, type RawMessage, type TopicInfo } from "@robotscope/core";
+import { ImagePreview } from "./ImagePreview";
 import { useViewerStore } from "../store/viewer-store";
 import styles from "./EntityInspector.module.css";
 
@@ -89,6 +90,9 @@ export function EntityInspector() {
 
           <section className={styles.section}>
             <h3>Raw message {inspectLoading ? "(loading…)" : ""}</h3>
+            {rawMessage?.message_encoding === "json" && rawMessage.schema === JSON_SCHEMAS.Image && rawMessage.decoded != null && (
+              <ImagePreview image={rawMessage.decoded as JsonImage} />
+            )}
             <pre className={styles.payload}>{formatPayload(rawMessage)}</pre>
             {rawMessage && (
               <dl className={styles.grid}>

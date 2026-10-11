@@ -29,6 +29,8 @@ export interface EntityQueryResult {
 export interface TopicInfo {
   name: string;
   schema: string;
+  message_encoding?: string;
+  metadata?: Record<string, string>;
   message_count?: number;
   frequency_hz?: number;
 }
@@ -56,6 +58,7 @@ export interface QueryEngine {
 export interface RawMessage {
   topic: string;
   schema: string;
+  message_encoding?: string;
   log_time_ns: number;
   publish_time_ns?: number;
   sequence?: number;

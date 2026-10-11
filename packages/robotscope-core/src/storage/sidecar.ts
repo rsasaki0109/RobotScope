@@ -83,8 +83,27 @@ export function validateSidecarFingerprint(
 export function parseSidecarManifest(json: string): SidecarManifest | null {
   try {
     const value = JSON.parse(json) as SidecarManifest;
-    if (value.version !== SIDECAR_VERSION || !Array.isArray(value.topics)) {
+    const finite = (item: unknown): item is number => typeof item === "number" && Number.isFinite(item) && item >= 0;
+    if (!value || value.version !== SIDECAR_VERSION || !Array.isArray(value.topics) ||
+        ![value.start_ns, value.end_ns, value.built_at_ms, value.tf_message_count, value.tf_transform_count].every(finite) ||
+        value.start_ns > value.end_ns ||
+        (value.recording_source !== undefined && !["mcap", "rosbag2", "live"].includes(value.recording_source))) {
       return null;
+    }
+    if (value.fingerprint && (typeof value.fingerprint.name !== "string" ||
+        !finite(value.fingerprint.size) ||
+        (value.fingerprint.last_modified_ms !== undefined && !finite(value.fingerprint.last_modified_ms)))) return null;
+    const names = new Set<string>();
+    for (const topic of value.topics) {
+      if (!topic || typeof topic.topic !== "string" || typeof topic.schema !== "string" ||
+          !Number.isSafeInteger(topic.channel_id) || topic.channel_id < 0 || !Array.isArray(topic.times) || names.has(topic.topic)) return null;
+      names.add(topic.topic);
+      let previous = -Infinity;
+      for (const time of topic.times) {
+        if (!Array.isArray(time) || time.length < 1 || time.length > 2 || !finite(time[0]) || time[0] < previous ||
+            (time[1] !== undefined && (!Number.isSafeInteger(time[1]) || time[1] < 0))) return null;
+        previous = time[0];
+      }
     }
     return value;
   } catch {

@@ -32,6 +32,15 @@ import type { LiveIngestBuffer } from "./ingest-buffer.js";
 export class LiveQueryEngineImpl implements McapQueryEngine {
   private rawMessageCache = new Map<string, RawMessage>();
   private numericSeriesCache = new Map<string, NumericSeries>();
+  private cachedRevision = -1;
+
+  private refreshCaches(): void {
+    const revision = this.buffer.getRevision();
+    if (revision === this.cachedRevision) return;
+    this.rawMessageCache.clear();
+    this.numericSeriesCache.clear();
+    this.cachedRevision = revision;
+  }
 
   constructor(private readonly buffer: LiveIngestBuffer) {}
 
@@ -103,7 +112,8 @@ export class LiveQueryEngineImpl implements McapQueryEngine {
   }
 
   async getRawMessageNearTime(topic: string, time_ns: number): Promise<RawMessage | null> {
-    const cacheKey = `${topic}@${Math.floor(time_ns / 1_000_000)}`;
+    this.refreshCaches();
+    const cacheKey = `${topic}@${time_ns}`;
     const cached = this.rawMessageCache.get(cacheKey);
     if (cached && cached.topic === topic) {
       return cached;
@@ -129,6 +139,7 @@ export class LiveQueryEngineImpl implements McapQueryEngine {
     t1_ns: number,
     maxPoints = 2000,
   ): Promise<NumericSeries> {
+    this.refreshCaches();
     const startNs = Math.min(t0_ns, t1_ns);
     const endNs = Math.max(t0_ns, t1_ns);
     const pointLimit = Math.max(0, Math.floor(maxPoints));

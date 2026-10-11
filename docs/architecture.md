@@ -16,16 +16,16 @@ Master design document for the RobotScope OSS observability platform.
 | Rerun | Generic multimodal data layer |
 | RViz | Display-only web clone |
 
-**Win on:** ROS2-native + Autoware-native + Physical-AI-native + fully OSS + plugin-first.
+**Win on:** robot decision debugging + Physical-AI semantics + fully OSS + plugin-first. ROS 2 and Autoware are supported integrations, alongside direct Python/JSON telemetry.
 
 ## Design principles
 
 1. Offline-first  
-2. ROS2-native  
+2. Middleware-independent core; ROS 2 through an input adapter
 3. MCAP-compatible (no proprietary log format in v0.1)  
 4. Entity/Component-based (RDM)  
-5. TF / time / causality-aware  
-6. Autoware-first wedge  
+5. Coordinate frames / time / causality-aware (including ROS TF)
+6. Domain workflows through plugins, with Autoware as an initial wedge
 7. Physical-AI-native  
 8. Plugin-first  
 9. Renderer-agnostic (Three.js v0.1 → wgpu v1.0)  
@@ -44,7 +44,7 @@ RobotScope Data Model (Entity, Component, Archetype, Timeline, Frame, Causality)
         ↓
 Robotics Plane │ AI Plane │ Storage Plane
         ↓
-Data Plane (ROS2 agent, MCAP/rosbag2, adapters)
+Data Plane (Python SDK → JSON MCAP, ROS2 agent, MCAP/rosbag2, adapters)
         ↓
 Plugin Plane │ Deployment Plane
 ```
@@ -59,7 +59,7 @@ Semantic **entity paths** (not raw topic names):
 /policy/main/vla_state
 ```
 
-ROS topics live in **provenance**:
+Input stream names, schemas and ROS topics live in **provenance**:
 
 ```yaml
 source.topic: /localization/kinematic_state
@@ -69,7 +69,15 @@ source.schema: nav_msgs/msg/Odometry
 
 **Timelines:** `log_time`, `sensor_time`, `valid_time`, `sim_time`, `model_step`, `episode_step`.
 
-**Storage:** Raw = MCAP/rosbag2/RRD. Sidecar v0.1 = per-topic time index at `{file.mcap}.robotscope/index.json` (+ IndexedDB in browser). Query = DuckDB/Arrow (later).
+**Storage:** MCAP is the primary interchange format; rosbag2 is also supported. JSON MCAP carries ordinary UTF-8 JSON with embedded JSON schemas and explicit semantic channel metadata. RRD and DuckDB/Arrow are future directions, not implemented readers. Sidecar v0.1 = per-topic time index at `{file.mcap}.robotscope/index.json` (+ IndexedDB in browser).
+
+**Current non-ROS path:** the Python SDK records scalar/structured telemetry,
+poses, images, points, trajectories and transforms. The ingest layer dispatches
+on channel message encoding (`json` or ROS 2 `cdr`), maps explicit entity paths,
+and exposes the same query and visualization API to both. JSON channels can also
+arrive over the live WebSocket protocol and retain their encoding/metadata when
+recorded. Unknown codecs are reported as decode errors. See
+[the input contract](non-ros-input.md); naming ROS-like topics is not required.
 
 RDM schemas: `RobotScope/schemas/rdm/v0.1/`
 

@@ -2,16 +2,35 @@
 
 <p align="center">
   <a href="https://rsasaki0109.github.io/RobotScope/?showcase=phantom-stop">
-    <img src="docs/assets/readme-hero.gif" alt="RobotScope explains a phantom obstacle stop from MCAP by separating observed facts from heuristic inference" width="920" />
+    <img src="docs/assets/readme-hero.gif" alt="A wheeled robot drives, turns, and stops in RobotScope's synthetic MCAP replay, with its pose, planned path, LiDAR returns, speed, and incident evidence aligned" width="920" />
   </a>
 </p>
 
+<table>
+  <tr>
+    <td align="center" width="50%">
+      <a href="https://rsasaki0109.github.io/RobotScope/?layout=timeseries&amp;demo=python">
+        <img src="docs/assets/readme-python-replay.gif" alt="Scrubbing a speed trace recorded with the Python SDK; the time cursor and sample values follow the recording" width="450" />
+      </a>
+      <br /><strong>Replay Python telemetry</strong>
+      <br />Record to MCAP and explore numeric signals. No ROS required.
+    </td>
+    <td align="center" width="50%">
+      <a href="https://rsasaki0109.github.io/RobotScope/?layout=autoware&amp;demo=incident&amp;incident=phantom-obstacle-stop">
+        <img src="docs/assets/readme-incident-evidence.gif" alt="Switching between phantom obstacle stop and control tracking incidents, with recorded facts and heuristic inference shown separately" width="450" />
+      </a>
+      <br /><strong>Inspect incident evidence</strong>
+      <br />Compare observed facts with clearly labeled debugging leads.
+    </td>
+  </tr>
+</table>
+
 <p align="center">
-  <strong>Drop an MCAP. RobotScope explains why the robot stopped.</strong>
+  <strong>Drop an MCAP. Follow the evidence behind robot decisions.</strong>
 </p>
 
 <p align="center">
-  Open-source incident explanation for ROS 2 and Autoware — facts, inference, 3D scene, and decision timeline in one local-first view.
+  Open-source robot and Physical AI observability — facts, inference, 3D scene, and decision timeline in one local-first view. Connect Python telemetry, JSON MCAP, or ROS 2.
 </p>
 
 <p align="center">
@@ -36,7 +55,7 @@
 > RobotScope is not a robot viewer. It is an OSS observability platform that explains what the robot **sensed**, **believed**, **planned**, **commanded**, **learned**, and **remembered** — on the same timeline, coordinate frame, and causality graph.
 
 <p align="center">
-  <strong>MCAP · rosbag2 · live WebSocket</strong>&nbsp;&nbsp;|&nbsp;&nbsp;
+  <strong>Python SDK · JSON MCAP · ROS 2 · live WebSocket</strong>&nbsp;&nbsp;|&nbsp;&nbsp;
   <strong>Autoware · Nav2 · MoveIt</strong> native panels&nbsp;&nbsp;|&nbsp;&nbsp;
   <strong>PlotJuggler-style time-series</strong>&nbsp;&nbsp;|&nbsp;&nbsp;
   <strong>cross-stack failure recipes</strong>&nbsp;&nbsp;|&nbsp;&nbsp;
@@ -78,7 +97,7 @@ Across the stack, **failure recipes** flag what went wrong (control tracking, ph
 | Rerun | Multimodal ECS data layer | ROS2-native graph, Autoware/Nav2 daily workflow |
 | RViz | ROS 3D standard | Web-native, dataset/replay, AI observability |
 
-**Winning wedge:** ROS2-native + Autoware-native + Physical-AI-native + fully OSS + plugin-first.
+**Focus:** explain robot decisions across input sources, with semantic entities, shared time and coordinate frames, and domain plugins. ROS 2, Autoware, Nav2 and MoveIt are supported integrations.
 
 We do not compete head-on with Foxglove on viewer polish, Rerun on generic data layers, or RViz display parity alone.
 
@@ -92,6 +111,29 @@ npm run dev                                                # → http://localhos
 ```
 
 Open an MCAP file from the viewer (drag & drop) or click **Connect Live** for a WebSocket agent.
+
+### Record from Python without ROS
+
+```bash
+python3 -m venv .venv
+source .venv/bin/activate
+python -m pip install ./sdk/python
+npm run demo:python
+npm run dev
+```
+
+Open the viewer with `?demo=python`, or drop the generated `packages/robotscope-viewer/public/demo/demo-python.mcap`. It contains scalar telemetry, poses, RGB images, point clouds, trajectories and frame transforms. Select the camera stream for its image preview; use the time-series layout for numeric plots. Neither recording nor playback requires ROS.
+
+```python
+from robotscope import Recorder
+
+with Recorder("run.mcap") as log:
+    log.log_scalar("/robot/arm/temperature", 42.5, unit="degC", time_ns=0)
+    log.log_pose("/robot/arm/tool", [0.1, 0.2, 0.3], frame="map", time_ns=0)
+    log.log_observation("/robot/arm/state", {"mode": "grasp", "confidence": 0.8}, time_ns=0)
+```
+
+See the [Python SDK](sdk/python/README.md) and [input contract](docs/non-ros-input.md) for geometry, images, live adapters and supported boundaries. Generic input support is a development baseline; simulator-specific adapters and arbitrary binary codecs are not yet shipped.
 
 **Incident demo (GitHub Pages):** [explain a phantom obstacle stop](https://rsasaki0109.github.io/RobotScope/?layout=autoware&demo=incident&incident=phantom-obstacle-stop) — the explainer auto-seeks to the incident and shows facts separately from inference. The same MCAP works with `layout=nav2`, `layout=moveit`, or `layout=timeseries`. Use `demo=1` for normal playback or `demo=rosbag2` for the bundled rosbag2 bag.
 
@@ -157,10 +199,16 @@ npm run demo:example
 npm run demo:ros2-agent -- --profile autoware
 
 # Static GitHub Pages bundle (local preview)
+python3 -m pip install -c sdk/python/constraints.txt ./sdk/python  # SDK demo dependency; use a virtualenv if needed
 npm run build:pages
 npm run preview:pages                  # → http://127.0.0.1:4173/RobotScope/?layout=autoware&demo=1
 npm run capture:showcase                # → hero GIF + MP4 + social card
+npm run capture:gallery                 # → Python replay + incident evidence GIFs
 ```
+
+Hero capture requires Chromium (or `CHROME_PATH`) and FFmpeg. It records the real showcase at 20 fps; the 10-second GIF stays below 3 MiB. A dedicated synthetic MCAP records a 7.2 m drive, turn, and stop. The schematic robot's pose, wheel motion, motion trail, speed, planned path, and point clouds follow that recording; heuristic inference is labeled separately.
+
+The two gallery GIFs capture focused panels from the same Pages build using synthetic demo recordings: Python SDK speed samples and incident evidence. Each loops for 8 seconds at 8 fps, stays below 1 MiB, and links to its interactive demo. Python 3 is required to generate the SDK demo bundled in the Pages build.
 
 ## Repository layout
 

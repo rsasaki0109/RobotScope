@@ -17,7 +17,7 @@ export function Sidebar() {
       event.preventDefault();
       const file = event.dataTransfer.files[0];
       if (file?.name.endsWith(".mcap")) {
-        await openMcapFile(file);
+        await openMcapFile(file).catch(() => { /* Store displays the load failure. */ });
       }
     },
     [openMcapFile],

@@ -73,8 +73,12 @@ test("exports facts and inference as separate report sections", () => {
 test("runs the ten-second showcase through four deterministic phases", () => {
   assert.equal(resolveShowcaseStory(0).phase, "question");
   assert.equal(resolveShowcaseStory(2_000).phase, "replay");
-  assert.equal(resolveShowcaseStory(5_000).phase, "facts");
-  assert.equal(resolveShowcaseStory(7_800).phase, "inference");
-  assert.equal(resolveShowcaseStory(9_999).incident_time_sec, 1.4);
+  assert.equal(resolveShowcaseStory(7_000).phase, "facts");
+  assert.equal(resolveShowcaseStory(8_500).phase, "inference");
+  assert.equal(resolveShowcaseStory(0).incident_time_sec, 0);
+  assert.ok(resolveShowcaseStory(500).incident_time_sec > 0);
+  assert.ok(resolveShowcaseStory(6_000).incident_time_sec > resolveShowcaseStory(2_000).incident_time_sec);
+  assert.equal(resolveShowcaseStory(9_999).incident_time_sec, 4.2);
+  assert.equal(resolveShowcaseStory(9_999, 6).incident_time_sec, 6);
   assert.equal(resolveShowcaseStory(12_000).elapsed_ms, 9_999);
 });

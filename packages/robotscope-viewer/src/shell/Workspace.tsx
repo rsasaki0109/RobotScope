@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 
 import { resolveLiveAgentUrlFromSearch } from "../config/live-agent";
 import { useViewerStore } from "../store/viewer-store";
@@ -17,7 +17,7 @@ function resolveLayoutFromUrl(): string {
   return params.get("layout") ?? "default";
 }
 
-type DemoSource = "mcap" | "rosbag2";
+type DemoSource = "mcap" | "rosbag2" | "python";
 
 function resolveDemoSource(): DemoSource | null {
   const params = new URLSearchParams(window.location.search);
@@ -28,6 +28,7 @@ function resolveDemoSource(): DemoSource | null {
   if (demo === "rosbag2") {
     return "rosbag2";
   }
+  if (demo === "python") return "python";
   if (new URLSearchParams(window.location.search).has("showcase")) {
     return "mcap";
   }
@@ -45,6 +46,9 @@ export function Workspace() {
   const session = useViewerStore((s) => s.session);
   const layoutId = useViewerStore((s) => s.layoutId);
   const showcase = resolveShowcaseFromUrl();
+  // React StrictMode replays effects. URL startup is a one-time request, not
+  // a subscription to session changes (including an explicit disconnect).
+  const urlStartupRequested = useRef(false);
 
   useEffect(() => {
     setLayoutId(resolveLayoutFromUrl());
@@ -52,27 +56,33 @@ export function Workspace() {
 
   useEffect(() => {
     const demoSource = resolveDemoSource();
-    if (!demoSource || session) {
+    if (!demoSource || session || urlStartupRequested.current) {
       return;
     }
     const demoUrl =
       demoSource === "rosbag2"
         ? `${import.meta.env.BASE_URL}demo/demo-rosbag2/demo-rosbag2_0.db3`
+        : demoSource === "python"
+        ? `${import.meta.env.BASE_URL}demo/demo-python.mcap`
+        : showcase
+        ? `${import.meta.env.BASE_URL}demo/demo-hero.mcap`
         : `${import.meta.env.BASE_URL}demo/demo-scene.mcap`;
+    urlStartupRequested.current = true;
     void openMcapUrl(demoUrl).catch((error: unknown) => {
       const message = error instanceof Error ? error.message : String(error);
       useViewerStore.setState({ statusMessage: `Demo load failed: ${message}` });
     });
-  }, [openMcapUrl, session]);
+  }, [openMcapUrl, session, showcase]);
 
   useEffect(() => {
     if (resolveDemoSource()) {
       return;
     }
     const liveUrl = resolveLiveAgentUrlFromSearch(window.location.search);
-    if (!liveUrl || session) {
+    if (!liveUrl || session || urlStartupRequested.current) {
       return;
     }
+    urlStartupRequested.current = true;
     void connectLiveAgent(liveUrl).catch((error: unknown) => {
       const message = error instanceof Error ? error.message : String(error);
       useViewerStore.setState({ statusMessage: `Live connect failed: ${message}` });

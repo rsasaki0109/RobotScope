@@ -1,11 +1,8 @@
+import { decodeMessage } from "../data/message-decoder.js";
+import { isTransformChannel, storedTransforms } from "../data/transforms.js";
 import type { McapIndexedReader } from "@mcap/core";
 
-import {
-  decodeRos2Message,
-  isTfMessageSchema,
-  isTfTopic,
-  type SchemaInfo,
-} from "../ros2/decoder.js";
+import type { SchemaInfo } from "../ros2/decoder.js";
 import { TopicTimeIndex } from "../storage/topic-time-index.js";
 import { TfBuffer } from "../tf/tf-buffer.js";
 
@@ -22,16 +19,6 @@ export interface McapIndexResult {
   tf_transform_count: number;
   tf_topics: string[];
 }
-
-interface DecodedTransform {
-  header: { stamp: { sec: number; nanosec?: number; nsec?: number }; frame_id: string };
-  child_frame_id: string;
-  transform: {
-    translation: { x: number; y: number; z: number };
-    rotation: { x: number; y: number; z: number; w: number };
-  };
-}
-
 function schemaFromReader(
   reader: McapIndexedReader,
   schemaId: number,
@@ -57,7 +44,7 @@ export async function indexMcapMessages(
   const tfTopics = new Set<string>();
 
   for (const channel of reader.channelsById.values()) {
-    if (isTfTopic(channel.topic)) {
+    if (isTransformChannel(channel.topic, reader.schemasById.get(channel.schemaId)?.name ?? "")) {
       tfTopics.add(channel.topic);
     }
     const schema = reader.schemasById.get(channel.schemaId);
@@ -65,6 +52,7 @@ export async function indexMcapMessages(
   }
 
   let messages_read = 0;
+  let tf_message_count = 0;
   let transforms_added = 0;
 
   for await (const message of reader.readMessages()) {
@@ -83,7 +71,7 @@ export async function indexMcapMessages(
       sequence: message.sequence,
     });
 
-    if (!schemaRecord || !isTfTopic(channel.topic) || !isTfMessageSchema(schemaRecord.name)) {
+    if (!schemaRecord || !isTransformChannel(channel.topic, schemaRecord.name)) {
       if (messages_read % 500 === 0) {
         onProgress?.({
           messages_read,
@@ -94,32 +82,14 @@ export async function indexMcapMessages(
       continue;
     }
 
-    const decoded = decodeRos2Message(schemaRecord, message.data);
+    const decoded = decodeMessage(schemaRecord, message.data, channel.messageEncoding);
     if (!decoded.value) {
       continue;
     }
+    tf_message_count += 1;
 
-    const tfMessage = decoded.value as { transforms?: DecodedTransform[] };
-    const isStatic = channel.topic.includes("static");
-
-    for (const transform of tfMessage.transforms ?? []) {
-      tfBuffer.addTransform({
-        parent_frame_id: transform.header.frame_id,
-        child_frame_id: transform.child_frame_id,
-        translation: [
-          transform.transform.translation.x,
-          transform.transform.translation.y,
-          transform.transform.translation.z,
-        ],
-        rotation: [
-          transform.transform.rotation.x,
-          transform.transform.rotation.y,
-          transform.transform.rotation.z,
-          transform.transform.rotation.w,
-        ],
-        time_ns: isStatic ? 0 : log_time_ns,
-        is_static: isStatic,
-      });
+    for (const transform of storedTransforms(schemaRecord.name, decoded.value, Number(message.logTime), channel.topic)) {
+      tfBuffer.addTransform(transform);
       transforms_added += 1;
     }
 
@@ -142,7 +112,7 @@ export async function indexMcapMessages(
   return {
     tfBuffer,
     topicIndex,
-    tf_message_count: messages_read,
+    tf_message_count,
     tf_transform_count: transforms_added,
     tf_topics: [...tfTopics].sort(),
   };
